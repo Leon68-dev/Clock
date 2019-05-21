@@ -26,6 +26,7 @@ namespace Clock
         private DateTime mCurDateTime;
         private DateTime mTimeShutDown;
         private bool mIsShutDown;
+        private bool mIsSleep = false;
         //private int mCountBoom;
         //private bool mCanBoom;
         //private bool mTckTck = true;
@@ -436,18 +437,19 @@ namespace Clock
             Application.Run(fm);
 		}
 
-		private void setShutdown(bool isShutDown)
+		private void setShutdown(bool isShutDown, bool isSleep)
 		{
-			if(isShutDown)
-			{
-                if ((mTimeShutDown != cPubFunc.chkTime()) && (DateTime.Now.ToString("hh:mm").Equals(mTimeShutDown.ToString("hh:mm"))))
-				{
-                    int flag = cPubFunc.Poweroff;
-                    cPubFunc.DoExitWindows(flag); 
-				}
+            if (isSleep && (mTimeShutDown != cPubFunc.chkTime()) && (DateTime.Now.ToString("hh:mm").Equals(mTimeShutDown.ToString("hh:mm"))))
+            {
+                cPubFunc.SetSuspendState(false, true, true);
+                return;
+            }
+            else if (isShutDown && (mTimeShutDown != cPubFunc.chkTime()) && (DateTime.Now.ToString("hh:mm").Equals(mTimeShutDown.ToString("hh:mm"))))
+            { 	
+                int flag = cPubFunc.Poweroff;
+                cPubFunc.DoExitWindows(flag); 
 			}
 		}
-
 
 		private void setTimeToTray()
 		{
@@ -542,9 +544,10 @@ namespace Clock
 
         private void cm_setShutDownPC_Click(object sender, EventArgs e)
         {
-            FShutDown fsd = new FShutDown(mTimeShutDown, mIsShutDown);
+            FShutDown fsd = new FShutDown(mTimeShutDown, mIsShutDown, mIsSleep);
             fsd.ShowDialog();
             mIsShutDown = fsd.isShutDown;
+            mIsSleep = fsd.isSleep;
 
             if (mIsShutDown)
             {
@@ -831,7 +834,7 @@ namespace Clock
             setTimeToTray();
             
             // Обработка отключения
-            setShutdown(this.mIsShutDown);
+            setShutdown(this.mIsShutDown, this.mIsSleep);
             
             if (++mClcTick > mMaxCountTick)
             {
