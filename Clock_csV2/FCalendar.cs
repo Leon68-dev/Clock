@@ -13,7 +13,6 @@ namespace Clock
 	{
 		private System.Windows.Forms.MonthCalendar monthCalendar1;
 		private System.Windows.Forms.Button button1;
-		private System.Windows.Forms.GroupBox groupBox1;
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
@@ -55,13 +54,12 @@ namespace Clock
 		{
             this.monthCalendar1 = new System.Windows.Forms.MonthCalendar();
             this.button1 = new System.Windows.Forms.Button();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.SuspendLayout();
             // 
             // monthCalendar1
             // 
             this.monthCalendar1.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.monthCalendar1.Location = new System.Drawing.Point(4, 4);
+            this.monthCalendar1.Location = new System.Drawing.Point(16, 5);
             this.monthCalendar1.MaxDate = new System.DateTime(2100, 1, 1, 0, 0, 0, 0);
             this.monthCalendar1.MaxSelectionCount = 1;
             this.monthCalendar1.MinDate = new System.DateTime(1900, 1, 1, 0, 0, 0, 0);
@@ -74,33 +72,24 @@ namespace Clock
             // 
             this.button1.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.button1.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.button1.Location = new System.Drawing.Point(45, 168);
+            this.button1.Location = new System.Drawing.Point(58, 224);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.Size = new System.Drawing.Size(105, 36);
             this.button1.TabIndex = 0;
             this.button1.Text = "&Ok";
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
-            // groupBox1
-            // 
-            this.groupBox1.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.groupBox1.Location = new System.Drawing.Point(4, 160);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(156, 4);
-            this.groupBox1.TabIndex = 2;
-            this.groupBox1.TabStop = false;
-            // 
             // FCalendar
             // 
             this.AcceptButton = this.button1;
-            this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
-            this.ClientSize = new System.Drawing.Size(165, 198);
-            this.Controls.Add(this.groupBox1);
+            this.AutoScaleBaseSize = new System.Drawing.Size(7, 20);
+            this.ClientSize = new System.Drawing.Size(226, 273);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.monthCalendar1);
+            this.DoubleBuffered = true;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "FCalendar";
-            this.Opacity = 0.85;
+            this.Opacity = 0.85D;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Calendar";
             this.Load += new System.EventHandler(this.Form2_Load);

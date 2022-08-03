@@ -52,11 +52,11 @@ namespace Clock
             // 
             this.trckBarOpacity.AutoSize = false;
             this.trckBarOpacity.LargeChange = 20;
-            this.trckBarOpacity.Location = new System.Drawing.Point(5, 18);
-            this.trckBarOpacity.Margin = new System.Windows.Forms.Padding(4);
+            this.trckBarOpacity.Location = new System.Drawing.Point(5, 22);
+            this.trckBarOpacity.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.trckBarOpacity.Maximum = 100;
             this.trckBarOpacity.Name = "trckBarOpacity";
-            this.trckBarOpacity.Size = new System.Drawing.Size(480, 44);
+            this.trckBarOpacity.Size = new System.Drawing.Size(480, 55);
             this.trckBarOpacity.SmallChange = 5;
             this.trckBarOpacity.TabIndex = 0;
             this.trckBarOpacity.TickFrequency = 5;
@@ -66,10 +66,10 @@ namespace Clock
             // btnOk
             // 
             this.btnOk.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.btnOk.Location = new System.Drawing.Point(400, 133);
-            this.btnOk.Margin = new System.Windows.Forms.Padding(4);
+            this.btnOk.Location = new System.Drawing.Point(400, 166);
+            this.btnOk.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(100, 28);
+            this.btnOk.Size = new System.Drawing.Size(100, 35);
             this.btnOk.TabIndex = 2;
             this.btnOk.Text = "Ok";
             this.btnOk.UseVisualStyleBackColor = true;
@@ -79,10 +79,10 @@ namespace Clock
             // 
             this.chkDay.AutoSize = true;
             this.chkDay.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.chkDay.Location = new System.Drawing.Point(11, 44);
-            this.chkDay.Margin = new System.Windows.Forms.Padding(4);
+            this.chkDay.Location = new System.Drawing.Point(11, 55);
+            this.chkDay.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.chkDay.Name = "chkDay";
-            this.chkDay.Size = new System.Drawing.Size(63, 21);
+            this.chkDay.Size = new System.Drawing.Size(66, 25);
             this.chkDay.TabIndex = 6;
             this.chkDay.Text = "Day";
             this.chkDay.UseVisualStyleBackColor = true;
@@ -91,10 +91,10 @@ namespace Clock
             // 
             this.chkDate.AutoSize = true;
             this.chkDate.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.chkDate.Location = new System.Drawing.Point(11, 69);
-            this.chkDate.Margin = new System.Windows.Forms.Padding(4);
+            this.chkDate.Location = new System.Drawing.Point(11, 86);
+            this.chkDate.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.chkDate.Name = "chkDate";
-            this.chkDate.Size = new System.Drawing.Size(67, 21);
+            this.chkDate.Size = new System.Drawing.Size(72, 25);
             this.chkDate.TabIndex = 5;
             this.chkDate.Text = "Date";
             this.chkDate.UseVisualStyleBackColor = true;
@@ -103,10 +103,10 @@ namespace Clock
             // 
             this.chkGMT.AutoSize = true;
             this.chkGMT.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.chkGMT.Location = new System.Drawing.Point(11, 20);
-            this.chkGMT.Margin = new System.Windows.Forms.Padding(4);
+            this.chkGMT.Location = new System.Drawing.Point(11, 25);
+            this.chkGMT.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.chkGMT.Name = "chkGMT";
-            this.chkGMT.Size = new System.Drawing.Size(68, 21);
+            this.chkGMT.Size = new System.Drawing.Size(71, 25);
             this.chkGMT.TabIndex = 4;
             this.chkGMT.Text = "GMT";
             this.chkGMT.UseVisualStyleBackColor = true;
@@ -122,11 +122,11 @@ namespace Clock
             this.groupBox1.Controls.Add(this.chkDay);
             this.groupBox1.Controls.Add(this.chkGMT);
             this.groupBox1.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.groupBox1.Location = new System.Drawing.Point(5, 69);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(4);
+            this.groupBox1.Location = new System.Drawing.Point(5, 86);
+            this.groupBox1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox1.Size = new System.Drawing.Size(320, 94);
+            this.groupBox1.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.groupBox1.Size = new System.Drawing.Size(320, 118);
             this.groupBox1.TabIndex = 7;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Dial";
@@ -135,20 +135,20 @@ namespace Clock
             // 
             this.groupBox3.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.groupBox3.Location = new System.Drawing.Point(75, 0);
-            this.groupBox3.Margin = new System.Windows.Forms.Padding(4);
+            this.groupBox3.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox3.Size = new System.Drawing.Size(3, 94);
+            this.groupBox3.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.groupBox3.Size = new System.Drawing.Size(3, 118);
             this.groupBox3.TabIndex = 9;
             this.groupBox3.TabStop = false;
             // 
             // chkBorder
             // 
             this.chkBorder.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.chkBorder.Location = new System.Drawing.Point(197, 44);
-            this.chkBorder.Margin = new System.Windows.Forms.Padding(4);
+            this.chkBorder.Location = new System.Drawing.Point(197, 55);
+            this.chkBorder.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.chkBorder.Name = "chkBorder";
-            this.chkBorder.Size = new System.Drawing.Size(80, 22);
+            this.chkBorder.Size = new System.Drawing.Size(80, 28);
             this.chkBorder.TabIndex = 12;
             this.chkBorder.Text = "Border";
             this.chkBorder.UseVisualStyleBackColor = true;
@@ -156,10 +156,10 @@ namespace Clock
             // chkAlwaysOnTop
             // 
             this.chkAlwaysOnTop.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.chkAlwaysOnTop.Location = new System.Drawing.Point(197, 20);
-            this.chkAlwaysOnTop.Margin = new System.Windows.Forms.Padding(4);
+            this.chkAlwaysOnTop.Location = new System.Drawing.Point(197, 25);
+            this.chkAlwaysOnTop.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.chkAlwaysOnTop.Name = "chkAlwaysOnTop";
-            this.chkAlwaysOnTop.Size = new System.Drawing.Size(117, 22);
+            this.chkAlwaysOnTop.Size = new System.Drawing.Size(117, 28);
             this.chkAlwaysOnTop.TabIndex = 10;
             this.chkAlwaysOnTop.Text = "Always on top";
             this.chkAlwaysOnTop.UseVisualStyleBackColor = true;
@@ -168,10 +168,10 @@ namespace Clock
             // 
             this.chkTransparent.Enabled = false;
             this.chkTransparent.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.chkTransparent.Location = new System.Drawing.Point(85, 44);
-            this.chkTransparent.Margin = new System.Windows.Forms.Padding(4);
+            this.chkTransparent.Location = new System.Drawing.Point(85, 55);
+            this.chkTransparent.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.chkTransparent.Name = "chkTransparent";
-            this.chkTransparent.Size = new System.Drawing.Size(111, 25);
+            this.chkTransparent.Size = new System.Drawing.Size(111, 31);
             this.chkTransparent.TabIndex = 11;
             this.chkTransparent.Text = "Transparent";
             this.chkTransparent.UseVisualStyleBackColor = true;
@@ -180,10 +180,10 @@ namespace Clock
             // 
             this.chkMoving.AutoSize = true;
             this.chkMoving.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.chkMoving.Location = new System.Drawing.Point(85, 20);
-            this.chkMoving.Margin = new System.Windows.Forms.Padding(4);
+            this.chkMoving.Location = new System.Drawing.Point(85, 25);
+            this.chkMoving.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.chkMoving.Name = "chkMoving";
-            this.chkMoving.Size = new System.Drawing.Size(82, 21);
+            this.chkMoving.Size = new System.Drawing.Size(90, 25);
             this.chkMoving.TabIndex = 9;
             this.chkMoving.Text = "Moving";
             this.chkMoving.UseVisualStyleBackColor = true;
@@ -193,10 +193,10 @@ namespace Clock
             this.groupBox2.Controls.Add(this.trckBarOpacity);
             this.groupBox2.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.groupBox2.Location = new System.Drawing.Point(5, 0);
-            this.groupBox2.Margin = new System.Windows.Forms.Padding(4);
+            this.groupBox2.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox2.Size = new System.Drawing.Size(496, 65);
+            this.groupBox2.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.groupBox2.Size = new System.Drawing.Size(496, 81);
             this.groupBox2.TabIndex = 8;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Opacity";
@@ -205,10 +205,10 @@ namespace Clock
             // 
             this.chkSound.AutoSize = true;
             this.chkSound.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.chkSound.Location = new System.Drawing.Point(336, 89);
-            this.chkSound.Margin = new System.Windows.Forms.Padding(4);
+            this.chkSound.Location = new System.Drawing.Point(336, 111);
+            this.chkSound.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.chkSound.Name = "chkSound";
-            this.chkSound.Size = new System.Drawing.Size(77, 21);
+            this.chkSound.Size = new System.Drawing.Size(82, 25);
             this.chkSound.TabIndex = 13;
             this.chkSound.Text = "Sound";
             this.chkSound.UseVisualStyleBackColor = true;
@@ -216,15 +216,16 @@ namespace Clock
             // FSetup
             // 
             this.AcceptButton = this.btnOk;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(508, 170);
+            this.ClientSize = new System.Drawing.Size(508, 212);
             this.Controls.Add(this.chkSound);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnOk);
+            this.DoubleBuffered = true;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
-            this.Margin = new System.Windows.Forms.Padding(4);
+            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "FSetup";
             this.Opacity = 0.85D;
             this.ShowIcon = false;

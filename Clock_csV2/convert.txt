@@ -1,0 +1,5 @@
+rem dotnet tool install -g --add-source 'https://api.nuget.org/v3/index.json' --ignore-failed-sources upgrade-assistant
+rem upgrade-assistant analyze Clock_cs.csproj
+upgrade-assistant upgrade Clock_cs.csproj
+ 
+pause
