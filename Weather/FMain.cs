@@ -208,7 +208,7 @@ namespace readRSS
         }
    
 
-         private void btnRef_Click(object sender, EventArgs e)
+        private void btnRef_Click(object sender, EventArgs e)
         {
             viewWeather();
         }

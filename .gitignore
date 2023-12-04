@@ -1,0 +1,16 @@
+/.vs
+/ClockAndToolbar/bin
+/ClockAndToolbar/obj
+/Clock_cs/bin
+/Clock_cs/obj
+/Clock_cs/.vs
+/Clock_csV2/.vs
+/Clock_csV2/Clock_cs.csproj.user
+/Clock_csV2/bin
+/Clock_csV2/obj
+/Clock_vc/Debug
+/Toolbar/obj
+/Toolbar/bin
+/Clock_vc/_Clock.vcxproj.user
+/Weather/bin
+/Weather/obj
