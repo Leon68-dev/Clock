@@ -38,7 +38,7 @@ namespace Clock
         private bool mChkAlwaysOnTop = false;
         private bool mChkTransparent = false;
         private bool mChkBorder = true;
-        private double mFrmOpacity = 1;
+        private int mFrmOpacity = 80;
         private string mTblName = "clock_cs";
         //private int mCalcCountBoom = 20;
         //private Thread thr;
@@ -98,7 +98,7 @@ namespace Clock
             Size = new Size(sW, sH);
             MinimumSize = new Size(sW, sH);
 
-            //Позиционирование
+            //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             startPosition(ref mDeskX, ref mDeskY);
 
             mTimeShutDown = new DateTime();
@@ -127,7 +127,7 @@ namespace Clock
                     mChkAlwaysOnTop = System.Convert.ToBoolean(ds.Tables[mTblName].Rows[0]["chkAlwaysOnTop"].ToString());
                     mChkBorder = System.Convert.ToBoolean(ds.Tables[mTblName].Rows[0]["chkBorder"].ToString());
                     mChkSound = System.Convert.ToBoolean(ds.Tables[mTblName].Rows[0]["chkSound"].ToString());
-                    mFrmOpacity = System.Convert.ToDouble(ds.Tables[mTblName].Rows[0]["frmOpacity"].ToString());
+                    mFrmOpacity = System.Convert.ToInt32(ds.Tables[mTblName].Rows[0]["frmOpacity"].ToString());
                     mDeskX = System.Convert.ToInt32(ds.Tables[mTblName].Rows[0]["deskX"].ToString());
                     mDeskY = System.Convert.ToInt32(ds.Tables[mTblName].Rows[0]["deskY"].ToString());
                     mIntervalRefr = System.Convert.ToInt32(ds.Tables[mTblName].Rows[0]["intervalRefr"].ToString());
@@ -146,7 +146,7 @@ namespace Clock
                     table.Columns.Add("chkAlwaysOnTop", typeof(bool));
                     table.Columns.Add("chkBorder", typeof(bool));
                     table.Columns.Add("chkSound", typeof(bool));
-                    table.Columns.Add("frmOpacity", typeof(double));
+                    table.Columns.Add("frmOpacity", typeof(int));
                     table.Columns.Add("deskX", typeof(int));
                     table.Columns.Add("deskY", typeof(int));
                     table.Columns.Add("intervalRefr", typeof(int));
@@ -178,7 +178,7 @@ namespace Clock
             }
 
             //mCanClose = false;
-            this.Opacity = mFrmOpacity;
+            //this.Opacity = mFrmOpacity / 100;
 
             mSizeDefault = 135;                 //this.ClientSize.Width;
 
@@ -195,7 +195,7 @@ namespace Clock
             // Enable timer.
             timer1.Enabled = true;
 
-            int koefTick = 100 / timer1.Interval;
+            int koefTick = 1000 / timer1.Interval;
             if (koefTick > 1)
                 mMaxCountTick = 60 * koefTick;
             else
@@ -210,7 +210,7 @@ namespace Clock
 
         private void startPosition(ref int x, ref int y)
         {
-            //Позиционирование
+            //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             System.Drawing.Rectangle workingRectangle = Screen.PrimaryScreen.WorkingArea;
             x = workingRectangle.Width - (int)(this.Size.Width + this.Size.Width * 0.2);
             y = workingRectangle.Height - (int)(this.Size.Height + this.Size.Height * 0.2);
@@ -236,254 +236,237 @@ namespace Clock
 		}
 
 
-		#region Windows Form Designer generated code
-		/// <summary>
-		/// Required method for Designer support - do not modify
-		/// the contents of this method with the code editor.
-		/// </summary>
-		private void InitializeComponent()
-		{
-            this.components = new System.ComponentModel.Container();
+        #region Windows Form Designer generated code
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FMain));
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
-            this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
-            this.contextMenu1 = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.m_Setup = new System.Windows.Forms.ToolStripMenuItem();
-            this.m_Open = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
-            this.m_About = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
-            this.m_Exit = new System.Windows.Forms.ToolStripMenuItem();
-            this.mSetup = new System.Windows.Forms.ToolStripMenuItem();
-            this.mOpen = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.mAbout = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuItem9 = new System.Windows.Forms.ToolStripMenuItem();
-            this.mExit = new System.Windows.Forms.ToolStripMenuItem();
-            this.contextMenuFMain = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.cm_Setup = new System.Windows.Forms.ToolStripMenuItem();
-            this.cm_hide = new System.Windows.Forms.ToolStripMenuItem();
-            this.cm_StartPosition = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.cm_calendar = new System.Windows.Forms.ToolStripMenuItem();
-            this.cm_setShutDownPC = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.cm_about = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.cm_exit = new System.Windows.Forms.ToolStripMenuItem();
-            this.contextMenu1.SuspendLayout();
-            this.contextMenuFMain.SuspendLayout();
-            this.SuspendLayout();
+            timer1 = new Timer(components);
+            notifyIcon1 = new NotifyIcon(components);
+            contextMenu1 = new ContextMenuStrip(components);
+            m_Setup = new ToolStripMenuItem();
+            m_Open = new ToolStripMenuItem();
+            toolStripSeparator4 = new ToolStripSeparator();
+            m_About = new ToolStripMenuItem();
+            toolStripSeparator5 = new ToolStripSeparator();
+            m_Exit = new ToolStripMenuItem();
+            mSetup = new ToolStripMenuItem();
+            mOpen = new ToolStripMenuItem();
+            menuItem1 = new ToolStripMenuItem();
+            mAbout = new ToolStripMenuItem();
+            menuItem9 = new ToolStripMenuItem();
+            mExit = new ToolStripMenuItem();
+            contextMenuFMain = new ContextMenuStrip(components);
+            cm_Setup = new ToolStripMenuItem();
+            cm_hide = new ToolStripMenuItem();
+            cm_StartPosition = new ToolStripMenuItem();
+            toolStripSeparator3 = new ToolStripSeparator();
+            cm_calendar = new ToolStripMenuItem();
+            cm_setShutDownPC = new ToolStripMenuItem();
+            toolStripSeparator1 = new ToolStripSeparator();
+            cm_about = new ToolStripMenuItem();
+            toolStripSeparator2 = new ToolStripSeparator();
+            cm_exit = new ToolStripMenuItem();
+            contextMenu1.SuspendLayout();
+            contextMenuFMain.SuspendLayout();
+            SuspendLayout();
             // 
             // timer1
             // 
-            this.timer1.Interval = 1000;
-            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            timer1.Interval = 1000;
+            timer1.Tick += timer1_Tick;
             // 
             // notifyIcon1
             // 
-            this.notifyIcon1.ContextMenuStrip = this.contextMenu1;
-            this.notifyIcon1.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon1.Icon")));
-            this.notifyIcon1.Text = "Clock (.NET)";
-            this.notifyIcon1.Visible = true;
-            this.notifyIcon1.DoubleClick += new System.EventHandler(this.notifyIcon1_DoubleClick);
+            notifyIcon1.ContextMenuStrip = contextMenu1;
+            notifyIcon1.Icon = (Icon)resources.GetObject("notifyIcon1.Icon");
+            notifyIcon1.Text = "Clock (.NET)";
+            notifyIcon1.Visible = true;
+            notifyIcon1.DoubleClick += notifyIcon1_DoubleClick;
             // 
             // contextMenu1
             // 
-            this.contextMenu1.ImageScalingSize = new System.Drawing.Size(20, 20);
-            this.contextMenu1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.m_Setup,
-            this.m_Open,
-            this.toolStripSeparator4,
-            this.m_About,
-            this.toolStripSeparator5,
-            this.m_Exit});
-            this.contextMenu1.Name = "contextMenu1";
-            this.contextMenu1.Size = new System.Drawing.Size(129, 112);
+            contextMenu1.ImageScalingSize = new Size(20, 20);
+            contextMenu1.Items.AddRange(new ToolStripItem[] { m_Setup, m_Open, toolStripSeparator4, m_About, toolStripSeparator5, m_Exit });
+            contextMenu1.Name = "contextMenu1";
+            contextMenu1.Size = new Size(129, 112);
             // 
             // m_Setup
             // 
-            this.m_Setup.Name = "m_Setup";
-            this.m_Setup.Size = new System.Drawing.Size(128, 24);
-            this.m_Setup.Text = "Setup...";
-            this.m_Setup.Click += new System.EventHandler(this.m_Setup_Click);
+            m_Setup.Name = "m_Setup";
+            m_Setup.Size = new Size(128, 24);
+            m_Setup.Text = "Setup...";
+            m_Setup.Click += m_Setup_Click;
             // 
             // m_Open
             // 
-            this.m_Open.Name = "m_Open";
-            this.m_Open.Size = new System.Drawing.Size(128, 24);
-            this.m_Open.Text = "Hide";
-            this.m_Open.Click += new System.EventHandler(this.m_Open_Click);
+            m_Open.Name = "m_Open";
+            m_Open.Size = new Size(128, 24);
+            m_Open.Text = "Hide";
+            m_Open.Click += m_Open_Click;
             // 
             // toolStripSeparator4
             // 
-            this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(125, 6);
+            toolStripSeparator4.Name = "toolStripSeparator4";
+            toolStripSeparator4.Size = new Size(125, 6);
             // 
             // m_About
             // 
-            this.m_About.Name = "m_About";
-            this.m_About.Size = new System.Drawing.Size(128, 24);
-            this.m_About.Text = "About...";
-            this.m_About.Click += new System.EventHandler(this.m_About_Click);
+            m_About.Name = "m_About";
+            m_About.Size = new Size(128, 24);
+            m_About.Text = "About...";
+            m_About.Click += m_About_Click;
             // 
             // toolStripSeparator5
             // 
-            this.toolStripSeparator5.Name = "toolStripSeparator5";
-            this.toolStripSeparator5.Size = new System.Drawing.Size(125, 6);
+            toolStripSeparator5.Name = "toolStripSeparator5";
+            toolStripSeparator5.Size = new Size(125, 6);
             // 
             // m_Exit
             // 
-            this.m_Exit.Name = "m_Exit";
-            this.m_Exit.Size = new System.Drawing.Size(128, 24);
-            this.m_Exit.Text = "Exit";
-            this.m_Exit.Click += new System.EventHandler(this.m_Exit_Click);
+            m_Exit.Name = "m_Exit";
+            m_Exit.Size = new Size(128, 24);
+            m_Exit.Text = "Exit";
+            m_Exit.Click += m_Exit_Click;
             // 
             // mSetup
             // 
-            this.mSetup.Name = "mSetup";
-            this.mSetup.Size = new System.Drawing.Size(32, 19);
+            mSetup.Name = "mSetup";
+            mSetup.Size = new Size(32, 19);
             // 
             // mOpen
             // 
-            this.mOpen.Name = "mOpen";
-            this.mOpen.Size = new System.Drawing.Size(32, 19);
+            mOpen.Name = "mOpen";
+            mOpen.Size = new Size(32, 19);
             // 
             // menuItem1
             // 
-            this.menuItem1.Name = "menuItem1";
-            this.menuItem1.Size = new System.Drawing.Size(32, 19);
+            menuItem1.Name = "menuItem1";
+            menuItem1.Size = new Size(32, 19);
             // 
             // mAbout
             // 
-            this.mAbout.Name = "mAbout";
-            this.mAbout.Size = new System.Drawing.Size(32, 19);
+            mAbout.Name = "mAbout";
+            mAbout.Size = new Size(32, 19);
             // 
             // menuItem9
             // 
-            this.menuItem9.Name = "menuItem9";
-            this.menuItem9.Size = new System.Drawing.Size(32, 19);
+            menuItem9.Name = "menuItem9";
+            menuItem9.Size = new Size(32, 19);
             // 
             // mExit
             // 
-            this.mExit.Name = "mExit";
-            this.mExit.Size = new System.Drawing.Size(32, 19);
+            mExit.Name = "mExit";
+            mExit.Size = new Size(32, 19);
             // 
             // contextMenuFMain
             // 
-            this.contextMenuFMain.ImageScalingSize = new System.Drawing.Size(20, 20);
-            this.contextMenuFMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.cm_Setup,
-            this.cm_hide,
-            this.cm_StartPosition,
-            this.toolStripSeparator3,
-            this.cm_calendar,
-            this.cm_setShutDownPC,
-            this.toolStripSeparator1,
-            this.cm_about,
-            this.toolStripSeparator2,
-            this.cm_exit});
-            this.contextMenuFMain.Name = "contextMenuFMain";
-            this.contextMenuFMain.Size = new System.Drawing.Size(206, 190);
+            contextMenuFMain.ImageScalingSize = new Size(20, 20);
+            contextMenuFMain.Items.AddRange(new ToolStripItem[] { cm_Setup, cm_hide, cm_StartPosition, toolStripSeparator3, cm_calendar, cm_setShutDownPC, toolStripSeparator1, cm_about, toolStripSeparator2, cm_exit });
+            contextMenuFMain.Name = "contextMenuFMain";
+            contextMenuFMain.Size = new Size(206, 190);
             // 
             // cm_Setup
             // 
-            this.cm_Setup.Name = "cm_Setup";
-            this.cm_Setup.Size = new System.Drawing.Size(205, 24);
-            this.cm_Setup.Text = "Setup...";
-            this.cm_Setup.Click += new System.EventHandler(this.cm_Setup_Click);
+            cm_Setup.Name = "cm_Setup";
+            cm_Setup.Size = new Size(205, 24);
+            cm_Setup.Text = "Setup...";
+            cm_Setup.Click += cm_Setup_Click;
             // 
             // cm_hide
             // 
-            this.cm_hide.Name = "cm_hide";
-            this.cm_hide.Size = new System.Drawing.Size(205, 24);
-            this.cm_hide.Text = "Hide";
-            this.cm_hide.Click += new System.EventHandler(this.cm_hide_Click);
+            cm_hide.Name = "cm_hide";
+            cm_hide.Size = new Size(205, 24);
+            cm_hide.Text = "Hide";
+            cm_hide.Click += cm_hide_Click;
             // 
             // cm_StartPosition
             // 
-            this.cm_StartPosition.Name = "cm_StartPosition";
-            this.cm_StartPosition.Size = new System.Drawing.Size(205, 24);
-            this.cm_StartPosition.Text = "Start position";
-            this.cm_StartPosition.Click += new System.EventHandler(this.cm_StartPosition_Click);
+            cm_StartPosition.Name = "cm_StartPosition";
+            cm_StartPosition.Size = new Size(205, 24);
+            cm_StartPosition.Text = "Start position";
+            cm_StartPosition.Click += cm_StartPosition_Click;
             // 
             // toolStripSeparator3
             // 
-            this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(202, 6);
+            toolStripSeparator3.Name = "toolStripSeparator3";
+            toolStripSeparator3.Size = new Size(202, 6);
             // 
             // cm_calendar
             // 
-            this.cm_calendar.Name = "cm_calendar";
-            this.cm_calendar.Size = new System.Drawing.Size(205, 24);
-            this.cm_calendar.Text = "Calendar...";
-            this.cm_calendar.Click += new System.EventHandler(this.cm_calendar_Click);
+            cm_calendar.Name = "cm_calendar";
+            cm_calendar.Size = new Size(205, 24);
+            cm_calendar.Text = "Calendar...";
+            cm_calendar.Click += cm_calendar_Click;
             // 
             // cm_setShutDownPC
             // 
-            this.cm_setShutDownPC.Name = "cm_setShutDownPC";
-            this.cm_setShutDownPC.Size = new System.Drawing.Size(205, 24);
-            this.cm_setShutDownPC.Text = "Set Shut Down PC...";
-            this.cm_setShutDownPC.Click += new System.EventHandler(this.cm_setShutDownPC_Click);
+            cm_setShutDownPC.Name = "cm_setShutDownPC";
+            cm_setShutDownPC.Size = new Size(205, 24);
+            cm_setShutDownPC.Text = "Set Shut Down PC...";
+            cm_setShutDownPC.Click += cm_setShutDownPC_Click;
             // 
             // toolStripSeparator1
             // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(202, 6);
+            toolStripSeparator1.Name = "toolStripSeparator1";
+            toolStripSeparator1.Size = new Size(202, 6);
             // 
             // cm_about
             // 
-            this.cm_about.Name = "cm_about";
-            this.cm_about.Size = new System.Drawing.Size(205, 24);
-            this.cm_about.Text = "About...";
-            this.cm_about.Click += new System.EventHandler(this.cm_about_Click);
+            cm_about.Name = "cm_about";
+            cm_about.Size = new Size(205, 24);
+            cm_about.Text = "About...";
+            cm_about.Click += cm_about_Click;
             // 
             // toolStripSeparator2
             // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(202, 6);
+            toolStripSeparator2.Name = "toolStripSeparator2";
+            toolStripSeparator2.Size = new Size(202, 6);
             // 
             // cm_exit
             // 
-            this.cm_exit.Name = "cm_exit";
-            this.cm_exit.Size = new System.Drawing.Size(205, 24);
-            this.cm_exit.Text = "Exit";
-            this.cm_exit.Click += new System.EventHandler(this.cm_exit_Click);
+            cm_exit.Name = "cm_exit";
+            cm_exit.Size = new Size(205, 24);
+            cm_exit.Text = "Exit";
+            cm_exit.Click += cm_exit_Click;
             // 
             // FMain
             // 
-            this.AutoScaleBaseSize = new System.Drawing.Size(7, 20);
-            this.BackColor = System.Drawing.Color.OldLace;
-            this.ClientSize = new System.Drawing.Size(165, 185);
-            this.ContextMenuStrip = this.contextMenuFMain;
-            this.DoubleBuffered = true;
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MinimumSize = new System.Drawing.Size(165, 185);
-            this.Name = "FMain";
-            this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
-            this.Text = "Clock";
-            this.TransparencyKey = System.Drawing.Color.Transparent;
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FMain_FormClosing);
-            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.FMain_MouseDown);
-            this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.FMain_MouseMove);
-            this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.FMain_MouseUp);
-            this.contextMenu1.ResumeLayout(false);
-            this.contextMenuFMain.ResumeLayout(false);
-            this.ResumeLayout(false);
+            AutoScaleBaseSize = new Size(7, 20);
+            BackColor = Color.OldLace;
+            ClientSize = new Size(146, 156);
+            ContextMenuStrip = contextMenuFMain;
+            DoubleBuffered = true;
+            FormBorderStyle = FormBorderStyle.None;
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            MinimumSize = new Size(146, 156);
+            Name = "FMain";
+            ShowInTaskbar = false;
+            StartPosition = FormStartPosition.Manual;
+            Text = "Clock";
+            TransparencyKey = Color.Transparent;
+            FormClosing += FMain_FormClosing;
+            MouseDown += FMain_MouseDown;
+            MouseMove += FMain_MouseMove;
+            MouseUp += FMain_MouseUp;
+            contextMenu1.ResumeLayout(false);
+            contextMenuFMain.ResumeLayout(false);
+            ResumeLayout(false);
+        }
+        #endregion
 
-		}
-		#endregion
 
-
-		/// <summary>
-		/// The main entry point for the application.
-		/// </summary>
-		[STAThread]
+        /// <summary>
+        /// The main entry point for the application.
+        /// </summary>
+        [STAThread]
 		static void Main() 
 		{
-			// Добавляем возможность применнения стилей. 
+			// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ. 
 			Application.EnableVisualStyles();
 		    FMain fm = new FMain();
             fm.initialization();
@@ -656,9 +639,9 @@ namespace Clock
             int x_end = (this.ClientSize.Width) - this.ClientSize.Width / 5;
             int y_end = (this.ClientSize.Width) - this.ClientSize.Height / 5;
 
-            // Создаем объект GraphicsPath.
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ GraphicsPath.
             System.Drawing.Drawing2D.GraphicsPath gp = new System.Drawing.Drawing2D.GraphicsPath();
-            // Прибавляем два круга.
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ.
 
             int delta = 0;
             if (this.mChkBorder)
@@ -666,21 +649,24 @@ namespace Clock
 
             gp.AddEllipse(x_beg - delta, y_beg - delta, x_end + delta * 2, y_end + delta * 2);
 
-            // Создаем регион на основе экземпляра GraphicsPath.
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ GraphicsPath.
             Region r = new Region(gp);
-            // Присваиваем созданный регион
-            // региону нашего окна.
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ.
             this.Region = r;
 
             try
             {
-                //// Копирую текущее содержимое области экрана в ту же обласмт на форме...
+                //// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ...
                 //e.Graphics.CopyFromScreen(new Point(5, 5), new Point(5, 5), new Size(new Point(1000, 20)));
-                //// рисую поверх полупрозрачным цветом
+                //// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
                 //e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(100, Color.Black)), new Rectangle(new Point(5, 5), new Size(new Point(1000, 20))));
 
                 if (this.mChkTransparent)
-                    e.Graphics.CopyFromScreen(new Point(this.Left, this.Top), new Point(0, 0), new Size(new Point(this.ClientSize.Width * 2, this.ClientSize.Height * 2)));
+                    e.Graphics.CopyFromScreen(
+                        new Point(this.Left, this.Top), 
+                        new Point(0, 0), 
+                        new Size(new Point(this.ClientSize.Width * 2, this.ClientSize.Height * 2)));
 
                 this.makeFacePain(e);
                 this.makeStringDraw(e);
@@ -700,6 +686,9 @@ namespace Clock
                     e.Graphics.DrawPath(myPen, myPath);
                 }
                 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                var opc = (double)this.mFrmOpacity / 100;
+                this.Opacity = opc;
 
                 base.OnPaint(e);
             }
@@ -754,12 +743,12 @@ namespace Clock
 
 
         /// <summary>
-        /// Рисование стрелок часов.
+        /// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ.
         /// </summary>
         /// <param name="e"></param>
         private void makeHandsPain(PaintEventArgs e)
         {
-            //Стрелки
+            //пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             int sz3 = clcSizeRatio(6);
             pHandHr = new Pen(Color.Black, sz3);         
             int sz = clcSizeRatio(5);
@@ -769,20 +758,20 @@ namespace Clock
 
             Pen pHhandWhite1 = new Pen(this.BackColor, 1);
             
-            //Время            
-            //Секунды
+            //пїЅпїЅпїЅпїЅпїЅ            
+            //пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             int s = this.mCurDateTime.Second;
             int s2 = this.mCurDateTime.Second + 30;
             int secSize = sizeMin() * 7 / 10;
             int secSize2 = sizeMin() * 1 / 6;
             
-            //Минуты
+            //пїЅпїЅпїЅпїЅпїЅпїЅ
             int m = this.mCurDateTime.Minute;
             int m2 = this.mCurDateTime.Minute + 30;
             int minSize = sizeMin() * 3 / 5;
             int minSize2 = sizeMin() * 1 / 8;
 
-            //Часы
+            //пїЅпїЅпїЅпїЅ
             int h = this.mCurDateTime.Hour;
             int h2 = this.mCurDateTime.Hour + 30;
             int horSize = sizeMin() * 2 / 5;
@@ -827,7 +816,7 @@ namespace Clock
 
 
         /// <summary>
-        /// Рисование циферблата
+        /// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         /// </summary>
         /// <param name="e"></param>
         private void makeFacePain(PaintEventArgs e)
@@ -890,7 +879,7 @@ namespace Clock
             
             setTimeToTray();
             
-            // Обработка отключения
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             setShutdown(this.mIsShutDown, this.mIsSleep);
             
             if (++mClcTick > mMaxCountTick)
@@ -921,7 +910,7 @@ namespace Clock
 
             if (mChkDay)
             {
-                //День недели
+                //пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
                 str = this.mCurDateTime.DayOfWeek.ToString();
                 f = new Font(Font.FontFamily, clcSizeRatio(6), FontStyle.Bold);
                 stringSize = e.Graphics.MeasureString(str, f);
@@ -939,7 +928,7 @@ namespace Clock
 
             if (mChkDate)
             {
-                //Дата
+                //пїЅпїЅпїЅпїЅ
                 str = this.mCurDateTime.ToShortDateString();
                 f = new Font(Font.FontFamily, clcSizeRatio(6), FontStyle.Bold);
                 stringSize = e.Graphics.MeasureString(str, f);
@@ -1007,7 +996,7 @@ namespace Clock
         private void cm_SetupClick()
         {
             FSetup fs = new FSetup();
-            fs.initialization(mChkGMT, mChkDate, mChkDay, mChkMoving, mChkAlwaysOnTop, mChkTransparent, mChkBorder, mChkSound, Opacity);
+            fs.initialization(mChkGMT, mChkDate, mChkDay, mChkMoving, mChkAlwaysOnTop, mChkTransparent, mChkBorder, mChkSound, mFrmOpacity);
             fs.ShowDialog();
 
             if (fs.mClose <= 0)
@@ -1024,7 +1013,7 @@ namespace Clock
                 this.mChkBorder = fs.mChkBorder;
                 this.TopMost = this.mChkAlwaysOnTop;
                 this.mChkSound = fs.mChkSound;
-                this.Opacity = fs.mValOpacity;
+                this.mFrmOpacity = fs.mValOpacity;
 
                 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 DataSet ds = new DataSet();
@@ -1042,7 +1031,7 @@ namespace Clock
                 else
                     ds.Tables[mTblName].Rows[0]["chkSound"] = this.mChkSound;
                 
-                ds.Tables[mTblName].Rows[0]["frmOpacity"] = this.Opacity;
+                ds.Tables[mTblName].Rows[0]["frmOpacity"] = this.mFrmOpacity;
                 ds.WriteXml(@cPubFunc.fileNameSet());
                 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             }

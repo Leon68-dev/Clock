@@ -45,60 +45,59 @@ namespace Clock
 			base.Dispose( disposing );
 		}
 
-		#region Windows Form Designer generated code
-		/// <summary>
-		/// Required method for Designer support - do not modify
-		/// the contents of this method with the code editor.
-		/// </summary>
-		private void InitializeComponent()
-		{
-            this.monthCalendar1 = new System.Windows.Forms.MonthCalendar();
-            this.button1 = new System.Windows.Forms.Button();
-            this.SuspendLayout();
+        #region Windows Form Designer generated code
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            monthCalendar1 = new MonthCalendar();
+            button1 = new Button();
+            SuspendLayout();
             // 
             // monthCalendar1
             // 
-            this.monthCalendar1.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.monthCalendar1.Location = new System.Drawing.Point(16, 5);
-            this.monthCalendar1.MaxDate = new System.DateTime(2100, 1, 1, 0, 0, 0, 0);
-            this.monthCalendar1.MaxSelectionCount = 1;
-            this.monthCalendar1.MinDate = new System.DateTime(1900, 1, 1, 0, 0, 0, 0);
-            this.monthCalendar1.Name = "monthCalendar1";
-            this.monthCalendar1.TabIndex = 0;
-            this.monthCalendar1.TodayDate = new System.DateTime(2000, 12, 16, 0, 0, 0, 0);
-            this.monthCalendar1.TrailingForeColor = System.Drawing.Color.Green;
+            monthCalendar1.ImeMode = ImeMode.NoControl;
+            monthCalendar1.Location = new Point(10, 5);
+            monthCalendar1.MaxDate = new DateTime(2100, 1, 1, 0, 0, 0, 0);
+            monthCalendar1.MaxSelectionCount = 1;
+            monthCalendar1.MinDate = new DateTime(1900, 1, 1, 0, 0, 0, 0);
+            monthCalendar1.Name = "monthCalendar1";
+            monthCalendar1.TabIndex = 0;
+            monthCalendar1.TodayDate = new DateTime(2000, 12, 16, 0, 0, 0, 0);
+            monthCalendar1.TrailingForeColor = Color.Green;
             // 
             // button1
             // 
-            this.button1.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.button1.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.button1.Location = new System.Drawing.Point(58, 224);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(105, 36);
-            this.button1.TabIndex = 0;
-            this.button1.Text = "&Ok";
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            button1.FlatStyle = FlatStyle.System;
+            button1.ImeMode = ImeMode.NoControl;
+            button1.Location = new Point(58, 218);
+            button1.Name = "button1";
+            button1.Size = new Size(105, 36);
+            button1.TabIndex = 0;
+            button1.Text = "&Ok";
+            button1.Click += button1_Click;
             // 
             // FCalendar
             // 
-            this.AcceptButton = this.button1;
-            this.AutoScaleBaseSize = new System.Drawing.Size(7, 20);
-            this.ClientSize = new System.Drawing.Size(226, 273);
-            this.Controls.Add(this.button1);
-            this.Controls.Add(this.monthCalendar1);
-            this.DoubleBuffered = true;
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
-            this.Name = "FCalendar";
-            this.Opacity = 0.85D;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Calendar";
-            this.Load += new System.EventHandler(this.Form2_Load);
-            this.ResumeLayout(false);
+            AcceptButton = button1;
+            AutoScaleBaseSize = new Size(7, 20);
+            ClientSize = new Size(213, 264);
+            Controls.Add(button1);
+            Controls.Add(monthCalendar1);
+            DoubleBuffered = true;
+            FormBorderStyle = FormBorderStyle.FixedToolWindow;
+            Name = "FCalendar";
+            Opacity = 0.85D;
+            StartPosition = FormStartPosition.CenterScreen;
+            Text = "Calendar";
+            Load += Form2_Load;
+            ResumeLayout(false);
+        }
+        #endregion
 
-		}
-		#endregion
-
-		private void Form2_Load(object sender, System.EventArgs e)
+        private void Form2_Load(object sender, System.EventArgs e)
 		{
 			setCalendar();
 		}

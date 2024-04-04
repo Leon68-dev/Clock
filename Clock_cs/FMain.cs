@@ -38,7 +38,7 @@ namespace Clock
         private bool mChkAlwaysOnTop = false;
         private bool mChkTransparent = false;
         private bool mChkBorder = true;
-        private double mFrmOpacity = 1;
+        private int mFrmOpacity = 80;
         private string mTblName = "clock_cs";
         //private int mCalcCountBoom = 20;
         //private Thread thr;
@@ -91,7 +91,7 @@ namespace Clock
             int sW = (int)(this.Size.Width);
             this.Size = new Size(sW, sH);
 
-            //Позиционирование
+            //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             startPosition(ref mDeskX, ref mDeskY);
 
             mTimeShutDown = new DateTime();
@@ -120,7 +120,7 @@ namespace Clock
                     mChkAlwaysOnTop = System.Convert.ToBoolean(ds.Tables[mTblName].Rows[0]["chkAlwaysOnTop"].ToString());
                     mChkBorder = System.Convert.ToBoolean(ds.Tables[mTblName].Rows[0]["chkBorder"].ToString());
                     mChkSound = System.Convert.ToBoolean(ds.Tables[mTblName].Rows[0]["chkSound"].ToString());
-                    mFrmOpacity = System.Convert.ToDouble(ds.Tables[mTblName].Rows[0]["frmOpacity"].ToString());
+                    mFrmOpacity = System.Convert.ToInt32(ds.Tables[mTblName].Rows[0]["frmOpacity"].ToString());
                     mDeskX = System.Convert.ToInt32(ds.Tables[mTblName].Rows[0]["deskX"].ToString());
                     mDeskY = System.Convert.ToInt32(ds.Tables[mTblName].Rows[0]["deskY"].ToString());
                     mIntervalRefr = System.Convert.ToInt32(ds.Tables[mTblName].Rows[0]["intervalRefr"].ToString());
@@ -139,7 +139,7 @@ namespace Clock
                     table.Columns.Add("chkAlwaysOnTop", typeof(bool));
                     table.Columns.Add("chkBorder", typeof(bool));
                     table.Columns.Add("chkSound", typeof(bool));
-                    table.Columns.Add("frmOpacity", typeof(double));
+                    table.Columns.Add("frmOpacity", typeof(int));
                     table.Columns.Add("deskX", typeof(int));
                     table.Columns.Add("deskY", typeof(int));
                     table.Columns.Add("intervalRefr", typeof(int));
@@ -171,7 +171,7 @@ namespace Clock
             }
 
             //mCanClose = false;
-            this.Opacity = mFrmOpacity;
+            //this.Opacity = mFrmOpacity / 100;
 
             mSizeDefault = 140;                 //this.ClientSize.Width;
 
@@ -203,7 +203,7 @@ namespace Clock
 
         private void startPosition(ref int x, ref int y)
         {
-            //Позиционирование
+            //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             System.Drawing.Rectangle workingRectangle = Screen.PrimaryScreen.WorkingArea;
             x = workingRectangle.Width - (int)(this.Size.Width + this.Size.Width * 0.2);
             y = workingRectangle.Height - (int)(this.Size.Height + this.Size.Height * 0.2);
@@ -430,7 +430,7 @@ namespace Clock
 		[STAThread]
 		static void Main() 
 		{
-			// Добавляем возможность применнения стилей. 
+			// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ. 
 			Application.EnableVisualStyles();
 		    FMain fm = new FMain();
             fm.initialization();
@@ -599,9 +599,9 @@ namespace Clock
             int x_end = (this.ClientSize.Width) - this.ClientSize.Width / 5;
             int y_end = (this.ClientSize.Width) - this.ClientSize.Height / 5;
 
-            // Создаем объект GraphicsPath.
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ GraphicsPath.
             System.Drawing.Drawing2D.GraphicsPath gp = new System.Drawing.Drawing2D.GraphicsPath();
-            // Прибавляем два круга.
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ.
 
             int delta = 0;
             if (this.mChkBorder)
@@ -609,21 +609,24 @@ namespace Clock
 
             gp.AddEllipse(x_beg - delta, y_beg - delta, x_end + delta * 2, y_end + delta * 2);
 
-            // Создаем регион на основе экземпляра GraphicsPath.
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ GraphicsPath.
             Region r = new Region(gp);
-            // Присваиваем созданный регион
-            // региону нашего окна.
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ.
             this.Region = r;
 
             try
             {
-                //// Копирую текущее содержимое области экрана в ту же обласмт на форме...
+                //// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ...
                 //e.Graphics.CopyFromScreen(new Point(5, 5), new Point(5, 5), new Size(new Point(1000, 20)));
-                //// рисую поверх полупрозрачным цветом
+                //// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
                 //e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(100, Color.Black)), new Rectangle(new Point(5, 5), new Size(new Point(1000, 20))));
 
                 if (this.mChkTransparent)
-                    e.Graphics.CopyFromScreen(new Point(this.Left, this.Top), new Point(0, 0), new Size(new Point(this.ClientSize.Width * 2, this.ClientSize.Height * 2)));
+                    e.Graphics.CopyFromScreen(
+                        new Point(this.Left, this.Top), 
+                        new Point(0, 0), 
+                        new Size(new Point(this.ClientSize.Width * 2, this.ClientSize.Height * 2)));
 
                 this.makeFacePain(e);
                 this.makeStringDraw(e);
@@ -643,6 +646,9 @@ namespace Clock
                     e.Graphics.DrawPath(myPen, myPath);
                 }
                 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                var opc = (double)this.mFrmOpacity / 100;
+                this.Opacity = opc;
 
                 base.OnPaint(e);
             }
@@ -697,12 +703,12 @@ namespace Clock
 
 
         /// <summary>
-        /// Рисование стрелок часов.
+        /// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ.
         /// </summary>
         /// <param name="e"></param>
         private void makeHandsPain(PaintEventArgs e)
         {
-            //Стрелки
+            //пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             int sz3 = clcSizeRatio(6);
             pHandHr = new Pen(Color.Black, sz3);         
             int sz = clcSizeRatio(5);
@@ -712,20 +718,20 @@ namespace Clock
 
             Pen pHhandWhite1 = new Pen(this.BackColor, 1);
             
-            //Время            
-            //Секунды
+            //пїЅпїЅпїЅпїЅпїЅ            
+            //пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             int s = this.mCurDateTime.Second;
             int s2 = this.mCurDateTime.Second + 30;
             int secSize = sizeMin() * 7 / 10;
             int secSize2 = sizeMin() * 1 / 6;
             
-            //Минуты
+            //пїЅпїЅпїЅпїЅпїЅпїЅ
             int m = this.mCurDateTime.Minute;
             int m2 = this.mCurDateTime.Minute + 30;
             int minSize = sizeMin() * 3 / 5;
             int minSize2 = sizeMin() * 1 / 8;
 
-            //Часы
+            //пїЅпїЅпїЅпїЅ
             int h = this.mCurDateTime.Hour;
             int h2 = this.mCurDateTime.Hour + 30;
             int horSize = sizeMin() * 2 / 5;
@@ -770,7 +776,7 @@ namespace Clock
 
 
         /// <summary>
-        /// Рисование циферблата
+        /// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         /// </summary>
         /// <param name="e"></param>
         private void makeFacePain(PaintEventArgs e)
@@ -833,7 +839,7 @@ namespace Clock
             
             setTimeToTray();
             
-            // Обработка отключения
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             setShutdown(this.mIsShutDown, this.mIsSleep);
             
             if (++mClcTick > mMaxCountTick)
@@ -864,7 +870,7 @@ namespace Clock
 
             if (mChkDay)
             {
-                //День недели
+                //пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
                 str = this.mCurDateTime.DayOfWeek.ToString();
                 f = new Font(Font.FontFamily, clcSizeRatio(6), FontStyle.Bold);
                 stringSize = e.Graphics.MeasureString(str, f);
@@ -882,7 +888,7 @@ namespace Clock
 
             if (mChkDate)
             {
-                //Дата
+                //пїЅпїЅпїЅпїЅ
                 str = this.mCurDateTime.ToShortDateString();
                 f = new Font(Font.FontFamily, clcSizeRatio(6), FontStyle.Bold);
                 stringSize = e.Graphics.MeasureString(str, f);
@@ -950,7 +956,7 @@ namespace Clock
         private void cm_SetupClick()
         {
             FSetup fs = new FSetup();
-            fs.initialization(mChkGMT, mChkDate, mChkDay, mChkMoving, mChkAlwaysOnTop, mChkTransparent, mChkBorder, mChkSound, Opacity);
+            fs.initialization(mChkGMT, mChkDate, mChkDay, mChkMoving, mChkAlwaysOnTop, mChkTransparent, mChkBorder, mChkSound, mFrmOpacity);
             fs.ShowDialog();
 
             if (fs.mClose <= 0)
@@ -967,7 +973,7 @@ namespace Clock
                 this.mChkBorder = fs.mChkBorder;
                 this.TopMost = this.mChkAlwaysOnTop;
                 this.mChkSound = fs.mChkSound;
-                this.Opacity = fs.mValOpacity;
+                this.mFrmOpacity = fs.mValOpacity;
 
                 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 DataSet ds = new DataSet();
@@ -985,7 +991,7 @@ namespace Clock
                 else
                     ds.Tables[mTblName].Rows[0]["chkSound"] = this.mChkSound;
                 
-                ds.Tables[mTblName].Rows[0]["frmOpacity"] = this.Opacity;
+                ds.Tables[mTblName].Rows[0]["frmOpacity"] = this.mFrmOpacity;
                 ds.WriteXml(@cPubFunc.fileNameSet());
                 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             }
@@ -1020,8 +1026,6 @@ namespace Clock
             }
             catch { }
         }
-
-
 
 	}
 

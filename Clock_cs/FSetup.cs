@@ -18,10 +18,9 @@ namespace Clock
         public bool mChkAlwaysOnTop = false;
         public bool mChkTransparent = false;
         public bool mChkBorder = true;
-        public double mValOpacity;
+        public int mValOpacity = 100;
         public int mClose = -1;
         public bool mChkSound = false;
-
         
         public FSetup()
         {
@@ -38,7 +37,7 @@ namespace Clock
             bool ChkTransparent,
             bool ChkBorder,
             bool ChkSound,
-            double ValOpacity)
+            int ValOpacity)
         {
             this.mChkGMT = ChkGMT;
             this.mChkDate = ChkDate;
@@ -82,8 +81,7 @@ namespace Clock
             this.mChkMoving = this.chkMoving.Checked;
             this.mChkTransparent = this.chkTransparent.Checked;
             this.mChkBorder = this.chkBorder.Checked;
-            
-            this.mValOpacity = this.mValOpacity / 100;
+            this.mValOpacity = this.trckBarOpacity.Value;
 
             if (!cPubFunc.existsTickTackWav())
                 this.mChkSound = false;
@@ -94,13 +92,12 @@ namespace Clock
         }
 
 
-        public void setOpacity(double val)
+        public void setOpacity(int val)
         {
-            mValOpacity = (int)(val * 100);
-            this.trckBarOpacity.Value = (int)mValOpacity;
+            mValOpacity = (int)val;
+            this.trckBarOpacity.Value = mValOpacity;
             this.toolTip1.SetToolTip(this.trckBarOpacity, this.trckBarOpacity.Value.ToString());
         }
-
 
         //private double getOpacity()
         //{

@@ -71,9 +71,9 @@ namespace frmAbout
             // 
             this.button1.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.button1.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.button1.Location = new System.Drawing.Point(252, 4);
+            this.button1.Location = new System.Drawing.Point(302, 5);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(52, 23);
+            this.button1.Size = new System.Drawing.Size(63, 26);
             this.button1.TabIndex = 0;
             this.button1.Text = "&Ok";
             this.button1.Click += new System.EventHandler(this.button1_Click);
@@ -83,9 +83,9 @@ namespace frmAbout
             this.label1.AutoSize = true;
             this.label1.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.label1.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.label1.Location = new System.Drawing.Point(8, 1);
+            this.label1.Location = new System.Drawing.Point(10, 1);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(42, 13);
+            this.label1.Size = new System.Drawing.Size(53, 16);
             this.label1.TabIndex = 2;
             this.label1.Text = "Version";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -94,9 +94,9 @@ namespace frmAbout
             // groupBox1
             // 
             this.groupBox1.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.groupBox1.Location = new System.Drawing.Point(4, 33);
+            this.groupBox1.Location = new System.Drawing.Point(5, 38);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(300, 2);
+            this.groupBox1.Size = new System.Drawing.Size(360, 2);
             this.groupBox1.TabIndex = 3;
             this.groupBox1.TabStop = false;
             // 
@@ -105,9 +105,9 @@ namespace frmAbout
             this.label2.AutoSize = true;
             this.label2.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.label2.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.label2.Location = new System.Drawing.Point(8, 40);
+            this.label2.Location = new System.Drawing.Point(10, 46);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(13, 13);
+            this.label2.Size = new System.Drawing.Size(13, 16);
             this.label2.TabIndex = 4;
             this.label2.Text = "  ";
             // 
@@ -116,9 +116,9 @@ namespace frmAbout
             this.label3.AutoSize = true;
             this.label3.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.label3.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.label3.Location = new System.Drawing.Point(8, 56);
+            this.label3.Location = new System.Drawing.Point(10, 65);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(13, 13);
+            this.label3.Size = new System.Drawing.Size(13, 16);
             this.label3.TabIndex = 5;
             this.label3.Text = "  ";
             // 
@@ -127,17 +127,17 @@ namespace frmAbout
             this.label4.AutoSize = true;
             this.label4.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.label4.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.label4.Location = new System.Drawing.Point(8, 17);
+            this.label4.Location = new System.Drawing.Point(10, 20);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(121, 13);
+            this.label4.Size = new System.Drawing.Size(147, 16);
             this.label4.TabIndex = 7;
-            this.label4.Text = "Copyright (C) 1998-2015";
+            this.label4.Text = "Copyright (C) 2004-2024";
             // 
             // FAbout
             // 
             this.AcceptButton = this.button1;
-            this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
-            this.ClientSize = new System.Drawing.Size(308, 73);
+            this.AutoScaleBaseSize = new System.Drawing.Size(6, 15);
+            this.ClientSize = new System.Drawing.Size(375, 93);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.groupBox1);
@@ -169,13 +169,13 @@ namespace frmAbout
 
 		private void Form3_Load(object sender, System.EventArgs e)
 		{
-			// Перебираем все элементы на форме.
+			// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ.
 			foreach(Control c in Controls)
 			{
-				// Если элемент есть потомок класса ButtonBase,
+				// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ ButtonBase,
 				if(c is ButtonBase)
 				{
-					// то применяем стиль XP.
+					// пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ XP.
 					((ButtonBase)c).FlatStyle = FlatStyle.System;
 				}
 			}
