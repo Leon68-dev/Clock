@@ -163,13 +163,13 @@ namespace frmAbout
 
 		private void Form3_Load(object sender, System.EventArgs e)
 		{
-			// Перебираем все элементы на форме.
+			// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ.
 			foreach(Control c in Controls)
 			{
-				// Если элемент есть потомок класса ButtonBase,
+				// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ ButtonBase,
 				if(c is ButtonBase)
 				{
-					// то применяем стиль XP.
+					// пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ XP.
 					((ButtonBase)c).FlatStyle = FlatStyle.System;
 				}
 			}
