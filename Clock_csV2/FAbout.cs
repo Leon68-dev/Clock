@@ -19,7 +19,7 @@ namespace frmAbout
 		private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
-        private Label label4;
+        private Label lblCopyright;
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
@@ -32,9 +32,9 @@ namespace frmAbout
 			//
 			InitializeComponent();
 
-			//
-			// TODO: Add any constructor code after InitializeComponent call
-			//
+            //
+            // TODO: Add any constructor code after InitializeComponent call
+            //
 		}
 
 		/// <summary>
@@ -52,111 +52,110 @@ namespace frmAbout
 			base.Dispose( disposing );
 		}
 
-		#region Windows Form Designer generated code
-		/// <summary>
-		/// Required method for Designer support - do not modify
-		/// the contents of this method with the code editor.
-		/// </summary>
-		private void InitializeComponent()
-		{
-            this.button1 = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
-            this.SuspendLayout();
+        #region Windows Form Designer generated code
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            button1 = new Button();
+            label1 = new Label();
+            groupBox1 = new GroupBox();
+            label2 = new Label();
+            label3 = new Label();
+            lblCopyright = new Label();
+            SuspendLayout();
             // 
             // button1
             // 
-            this.button1.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.button1.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.button1.Location = new System.Drawing.Point(353, 77);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(73, 38);
-            this.button1.TabIndex = 0;
-            this.button1.Text = "&Ok";
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            button1.FlatStyle = FlatStyle.System;
+            button1.ImeMode = ImeMode.NoControl;
+            button1.Location = new Point(353, 77);
+            button1.Name = "button1";
+            button1.Size = new Size(73, 38);
+            button1.TabIndex = 0;
+            button1.Text = "&Ok";
+            button1.Click += button1_Click;
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.label1.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.label1.Location = new System.Drawing.Point(11, 2);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(57, 20);
-            this.label1.TabIndex = 2;
-            this.label1.Text = "Version";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            label1.AutoSize = true;
+            label1.FlatStyle = FlatStyle.System;
+            label1.ImeMode = ImeMode.NoControl;
+            label1.Location = new Point(11, 2);
+            label1.Name = "label1";
+            label1.Size = new Size(57, 20);
+            label1.TabIndex = 2;
+            label1.Text = "Version";
+            label1.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // groupBox1
             // 
-            this.groupBox1.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.groupBox1.Location = new System.Drawing.Point(6, 50);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(420, 13);
-            this.groupBox1.TabIndex = 3;
-            this.groupBox1.TabStop = false;
+            groupBox1.FlatStyle = FlatStyle.System;
+            groupBox1.Location = new Point(6, 50);
+            groupBox1.Name = "groupBox1";
+            groupBox1.Size = new Size(420, 13);
+            groupBox1.TabIndex = 3;
+            groupBox1.TabStop = false;
             // 
             // label2
             // 
-            this.label2.AutoSize = true;
-            this.label2.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.label2.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.label2.Location = new System.Drawing.Point(11, 69);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(17, 20);
-            this.label2.TabIndex = 4;
-            this.label2.Text = "  ";
+            label2.AutoSize = true;
+            label2.FlatStyle = FlatStyle.System;
+            label2.ImeMode = ImeMode.NoControl;
+            label2.Location = new Point(11, 69);
+            label2.Name = "label2";
+            label2.Size = new Size(17, 20);
+            label2.TabIndex = 4;
+            label2.Text = "  ";
             // 
             // label3
             // 
-            this.label3.AutoSize = true;
-            this.label3.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.label3.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.label3.Location = new System.Drawing.Point(11, 93);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(17, 20);
-            this.label3.TabIndex = 5;
-            this.label3.Text = "  ";
+            label3.AutoSize = true;
+            label3.FlatStyle = FlatStyle.System;
+            label3.ImeMode = ImeMode.NoControl;
+            label3.Location = new Point(11, 93);
+            label3.Name = "label3";
+            label3.Size = new Size(17, 20);
+            label3.TabIndex = 5;
+            label3.Text = "  ";
             // 
-            // label4
+            // lblCopyright
             // 
-            this.label4.AutoSize = true;
-            this.label4.FlatStyle = System.Windows.Forms.FlatStyle.System;
-            this.label4.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.label4.Location = new System.Drawing.Point(11, 26);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(171, 20);
-            this.label4.TabIndex = 7;
-            this.label4.Text = "Copyright (C) 2004-2022";
+            lblCopyright.AutoSize = true;
+            lblCopyright.FlatStyle = FlatStyle.System;
+            lblCopyright.ImeMode = ImeMode.NoControl;
+            lblCopyright.Location = new Point(11, 26);
+            lblCopyright.Name = "lblCopyright";
+            lblCopyright.Size = new Size(173, 20);
+            lblCopyright.TabIndex = 7;
+            lblCopyright.Text = "Copyright (C) 2004-20XX";
             // 
             // FAbout
             // 
-            this.AcceptButton = this.button1;
-            this.AutoScaleBaseSize = new System.Drawing.Size(7, 20);
-            this.ClientSize = new System.Drawing.Size(436, 122);
-            this.Controls.Add(this.label3);
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.groupBox1);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.button1);
-            this.Controls.Add(this.label4);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
-            this.Name = "FAbout";
-            this.Opacity = 0.85D;
-            this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "About";
-            this.Load += new System.EventHandler(this.Form3_Load);
-            this.ResumeLayout(false);
-            this.PerformLayout();
+            AcceptButton = button1;
+            AutoScaleBaseSize = new Size(7, 20);
+            ClientSize = new Size(436, 122);
+            Controls.Add(label3);
+            Controls.Add(label2);
+            Controls.Add(groupBox1);
+            Controls.Add(label1);
+            Controls.Add(button1);
+            Controls.Add(lblCopyright);
+            FormBorderStyle = FormBorderStyle.FixedToolWindow;
+            Name = "FAbout";
+            Opacity = 0.85D;
+            ShowInTaskbar = false;
+            StartPosition = FormStartPosition.CenterScreen;
+            Text = "About";
+            Load += Form3_Load;
+            ResumeLayout(false);
+            PerformLayout();
+        }
+        #endregion
 
-		}
-		#endregion
-
-		private void button1_Click(object sender, System.EventArgs e)
+        private void button1_Click(object sender, System.EventArgs e)
 		{
 			this.Close();
 		}
@@ -196,6 +195,8 @@ namespace frmAbout
             //label3.Text = winmem;
 
             label2.Text = getOSInfo();
+
+            this.lblCopyright.Text = $"Copyright (C) 2004-{DateTime.Now.Year}";
         }
 
         private string getOSInfo()
