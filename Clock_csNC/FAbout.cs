@@ -109,6 +109,7 @@ namespace frmAbout
             label2.Size = new Size(17, 20);
             label2.TabIndex = 4;
             label2.Text = "  ";
+            label2.Visible = false;
             // 
             // label3
             // 
