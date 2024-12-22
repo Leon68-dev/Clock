@@ -4,10 +4,10 @@
 /Clock_cs/obj
 /Clock_cs/.vs
 
-/Clock_csNC/.vs
-/Clock_csNC/Clock_csNC.csproj.user
-/Clock_csNC/bin
-/Clock_csNC/obj
+/Clock_csc/.vs
+/Clock_csc/Clock_csc.csproj.user
+/Clock_csc/bin
+/Clock_csc/obj
 
 /Clock_vc/Debug
 /Clock_vc/_Clock.vcxproj.user

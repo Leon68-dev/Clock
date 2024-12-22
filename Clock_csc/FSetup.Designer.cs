@@ -1,4 +1,4 @@
-namespace Clock
+namespace Clock_csc
 {
     partial class FSetup
     {

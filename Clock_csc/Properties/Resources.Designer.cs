@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Clock.Properties {
+namespace Clock_csc.Properties {
     using System;
     
     

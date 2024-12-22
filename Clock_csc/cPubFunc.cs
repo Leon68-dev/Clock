@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 
-namespace Clock
+namespace Clock_csc
 {
 	/// <summary>
 	/// Summary description for cUbFunc.

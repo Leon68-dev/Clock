@@ -4,7 +4,7 @@ using System.Collections;
 using System.ComponentModel;
 using System.Windows.Forms;
 
-namespace Clock
+namespace Clock_csc
 {
 	/// <summary>
 	/// Summary description for Form2.

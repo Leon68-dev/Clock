@@ -5,7 +5,7 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using System.Data; 
 
-namespace Clock
+namespace Clock_csc
 {
 	/// <summary>
 	/// Summary description for FShotDown.

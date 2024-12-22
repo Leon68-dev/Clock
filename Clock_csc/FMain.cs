@@ -4,7 +4,7 @@ using System.Windows.Forms;
 using System.Data;
 using System.IO;
 
-namespace Clock
+namespace Clock_csc
 {
 	/// <summary>
 	/// Summary description for Form1.
