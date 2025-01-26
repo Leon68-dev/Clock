@@ -20,10 +20,12 @@ namespace frmAbout
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
         private Label lblCopyright;
-		/// <summary>
-		/// Required designer variable.
-		/// </summary>
-		private System.ComponentModel.Container components = null;
+        private PictureBox pictureBox1;
+
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
+        private System.ComponentModel.Container components = null;
 
 		public FAbout()
 		{
@@ -59,21 +61,25 @@ namespace frmAbout
         /// </summary>
         private void InitializeComponent()
         {
+            ComponentResourceManager resources = new ComponentResourceManager(typeof(FAbout));
             button1 = new Button();
             label1 = new Label();
             groupBox1 = new GroupBox();
             label2 = new Label();
             label3 = new Label();
             lblCopyright = new Label();
+            pictureBox1 = new PictureBox();
+            groupBox1.SuspendLayout();
+            ((ISupportInitialize)pictureBox1).BeginInit();
             SuspendLayout();
             // 
             // button1
             // 
             button1.FlatStyle = FlatStyle.System;
             button1.ImeMode = ImeMode.NoControl;
-            button1.Location = new Point(353, 77);
+            button1.Location = new Point(370, 9);
             button1.Name = "button1";
-            button1.Size = new Size(73, 38);
+            button1.Size = new Size(73, 37);
             button1.TabIndex = 0;
             button1.Text = "&Ok";
             button1.Click += button1_Click;
@@ -83,7 +89,7 @@ namespace frmAbout
             label1.AutoSize = true;
             label1.FlatStyle = FlatStyle.System;
             label1.ImeMode = ImeMode.NoControl;
-            label1.Location = new Point(11, 2);
+            label1.Location = new Point(135, 54);
             label1.Name = "label1";
             label1.Size = new Size(57, 20);
             label1.TabIndex = 2;
@@ -92,10 +98,12 @@ namespace frmAbout
             // 
             // groupBox1
             // 
+            groupBox1.Controls.Add(label2);
+            groupBox1.Controls.Add(label3);
             groupBox1.FlatStyle = FlatStyle.System;
-            groupBox1.Location = new Point(6, 50);
+            groupBox1.Location = new Point(6, 100);
             groupBox1.Name = "groupBox1";
-            groupBox1.Size = new Size(420, 13);
+            groupBox1.Size = new Size(437, 77);
             groupBox1.TabIndex = 3;
             groupBox1.TabStop = false;
             // 
@@ -104,19 +112,18 @@ namespace frmAbout
             label2.AutoSize = true;
             label2.FlatStyle = FlatStyle.System;
             label2.ImeMode = ImeMode.NoControl;
-            label2.Location = new Point(11, 69);
+            label2.Location = new Point(9, 19);
             label2.Name = "label2";
             label2.Size = new Size(17, 20);
             label2.TabIndex = 4;
             label2.Text = "  ";
-            label2.Visible = false;
             // 
             // label3
             // 
             label3.AutoSize = true;
             label3.FlatStyle = FlatStyle.System;
             label3.ImeMode = ImeMode.NoControl;
-            label3.Location = new Point(11, 93);
+            label3.Location = new Point(9, 46);
             label3.Name = "label3";
             label3.Size = new Size(17, 20);
             label3.TabIndex = 5;
@@ -127,19 +134,27 @@ namespace frmAbout
             lblCopyright.AutoSize = true;
             lblCopyright.FlatStyle = FlatStyle.System;
             lblCopyright.ImeMode = ImeMode.NoControl;
-            lblCopyright.Location = new Point(11, 26);
+            lblCopyright.Location = new Point(134, 80);
             lblCopyright.Name = "lblCopyright";
             lblCopyright.Size = new Size(173, 20);
             lblCopyright.TabIndex = 7;
             lblCopyright.Text = "Copyright (C) 2004-20XX";
             // 
+            // pictureBox1
+            // 
+            pictureBox1.Image = (Image)resources.GetObject("pictureBox1.Image");
+            pictureBox1.Location = new Point(6, 9);
+            pictureBox1.Name = "pictureBox1";
+            pictureBox1.Size = new Size(121, 89);
+            pictureBox1.TabIndex = 8;
+            pictureBox1.TabStop = false;
+            // 
             // FAbout
             // 
             AcceptButton = button1;
             AutoScaleBaseSize = new Size(7, 20);
-            ClientSize = new Size(436, 122);
-            Controls.Add(label3);
-            Controls.Add(label2);
+            ClientSize = new Size(453, 186);
+            Controls.Add(pictureBox1);
             Controls.Add(groupBox1);
             Controls.Add(label1);
             Controls.Add(button1);
@@ -151,6 +166,9 @@ namespace frmAbout
             StartPosition = FormStartPosition.CenterScreen;
             Text = "About";
             Load += Form3_Load;
+            groupBox1.ResumeLayout(false);
+            groupBox1.PerformLayout();
+            ((ISupportInitialize)pictureBox1).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -176,28 +194,33 @@ namespace frmAbout
 
 
             label1.Text = "Clock Version " + Application.ProductVersion;
-
-            //ManagementObjectSearcher s = new ManagementObjectSearcher("SELECT Caption, Version, ServicePackMajorVersion, TotalVisibleMemorySize FROM Win32_OperatingSystem");
-
-            //string winver = null;
-            //string winmem = null;
-            //int valmem = 0;
-            //foreach (ManagementObject m in s.Get())
-            //{
-            //    winver = m["Caption"].ToString() + " (" + m["Version"].ToString();
-            //    winver += " Service Pack " + m["ServicePackMajorVersion"].ToString() + ")";
-
-            //    valmem = Convert.ToInt32(m["TotalVisibleMemorySize"].ToString());
-            //    winmem = "Physical memory available: " + valmem.ToString("### ### ### ###") + " KB";
-
-            //}
-
-            //label2.Text = winver;
-            //label3.Text = winmem;
-
-            label2.Text = getOSInfo();
-
             this.lblCopyright.Text = $"Copyright (C) 2004-{DateTime.Now.Year}";
+            
+            var os = Environment.OSVersion.ToString();
+            if(os.Contains("Windows"))
+            {
+                ManagementObjectSearcher s = new ManagementObjectSearcher("SELECT Caption, Version, ServicePackMajorVersion, TotalVisibleMemorySize FROM Win32_OperatingSystem");
+
+                string winver = null;
+                string winmem = null;
+                int valmem = 0;
+                foreach (ManagementObject m in s.Get())
+                {
+                    winver = m["Caption"].ToString() + " (" + m["Version"].ToString();
+                    if (m["ServicePackMajorVersion"].ToString() != "0")
+                        winver += " Service Pack " + m["ServicePackMajorVersion"].ToString() + ")";
+                    winver += ")";
+
+                    valmem = Convert.ToInt32(m["TotalVisibleMemorySize"].ToString());
+                    winmem = "Physical memory available: " + valmem.ToString("### ### ### ###") + " KB";
+                }
+
+                label2.Text = winver;
+                label3.Text = winmem;
+
+                //label2.Text = getOSInfo();
+            }
+
         }
 
         private string getOSInfo()
