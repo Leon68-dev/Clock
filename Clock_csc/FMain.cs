@@ -438,12 +438,12 @@ namespace Clock_csc
             // 
             AutoScaleBaseSize = new Size(7, 20);
             BackColor = Color.OldLace;
-            ClientSize = new Size(148, 158);
+            ClientSize = new Size(148, 148);
             ContextMenuStrip = contextMenuFMain;
             DoubleBuffered = true;
             FormBorderStyle = FormBorderStyle.None;
             Icon = (Icon)resources.GetObject("$this.Icon");
-            MinimumSize = new Size(148, 158);
+            MinimumSize = new Size(148, 148);
             Name = "FMain";
             ShowInTaskbar = false;
             StartPosition = FormStartPosition.Manual;
