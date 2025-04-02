@@ -306,13 +306,14 @@ namespace Clock_csc_v2
             try
             {
                 System.IntPtr resHandle = System.IntPtr.Zero;
+                
                 if(File.Exists(soundFileName))
                     r = PlaySound(soundFileName, resHandle, 0);
             }
             catch (Exception ex) 
             {
-                Console.WriteLine(ex.Message);
-                Console.WriteLine(ex.StackTrace);
+                Debug.WriteLine(ex.Message);
+                Debug.WriteLine(ex.StackTrace);
             }
 
             return r;

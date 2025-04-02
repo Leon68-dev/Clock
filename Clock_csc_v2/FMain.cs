@@ -1,4 +1,5 @@
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Media;
 
@@ -134,7 +135,6 @@ namespace Clock_csc_v2
 
             mCurDateTime = getCurTime(mChkGMT);
 
-            // Set to 1 second.
             timer1.Interval = mIntervalRefr;
             // Enable timer.
             timer1.Enabled = true;
@@ -528,12 +528,15 @@ namespace Clock_csc_v2
 
             setShutdown(this.mIsShutDown, this.mIsSleep);
 
-            if (++mClcTick > mMaxCountTick)
-            {
-                mClcTick = 0;
+            //if (++mClcTick > mMaxCountTick)
+            //{
+            //    mClcTick = 0;
+            //    GC.Collect();
+            //}
+
+            if (mCurDateTime.Minute == 8 && mCurDateTime.Second == 48)
                 GC.Collect();
-            }
-            
+
             this.Refresh();
 
             if (mChkSound) 
@@ -559,12 +562,9 @@ namespace Clock_csc_v2
                 {
                     playSound(cPubFunc.getFileNameWav("_30.wav"));
                 }
-                else
+                else if (mCurDateTime.Second % 2 == 0)
                 {
-                    if(mCurDateTime.Second % 2 == 0)
-                        playSound(cPubFunc.getFileNameWav("_TickTack.wav"));
-                    else
-                        stopSound();
+                    playSoundTickTack(cPubFunc.getFileNameWav("_TickTack.wav"));
                 }
             }
             else 
@@ -572,9 +572,34 @@ namespace Clock_csc_v2
                 stopSound();
             }
         }
-        
 
-        void playSound(string filename)
+        private bool _isRuning = false;
+        private void playSoundTickTack(string filename)
+        {
+            Debug.WriteLine($"  run: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}");
+
+            if (string.IsNullOrEmpty(filename))
+                return;
+
+            if (!_isRuning && mChkSound)
+            {
+                _isRuning = true;
+                cts = new CancellationTokenSource(); // Reset the token
+                Task.Run(() =>
+                {
+                    if (!cts.Token.IsCancellationRequested)
+                    {
+                        cPubFunc.playSound(filename);
+                        Debug.WriteLine($"sound: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}");
+                    }
+                    _isRuning = false;
+
+                    playSoundTickTack(filename);
+                }, cts.Token);
+            }            
+        }
+
+        private void playSound(string filename)
         {
             if(string.IsNullOrEmpty(filename))
                 return;
@@ -587,7 +612,7 @@ namespace Clock_csc_v2
             }, cts.Token);
         }
 
-        void stopSound()
+        private void stopSound()
         {
             cts.Cancel(); // Signals cancellation
         }
