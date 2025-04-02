@@ -1,16 +1,17 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Clock
+namespace Clock_cs_v2
 {
     public partial class FSetup : Form
     {
-        
         public bool mChkGMT = false;
         public bool mChkDate = true;
         public bool mChkDay = true;
@@ -21,23 +22,22 @@ namespace Clock
         public int mValOpacity = 100;
         public int mClose = -1;
         public bool mChkSound = false;
-        
+
         public FSetup()
         {
             InitializeComponent();
         }
 
-
         public void initialization(
-            bool ChkGMT,
-            bool ChkDate,
-            bool ChkDay,
-            bool ChkMoving,
-            bool ChkAlwaysOnTop,
-            bool ChkTransparent,
-            bool ChkBorder,
-            bool ChkSound,
-            int ValOpacity)
+    bool ChkGMT,
+    bool ChkDate,
+    bool ChkDay,
+    bool ChkMoving,
+    bool ChkAlwaysOnTop,
+    bool ChkTransparent,
+    bool ChkBorder,
+    bool ChkSound,
+    int ValOpacity)
         {
             this.mChkGMT = ChkGMT;
             this.mChkDate = ChkDate;
@@ -68,7 +68,6 @@ namespace Clock
 
         }
 
-
         private void btnOk_Click(object sender, EventArgs e)
         {
             this.mClose = 1;
@@ -91,7 +90,6 @@ namespace Clock
             this.Close();
         }
 
-
         public void setOpacity(int val)
         {
             mValOpacity = (int)val;
@@ -104,12 +102,10 @@ namespace Clock
         //    return this.trckBarOpacity.Value;
         //}
 
-
         private void trckBarOpacity_ValueChanged(object sender, EventArgs e)
         {
             this.toolTip1.SetToolTip(this.trckBarOpacity, this.trckBarOpacity.Value.ToString());
         }
 
- 
     }
 }

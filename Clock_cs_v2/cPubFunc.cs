@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 
-namespace Clock
+namespace Clock_cs_v2
 {
 	/// <summary>
 	/// Summary description for cUbFunc.
@@ -28,7 +28,7 @@ namespace Clock
 
 		public static string fileNameSet()
 		{
-			return Environment.CurrentDirectory + @"\clock_cs.xml";
+			return Environment.CurrentDirectory + @"\clock_cs_v2.xml";
 		}
 
         public static System.Drawing.Color setColor(bool isBlack)

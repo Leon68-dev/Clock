@@ -1,16 +1,18 @@
-using System;
-using System.Drawing;
-using System.Windows.Forms;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
+using System.Drawing;
 using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
-namespace Clock
+namespace Clock_cs_v2
 {
-	/// <summary>
-	/// Summary description for Form1.
-	/// </summary>
-	public class FMain : System.Windows.Forms.Form
-	{
+    public partial class FMain : Form
+    {
         private Pen pHandHr;
         private Pen pHandMin;
         private Pen pHhandSec;
@@ -39,7 +41,7 @@ namespace Clock
         private bool mChkTransparent = false;
         private bool mChkBorder = true;
         private int mFrmOpacity = 80;
-        private string mTblName = "clock_cs";
+        private string mTblName = "Clock_cs_v2";
         //private int mCalcCountBoom = 20;
         //private Thread thr;
         private bool mChkSound = false;
@@ -49,39 +51,10 @@ namespace Clock
         private int mMaxCountTick = 0;
         private int mIntervalRefr = 1000;
 
-        private System.Windows.Forms.Timer timer1; 
-        private System.ComponentModel.IContainer components;
-		private System.Windows.Forms.NotifyIcon notifyIcon1;
-        private System.Windows.Forms.ContextMenu contextMenu1;
-		private System.Windows.Forms.MenuItem mExit;
-		private System.Windows.Forms.MenuItem menuItem9;
-		private System.Windows.Forms.MenuItem mAbout;
-        private System.Windows.Forms.MenuItem mOpen;
-        private ContextMenuStrip contextMenuFMain;
-        private ToolStripMenuItem cm_hide;
-        private ToolStripMenuItem cm_calendar;
-        private ToolStripMenuItem cm_setShutDownPC;
-        private ToolStripSeparator toolStripSeparator1;
-        private ToolStripMenuItem cm_about;
-        private ToolStripSeparator toolStripSeparator2;
-        private ToolStripMenuItem cm_exit;
-        private ToolStripSeparator toolStripSeparator3;
-        private ToolStripMenuItem cm_Setup;
-        private ToolStripMenuItem cm_StartPosition;
-        private MenuItem mSetup;
-        private MenuItem menuItem1;
-
-		public FMain()
-		{
-			//
-			// Required for Windows Form Designer support
-			//
-			InitializeComponent();
-
-			//
-			// TODO: Add any constructor code after InitializeComponent call
-			//
-		}
+        public FMain()
+        {
+            InitializeComponent();
+        }
 
         public void initialization()
         {
@@ -98,7 +71,7 @@ namespace Clock
             mTimeShutDown = cPubFunc.chkTime();
             //mCountBoom = 0;
             //mTckTck = false;
-            
+
             //string str = Environment.ExpandEnvironmentVariables("%SystemRoot%");
             //cPubFunc.playSound(@str + @"\Media\tada.wav");
 
@@ -212,247 +185,22 @@ namespace Clock
             this.DesktopLocation = tempPoint;
         }
         
-
-		/// <summary>
-		/// Clean up any resources being used.
-		/// </summary>
-		protected override void Dispose( bool disposing )
-		{
-			if( disposing )
-			{
-				if (components != null) 
-				{
-					components.Dispose();
-				}
-			}
-			base.Dispose( disposing );
-		}
-
-
-		#region Windows Form Designer generated code
-		/// <summary>
-		/// Required method for Designer support - do not modify
-		/// the contents of this method with the code editor.
-		/// </summary>
-		private void InitializeComponent()
-		{
-            this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FMain));
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
-            this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
-            this.contextMenu1 = new System.Windows.Forms.ContextMenu();
-            this.mSetup = new System.Windows.Forms.MenuItem();
-            this.mOpen = new System.Windows.Forms.MenuItem();
-            this.menuItem1 = new System.Windows.Forms.MenuItem();
-            this.mAbout = new System.Windows.Forms.MenuItem();
-            this.menuItem9 = new System.Windows.Forms.MenuItem();
-            this.mExit = new System.Windows.Forms.MenuItem();
-            this.contextMenuFMain = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.cm_Setup = new System.Windows.Forms.ToolStripMenuItem();
-            this.cm_hide = new System.Windows.Forms.ToolStripMenuItem();
-            this.cm_StartPosition = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.cm_calendar = new System.Windows.Forms.ToolStripMenuItem();
-            this.cm_setShutDownPC = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.cm_about = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.cm_exit = new System.Windows.Forms.ToolStripMenuItem();
-            this.contextMenuFMain.SuspendLayout();
-            this.SuspendLayout();
-            // 
-            // timer1
-            // 
-            this.timer1.Interval = 1000;
-            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
-            // 
-            // notifyIcon1
-            // 
-            this.notifyIcon1.ContextMenu = this.contextMenu1;
-            this.notifyIcon1.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon1.Icon")));
-            this.notifyIcon1.Text = "Clock (.NET)";
-            this.notifyIcon1.Visible = true;
-            this.notifyIcon1.DoubleClick += new System.EventHandler(this.notifyIcon1_DoubleClick);
-            // 
-            // contextMenu1
-            // 
-            this.contextMenu1.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
-            this.mSetup,
-            this.mOpen,
-            this.menuItem1,
-            this.mAbout,
-            this.menuItem9,
-            this.mExit});
-            // 
-            // mSetup
-            // 
-            this.mSetup.Index = 0;
-            this.mSetup.Text = "Setup...";
-            this.mSetup.Click += new System.EventHandler(this.mSetup_Click);
-            // 
-            // mOpen
-            // 
-            this.mOpen.Index = 1;
-            this.mOpen.Text = "Hide";
-            this.mOpen.Click += new System.EventHandler(this.mCMView_Click);
-            // 
-            // menuItem1
-            // 
-            this.menuItem1.Index = 2;
-            this.menuItem1.Text = "-";
-            // 
-            // mAbout
-            // 
-            this.mAbout.Index = 3;
-            this.mAbout.Text = "About...";
-            this.mAbout.Click += new System.EventHandler(this.menuItem10_Click);
-            // 
-            // menuItem9
-            // 
-            this.menuItem9.Index = 4;
-            this.menuItem9.Text = "-";
-            // 
-            // mExit
-            // 
-            this.mExit.Index = 5;
-            this.mExit.Text = "Exit";
-            this.mExit.Click += new System.EventHandler(this.menuItem8_Click);
-            // 
-            // contextMenuFMain
-            // 
-            this.contextMenuFMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.cm_Setup,
-            this.cm_hide,
-            this.cm_StartPosition,
-            this.toolStripSeparator3,
-            this.cm_calendar,
-            this.cm_setShutDownPC,
-            this.toolStripSeparator1,
-            this.cm_about,
-            this.toolStripSeparator2,
-            this.cm_exit});
-            this.contextMenuFMain.Name = "contextMenuFMain";
-            this.contextMenuFMain.Size = new System.Drawing.Size(185, 198);
-            // 
-            // cm_Setup
-            // 
-            this.cm_Setup.Name = "cm_Setup";
-            this.cm_Setup.Size = new System.Drawing.Size(184, 22);
-            this.cm_Setup.Text = "Setup...";
-            this.cm_Setup.Click += new System.EventHandler(this.cm_Setup_Click);
-            // 
-            // cm_hide
-            // 
-            this.cm_hide.Name = "cm_hide";
-            this.cm_hide.Size = new System.Drawing.Size(184, 22);
-            this.cm_hide.Text = "Hide";
-            this.cm_hide.Click += new System.EventHandler(this.cm_hide_Click);
-            // 
-            // cm_StartPosition
-            // 
-            this.cm_StartPosition.Name = "cm_StartPosition";
-            this.cm_StartPosition.Size = new System.Drawing.Size(184, 22);
-            this.cm_StartPosition.Text = "Start position";
-            this.cm_StartPosition.Click += new System.EventHandler(this.cm_StartPosition_Click);
-            // 
-            // toolStripSeparator3
-            // 
-            this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(181, 6);
-            // 
-            // cm_calendar
-            // 
-            this.cm_calendar.Name = "cm_calendar";
-            this.cm_calendar.Size = new System.Drawing.Size(184, 22);
-            this.cm_calendar.Text = "Calendar...";
-            this.cm_calendar.Click += new System.EventHandler(this.cm_calendar_Click);
-            // 
-            // cm_setShutDownPC
-            // 
-            this.cm_setShutDownPC.Name = "cm_setShutDownPC";
-            this.cm_setShutDownPC.Size = new System.Drawing.Size(184, 22);
-            this.cm_setShutDownPC.Text = "Set Shut Down PC...";
-            this.cm_setShutDownPC.Click += new System.EventHandler(this.cm_setShutDownPC_Click);
-            // 
-            // toolStripSeparator1
-            // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(181, 6);
-            // 
-            // cm_about
-            // 
-            this.cm_about.Name = "cm_about";
-            this.cm_about.Size = new System.Drawing.Size(184, 22);
-            this.cm_about.Text = "About...";
-            this.cm_about.Click += new System.EventHandler(this.cm_about_Click);
-            // 
-            // toolStripSeparator2
-            // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(181, 6);
-            // 
-            // cm_exit
-            // 
-            this.cm_exit.Name = "cm_exit";
-            this.cm_exit.Size = new System.Drawing.Size(184, 22);
-            this.cm_exit.Text = "Exit";
-            this.cm_exit.Click += new System.EventHandler(this.cm_exit_Click);
-            // 
-            // FMain
-            // 
-            this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
-            this.BackColor = System.Drawing.Color.OldLace;
-            this.ClientSize = new System.Drawing.Size(140, 140);
-            this.ContextMenuStrip = this.contextMenuFMain;
-            this.DoubleBuffered = true;
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MinimumSize = new System.Drawing.Size(140, 140);
-            this.Name = "FMain";
-            this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
-            this.Text = "Clock";
-            this.TransparencyKey = System.Drawing.Color.Transparent;
-            this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.FMain_MouseUp);
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FMain_FormClosing);
-            this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.FMain_MouseMove);
-            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.FMain_MouseDown);
-            this.contextMenuFMain.ResumeLayout(false);
-            this.ResumeLayout(false);
-
-		}
-		#endregion
-
-
-		/// <summary>
-		/// The main entry point for the application.
-		/// </summary>
-		[STAThread]
-		static void Main() 
-		{
-			// ��������� ����������� ����������� ������. 
-			Application.EnableVisualStyles();
-		    FMain fm = new FMain();
-            fm.initialization();
-            Application.Run(fm);
-		}
-
-		private void setShutdown(bool isShutDown, bool isSleep)
-		{
+        private void setShutdown(bool isShutDown, bool isSleep)
+        {
             if (isSleep && (mTimeShutDown != cPubFunc.chkTime()) && (DateTime.Now.ToString("hh:mm").Equals(mTimeShutDown.ToString("hh:mm"))))
             {
                 cPubFunc.SetSuspendState(false, true, true);
                 return;
             }
             else if (isShutDown && (mTimeShutDown != cPubFunc.chkTime()) && (DateTime.Now.ToString("hh:mm").Equals(mTimeShutDown.ToString("hh:mm"))))
-            { 	
+            {
                 int flag = cPubFunc.Poweroff;
-                cPubFunc.DoExitWindows(flag); 
-			}
-		}
+                cPubFunc.DoExitWindows(flag);
+            }
+        }
 
-		private void setTimeToTray()
-		{
+        private void setTimeToTray()
+        {
             if (DateTime.Now.Second != 1)
                 return;
 
@@ -463,14 +211,14 @@ namespace Clock
             if (mChkGMT)
                 str += " GMT";
 
-            notifyIcon1.Text = str; 
-		}
+            notifyIcon1.Text = str;
+        }
 
         private void closeForm()
-		{
-			this.Visible = true;
-			Application.Exit();
-		}
+        {
+            this.Visible = true;
+            Application.Exit();
+        }
 
         private void mCMViewClick()
         {
@@ -499,7 +247,6 @@ namespace Clock
         {
             mCMViewClick();
         }
-                        
 
         private void FMain_MouseDown(object sender, MouseEventArgs e)
         {
@@ -511,7 +258,6 @@ namespace Clock
             }
         }
 
-
         private void FMain_MouseMove(object sender, MouseEventArgs e)
         {
             if (mChkMoving && msDown)
@@ -521,12 +267,10 @@ namespace Clock
             }
         }
 
-
         private void FMain_MouseUp(object sender, MouseEventArgs e)
         {
             msDown = false;
         }
-        
 
         private void cm_hide_Click(object sender, EventArgs e)
         {
@@ -534,13 +278,11 @@ namespace Clock
             this.Visible = false;
         }
 
-
         private void cm_calendar_Click(object sender, EventArgs e)
         {
             FCalendar fcld = new FCalendar();
-            fcld.ShowDialog(); 
+            fcld.ShowDialog();
         }
-
 
         private void cm_setShutDownPC_Click(object sender, EventArgs e)
         {
@@ -561,31 +303,26 @@ namespace Clock
             }
         }
 
-
         private void cm_about_Click(object sender, EventArgs e)
         {
-            frmAbout.FAbout fa = new frmAbout.FAbout();
+            FAbout fa = new FAbout();
             fa.ShowDialog();
         }
-
 
         private void cm_exit_Click(object sender, EventArgs e)
         {
             closeForm();
         }
 
-
         private void menuItem8_Click(object sender, EventArgs e)
         {
             cm_exit_Click(sender, e);
         }
 
-
         private void menuItem10_Click(object sender, EventArgs e)
         {
             cm_about_Click(sender, e);
         }
-
 
         protected override void OnPaint(PaintEventArgs e)
         {
@@ -624,8 +361,8 @@ namespace Clock
 
                 if (this.mChkTransparent)
                     e.Graphics.CopyFromScreen(
-                        new Point(this.Left, this.Top), 
-                        new Point(0, 0), 
+                        new Point(this.Left, this.Top),
+                        new Point(0, 0),
                         new Size(new Point(this.ClientSize.Width * 2, this.ClientSize.Height * 2)));
 
                 this.makeFacePain(e);
@@ -710,21 +447,21 @@ namespace Clock
         {
             //�������
             int sz3 = clcSizeRatio(6);
-            pHandHr = new Pen(Color.Black, sz3);         
+            pHandHr = new Pen(Color.Black, sz3);
             int sz = clcSizeRatio(5);
-            pHandMin = new Pen(Color.Black, sz);        
+            pHandMin = new Pen(Color.Black, sz);
             sz = clcSizeRatio(2);
             pHhandSec = new Pen(Color.Red, sz);
 
             Pen pHhandWhite1 = new Pen(this.BackColor, 1);
-            
+
             //�����            
             //�������
             int s = this.mCurDateTime.Second;
             int s2 = this.mCurDateTime.Second + 30;
             int secSize = sizeMin() * 7 / 10;
             int secSize2 = sizeMin() * 1 / 6;
-            
+
             //������
             int m = this.mCurDateTime.Minute;
             int m2 = this.mCurDateTime.Minute + 30;
@@ -836,12 +573,12 @@ namespace Clock
         private void timer1_Tick(object sender, System.EventArgs e)
         {
             mCurDateTime = getCurTime(mChkGMT);
-            
+
             setTimeToTray();
-            
+
             // ��������� ����������
             setShutdown(this.mIsShutDown, this.mIsSleep);
-            
+
             if (++mClcTick > mMaxCountTick)
             {
                 mClcTick = 0;
@@ -850,7 +587,7 @@ namespace Clock
 
             this.Refresh();
         }
-        
+
 
         private void makeStringDraw(PaintEventArgs e)
         {
@@ -882,7 +619,7 @@ namespace Clock
                 if (this.mCurDateTime.DayOfWeek == System.DayOfWeek.Saturday || this.mCurDateTime.DayOfWeek == System.DayOfWeek.Sunday)
                     drawString(e.Graphics, str, ref f, x, y, Brushes.Red);
                 else
-                    drawString(e.Graphics, str, ref f, x, y, Brushes.SaddleBrown);  
+                    drawString(e.Graphics, str, ref f, x, y, Brushes.SaddleBrown);
             }
 
 
@@ -937,7 +674,7 @@ namespace Clock
             return ((int)(Math.Sin((hour * 30 + min / 2) * Math.PI / 180 - Math.PI / 2) * size + yCenter));
         }
 
-        
+
         private DateTime getCurTime(bool isGmt)
         {
             if (isGmt)
@@ -986,11 +723,11 @@ namespace Clock
                 ds.Tables[mTblName].Rows[0]["chkTransparent"] = this.mChkTransparent;
                 ds.Tables[mTblName].Rows[0]["chkBorder"] = this.mChkBorder;
 
-                if(cPubFunc.existsTickTackWav())
+                if (cPubFunc.existsTickTackWav())
                     ds.Tables[mTblName].Rows[0]["chkSound"] = false;
                 else
                     ds.Tables[mTblName].Rows[0]["chkSound"] = this.mChkSound;
-                
+
                 ds.Tables[mTblName].Rows[0]["frmOpacity"] = this.mFrmOpacity;
                 ds.WriteXml(@cPubFunc.fileNameSet());
                 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1027,6 +764,5 @@ namespace Clock
             catch { }
         }
 
-	}
-
+    }
 }

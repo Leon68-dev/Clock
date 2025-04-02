@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34701.34
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clock_cs", "Clock_cs\Clock_cs.csproj", "{55985E28-2DCB-43CE-831B-FF0463EB0E82}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "_Clock", "Clock_vc\_Clock.vcxproj", "{BD196EE4-C3B9-4FAF-8D4A-0F5FAE626A1C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Toolbar", "toolbar\Toolbar.csproj", "{D44DB094-49D1-4BBE-9103-7F1CE75073C1}"
@@ -15,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClockAndToolbar", "ClockAnd
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clock_csc_v2", "Clock_csc_v2\Clock_csc_v2.csproj", "{82D7D548-C438-4015-8D61-E86986139197}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clock_cs_v2", "Clock_cs_v2\Clock_cs_v2.csproj", "{EB64832D-3CF9-4ED1-BB03-5101A2F73666}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,13 +23,6 @@ Global
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{55985E28-2DCB-43CE-831B-FF0463EB0E82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{55985E28-2DCB-43CE-831B-FF0463EB0E82}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{55985E28-2DCB-43CE-831B-FF0463EB0E82}.Debug|Win32.ActiveCfg = Debug|Any CPU
-		{55985E28-2DCB-43CE-831B-FF0463EB0E82}.Debug|Win32.Build.0 = Debug|Any CPU
-		{55985E28-2DCB-43CE-831B-FF0463EB0E82}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{55985E28-2DCB-43CE-831B-FF0463EB0E82}.Release|Any CPU.Build.0 = Release|Any CPU
-		{55985E28-2DCB-43CE-831B-FF0463EB0E82}.Release|Win32.ActiveCfg = Release|Any CPU
 		{BD196EE4-C3B9-4FAF-8D4A-0F5FAE626A1C}.Debug|Any CPU.ActiveCfg = Debug|Win32
 		{BD196EE4-C3B9-4FAF-8D4A-0F5FAE626A1C}.Debug|Win32.ActiveCfg = Debug|Win32
 		{BD196EE4-C3B9-4FAF-8D4A-0F5FAE626A1C}.Debug|Win32.Build.0 = Debug|Win32
@@ -68,6 +61,14 @@ Global
 		{82D7D548-C438-4015-8D61-E86986139197}.Release|Any CPU.Build.0 = Release|Any CPU
 		{82D7D548-C438-4015-8D61-E86986139197}.Release|Win32.ActiveCfg = Release|Any CPU
 		{82D7D548-C438-4015-8D61-E86986139197}.Release|Win32.Build.0 = Release|Any CPU
+		{EB64832D-3CF9-4ED1-BB03-5101A2F73666}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB64832D-3CF9-4ED1-BB03-5101A2F73666}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB64832D-3CF9-4ED1-BB03-5101A2F73666}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{EB64832D-3CF9-4ED1-BB03-5101A2F73666}.Debug|Win32.Build.0 = Debug|Any CPU
+		{EB64832D-3CF9-4ED1-BB03-5101A2F73666}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB64832D-3CF9-4ED1-BB03-5101A2F73666}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB64832D-3CF9-4ED1-BB03-5101A2F73666}.Release|Win32.ActiveCfg = Release|Any CPU
+		{EB64832D-3CF9-4ED1-BB03-5101A2F73666}.Release|Win32.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
