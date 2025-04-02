@@ -1,5 +1,6 @@
-﻿using System.Data;
+using System.Data;
 using System.Drawing;
+using System.Media;
 
 namespace Clock_csc_v2
 {
@@ -21,10 +22,6 @@ namespace Clock_csc_v2
         private DateTime mTimeShutDown;
         private bool mIsShutDown;
         private bool mIsSleep = false;
-        //private int mCountBoom;
-        //private bool mCanBoom;
-        //private bool mTckTck = true;
-        //private bool mCanClose;
         private bool mChkGMT = false;
         private bool mChkDate = true;
         private bool mChkDay = true;
@@ -33,15 +30,13 @@ namespace Clock_csc_v2
         private bool mChkTransparent = false;
         private bool mChkBorder = true;
         private int mFrmOpacity = 80;
-        private string mTblName = "clock_cs";
-        //private int mCalcCountBoom = 20;
-        //private Thread thr;
+        private const string TBL_NAME = "clock_csc_v2";
         private bool mChkSound = false;
-        //private PaintEventArgs mPaintEventArgs = null;
-        //private Color mColorBlackWhite;
         private int mClcTick = 0;
         private int mMaxCountTick = 0;
         private int mIntervalRefr = 1000;
+        private CancellationTokenSource cts = new CancellationTokenSource();
+
         public FMain()
         {
             InitializeComponent();
@@ -60,11 +55,9 @@ namespace Clock_csc_v2
 
             mTimeShutDown = new DateTime();
             mTimeShutDown = cPubFunc.chkTime();
-            //mCountBoom = 0;
-            //mTckTck = false;
 
-            //string str = Environment.ExpandEnvironmentVariables("%SystemRoot%");
-            //cPubFunc.playSound(@str + @"\Media\tada.wav");
+            string str = Environment.ExpandEnvironmentVariables("%SystemRoot%");
+            cPubFunc.playSound(@str + @"\Media\tada.wav");
 
             DataSet ds = new DataSet();
 
@@ -74,24 +67,24 @@ namespace Clock_csc_v2
                 if (File.Exists(filename))
                 {
                     ds.ReadXml(filename);
-                    mTimeShutDown = Convert.ToDateTime(ds.Tables[mTblName].Rows[0]["timeOff"].ToString());
-                    mIsShutDown = System.Convert.ToBoolean(ds.Tables[mTblName].Rows[0]["chkOff"].ToString());
-                    mChkGMT = System.Convert.ToBoolean(ds.Tables[mTblName].Rows[0]["chkGMT"].ToString());
-                    mChkDate = System.Convert.ToBoolean(ds.Tables[mTblName].Rows[0]["chkDate"].ToString());
-                    mChkDay = System.Convert.ToBoolean(ds.Tables[mTblName].Rows[0]["chkDay"].ToString());
-                    mChkMoving = System.Convert.ToBoolean(ds.Tables[mTblName].Rows[0]["chkMoving"].ToString());
-                    mChkTransparent = System.Convert.ToBoolean(ds.Tables[mTblName].Rows[0]["chkTransparent"].ToString());
-                    mChkAlwaysOnTop = System.Convert.ToBoolean(ds.Tables[mTblName].Rows[0]["chkAlwaysOnTop"].ToString());
-                    mChkBorder = System.Convert.ToBoolean(ds.Tables[mTblName].Rows[0]["chkBorder"].ToString());
-                    mChkSound = System.Convert.ToBoolean(ds.Tables[mTblName].Rows[0]["chkSound"].ToString());
-                    mFrmOpacity = System.Convert.ToInt32(ds.Tables[mTblName].Rows[0]["frmOpacity"].ToString());
-                    mDeskX = System.Convert.ToInt32(ds.Tables[mTblName].Rows[0]["deskX"].ToString());
-                    mDeskY = System.Convert.ToInt32(ds.Tables[mTblName].Rows[0]["deskY"].ToString());
-                    mIntervalRefr = System.Convert.ToInt32(ds.Tables[mTblName].Rows[0]["intervalRefr"].ToString());
+                    mTimeShutDown = Convert.ToDateTime(ds.Tables[TBL_NAME].Rows[0]["timeOff"].ToString());
+                    mIsShutDown = System.Convert.ToBoolean(ds.Tables[TBL_NAME].Rows[0]["chkOff"].ToString());
+                    mChkGMT = System.Convert.ToBoolean(ds.Tables[TBL_NAME].Rows[0]["chkGMT"].ToString());
+                    mChkDate = System.Convert.ToBoolean(ds.Tables[TBL_NAME].Rows[0]["chkDate"].ToString());
+                    mChkDay = System.Convert.ToBoolean(ds.Tables[TBL_NAME].Rows[0]["chkDay"].ToString());
+                    mChkMoving = System.Convert.ToBoolean(ds.Tables[TBL_NAME].Rows[0]["chkMoving"].ToString());
+                    mChkTransparent = System.Convert.ToBoolean(ds.Tables[TBL_NAME].Rows[0]["chkTransparent"].ToString());
+                    mChkAlwaysOnTop = System.Convert.ToBoolean(ds.Tables[TBL_NAME].Rows[0]["chkAlwaysOnTop"].ToString());
+                    mChkBorder = System.Convert.ToBoolean(ds.Tables[TBL_NAME].Rows[0]["chkBorder"].ToString());
+                    mChkSound = System.Convert.ToBoolean(ds.Tables[TBL_NAME].Rows[0]["chkSound"].ToString());
+                    mFrmOpacity = System.Convert.ToInt32(ds.Tables[TBL_NAME].Rows[0]["frmOpacity"].ToString());
+                    mDeskX = System.Convert.ToInt32(ds.Tables[TBL_NAME].Rows[0]["deskX"].ToString());
+                    mDeskY = System.Convert.ToInt32(ds.Tables[TBL_NAME].Rows[0]["deskY"].ToString());
+                    mIntervalRefr = System.Convert.ToInt32(ds.Tables[TBL_NAME].Rows[0]["intervalRefr"].ToString());
                 }
                 else
                 {
-                    DataTable table = new DataTable(mTblName);
+                    DataTable table = new DataTable(TBL_NAME);
 
                     table.Columns.Add("timeOff", typeof(DateTime));
                     table.Columns.Add("chkOff", typeof(bool));
@@ -109,7 +102,7 @@ namespace Clock_csc_v2
                     table.Columns.Add("intervalRefr", typeof(int));
                     ds.Tables.Add(table);
 
-                    DataRow dr = ds.Tables[mTblName].NewRow();
+                    DataRow dr = ds.Tables[TBL_NAME].NewRow();
                     dr["timeOff"] = cPubFunc.chkTime();
                     dr["chkOff"] = false;
                     dr["chkGMT"] = mChkGMT;
@@ -124,7 +117,7 @@ namespace Clock_csc_v2
                     dr["deskX"] = mDeskX;
                     dr["deskY"] = mDeskY;
                     dr["intervalRefr"] = mIntervalRefr;
-                    ds.Tables[mTblName].Rows.Add(dr);
+                    ds.Tables[TBL_NAME].Rows.Add(dr);
 
                     ds.WriteXml(@cPubFunc.fileNameSet());
                 }
@@ -134,21 +127,14 @@ namespace Clock_csc_v2
                 throw;
             }
 
-            //mCanClose = false;
-            //this.Opacity = mFrmOpacity / 100;
-
             mSizeDefault = 140;                 
-            
 
             mXCenter = this.ClientSize.Width / 2;
             mYCenter = this.ClientSize.Height / 2;
 
             mCurDateTime = getCurTime(mChkGMT);
 
-            //mColorBlackWhite = cPubFunc.setColor(mChkIsTransparent);
-
             // Set to 1 second.
-            //timer1.Interval = 1000;
             timer1.Interval = mIntervalRefr;
             // Enable timer.
             timer1.Enabled = true;
@@ -162,7 +148,6 @@ namespace Clock_csc_v2
             this.DesktopLocation = new Point(this.mDeskX, this.mDeskY);
 
             this.TopMost = this.mChkAlwaysOnTop;
-
         }
 
         private DateTime getCurTime(bool isGmt)
@@ -222,7 +207,6 @@ namespace Clock_csc_v2
         {
             if (this.Visible == true && mTypeActivate == 1)
             {
-                //mOpen.Text = "Hide";
                 m_Open.Text = "Hide";
                 cm_hide.Text = "Hide";
                 this.Visible = true;
@@ -230,14 +214,12 @@ namespace Clock_csc_v2
             }
             else if (this.Visible == true)
             {
-                //mOpen.Text = "Open";
                 m_Open.Text = "Open";
                 cm_hide.Text = "Open";
                 this.Visible = false;
             }
             else
             {
-                //mOpen.Text = "Hide";
                 m_Open.Text = "Hide";
                 cm_hide.Text = "Hide";
                 this.Visible = true;
@@ -249,7 +231,6 @@ namespace Clock_csc_v2
             mCMViewClick();
         }
 
-
         private void FMain_MouseDown(object sender, MouseEventArgs e)
         {
             if (mChkMoving)
@@ -260,7 +241,6 @@ namespace Clock_csc_v2
             }
         }
 
-
         private void FMain_MouseMove(object sender, MouseEventArgs e)
         {
             if (mChkMoving && msDown)
@@ -270,20 +250,16 @@ namespace Clock_csc_v2
             }
         }
 
-
         private void FMain_MouseUp(object sender, MouseEventArgs e)
         {
             msDown = false;
         }
 
-
         private void cm_hide_Click(object sender, EventArgs e)
         {
-            //mOpen.Text = "Open";
             m_Open.Text = "Open";
             this.Visible = false;
         }
-
         private void cm_calendar_Click(object sender, EventArgs e)
         {
             FCalendar fcld = new FCalendar();
@@ -330,7 +306,6 @@ namespace Clock_csc_v2
             cm_about_Click(sender, e);
         }
 
-
         protected override void OnPaint(PaintEventArgs e)
         {
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
@@ -343,9 +318,7 @@ namespace Clock_csc_v2
             int x_end = (this.ClientSize.Width) - this.ClientSize.Width / 5;
             int y_end = (this.ClientSize.Width) - this.ClientSize.Height / 5;
 
-            // ������� ������ GraphicsPath.
             System.Drawing.Drawing2D.GraphicsPath gp = new System.Drawing.Drawing2D.GraphicsPath();
-            // ���������� ��� �����.
 
             int delta = 0;
             if (this.mChkBorder)
@@ -353,17 +326,12 @@ namespace Clock_csc_v2
 
             gp.AddEllipse(x_beg - delta, y_beg - delta, x_end + delta * 2, y_end + delta * 2);
 
-            // ������� ������ �� ������ ���������� GraphicsPath.
             Region r = new Region(gp);
-            // ����������� ��������� ������
-            // ������� ������ ����.
             this.Region = r;
 
             try
             {
-                //// ������� ������� ���������� ������� ������ � �� �� ������� �� �����...
                 //e.Graphics.CopyFromScreen(new Point(5, 5), new Point(5, 5), new Size(new Point(1000, 20)));
-                //// ����� ������ �������������� ������
                 //e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(100, Color.Black)), new Rectangle(new Point(5, 5), new Size(new Point(1000, 20))));
 
                 if (this.mChkTransparent)
@@ -399,7 +367,6 @@ namespace Clock_csc_v2
             catch { }
         }
 
-
         public void drawCircleFloat(PaintEventArgs e, ref Pen penCircle, float x, float y, float width, float height)
         {
             float startAngle = 0.0F;
@@ -407,18 +374,15 @@ namespace Clock_csc_v2
             e.Graphics.DrawArc(penCircle, x, y, width, height, startAngle, sweepAngle);
         }
 
-
         public void drawLineFloat(PaintEventArgs e, ref Pen penLine, float x_beg, float y_beg, float x_end, float y_end)
         {
             e.Graphics.DrawLine(penLine, x_beg, y_beg, x_end, y_end);
         }
 
-
         private void drawString(Graphics g, string s, ref Font f, int x, int y, Brush brush)
         {
             g.DrawString(s, f, brush, x, y);
         }
-
 
         private int clcSizeRatio(int defaultSize)
         {
@@ -428,14 +392,12 @@ namespace Clock_csc_v2
             else
                 clc = this.ClientSize.Height;
 
-
             clc = (clc * defaultSize / mSizeDefault);
             if (clc <= 0)
                 clc = 1;
 
             return clc;
         }
-
 
         private int sizeMin()
         {
@@ -445,14 +407,8 @@ namespace Clock_csc_v2
                 return (this.ClientSize.Height / 2);
         }
 
-
-        /// <summary>
-        /// ��������� ������� �����.
-        /// </summary>
-        /// <param name="e"></param>
         private void makeHandsPain(PaintEventArgs e)
         {
-            //�������
             int sz3 = clcSizeRatio(6);
             pHandHr = new Pen(Color.Black, sz3);
             int sz = clcSizeRatio(5);
@@ -462,20 +418,16 @@ namespace Clock_csc_v2
 
             Pen pHhandWhite1 = new Pen(this.BackColor, 1);
 
-            //�����            
-            //�������
             int s = this.mCurDateTime.Second;
             int s2 = this.mCurDateTime.Second + 30;
             int secSize = sizeMin() * 7 / 10;
             int secSize2 = sizeMin() * 1 / 6;
 
-            //������
             int m = this.mCurDateTime.Minute;
             int m2 = this.mCurDateTime.Minute + 30;
             int minSize = sizeMin() * 3 / 5;
             int minSize2 = sizeMin() * 1 / 8;
 
-            //����
             int h = this.mCurDateTime.Hour;
             int h2 = this.mCurDateTime.Hour + 30;
             int horSize = sizeMin() * 2 / 5;
@@ -518,11 +470,6 @@ namespace Clock_csc_v2
             drawCircleFloat(e, ref pHhandSec, mXCenter - (sz / 2), mYCenter - (sz / 2), sz, sz);
         }
 
-
-        /// <summary>
-        /// ��������� ����������
-        /// </summary>
-        /// <param name="e"></param>
         private void makeFacePain(PaintEventArgs e)
         {
             for (int i = 0; i < 60; i++)
@@ -549,7 +496,6 @@ namespace Clock_csc_v2
             }
         }
 
-
         private void makeFacePain(PaintEventArgs e, int min, int size, int clc_ch, int clc_zh)
         {
             int clc = sizeMin() * clc_ch / clc_zh;
@@ -559,7 +505,6 @@ namespace Clock_csc_v2
             int y = clcY(min, clc, mYCenter);
             drawCircleFloat(e, ref pHandMin, x - (sz / 2), y - (sz / 2), sz, sz);
         }
-
 
         private void makeFacePain(PaintEventArgs e, int min, int size, int line, int clc_ch, int clc_zh)
         {
@@ -575,14 +520,12 @@ namespace Clock_csc_v2
             drawLineFloat(e, ref pHandMin, x_beg, y_beg, x_end, y_end);
         }
 
-
         private void timer1_Tick(object sender, System.EventArgs e)
         {
             mCurDateTime = getCurTime(mChkGMT);
 
             setTimeToTray();
 
-            // ��������� ����������
             setShutdown(this.mIsShutDown, this.mIsSleep);
 
             if (++mClcTick > mMaxCountTick)
@@ -590,10 +533,64 @@ namespace Clock_csc_v2
                 mClcTick = 0;
                 GC.Collect();
             }
-
+            
             this.Refresh();
+
+            if (mChkSound) 
+            {
+                if (mCurDateTime.Minute == 0 && mCurDateTime.Second == 0)
+                {
+                    int hours = mCurDateTime.Hour;
+                    
+                    if (hours > 12)
+                        hours -= 12;
+
+                    if(hours == 0)
+                        hours = 12;
+
+                    for (int i = 0; i < hours; i++)
+                        playSound(cPubFunc.getFileNameWav("_Boom.wav"));
+                }
+                else if ((mCurDateTime.Minute == 15 || mCurDateTime.Minute == 45) && mCurDateTime.Second == 0)
+                {
+                    playSound(cPubFunc.getFileNameWav("_15.wav"));
+                }
+                else if (mCurDateTime.Minute == 30 && mCurDateTime.Second == 0)
+                {
+                    playSound(cPubFunc.getFileNameWav("_30.wav"));
+                }
+                else
+                {
+                    if(mCurDateTime.Second % 2 == 0)
+                        playSound(cPubFunc.getFileNameWav("_TickTack.wav"));
+                    else
+                        stopSound();
+                }
+            }
+            else 
+            {
+                stopSound();
+            }
+        }
+        
+
+        void playSound(string filename)
+        {
+            if(string.IsNullOrEmpty(filename))
+                return;
+
+            cts = new CancellationTokenSource(); // Reset the token
+            Task.Run(() =>
+            {
+                if (!cts.Token.IsCancellationRequested)
+                    cPubFunc.playSound(filename);
+            }, cts.Token);
         }
 
+        void stopSound()
+        {
+            cts.Cancel(); // Signals cancellation
+        }
 
         private void makeStringDraw(PaintEventArgs e)
         {
@@ -610,10 +607,8 @@ namespace Clock_csc_v2
             x -= (int)stringSize.Width / 2;
             drawString(e.Graphics, str, ref f, x, y, Brushes.LightCoral);
 
-
             if (mChkDay)
             {
-                //���� ������
                 str = this.mCurDateTime.DayOfWeek.ToString();
                 f = new Font(Font.FontFamily, clcSizeRatio(6), FontStyle.Bold);
                 stringSize = e.Graphics.MeasureString(str, f);
@@ -628,10 +623,8 @@ namespace Clock_csc_v2
                     drawString(e.Graphics, str, ref f, x, y, Brushes.SaddleBrown);
             }
 
-
             if (mChkDate)
             {
-                //����
                 str = this.mCurDateTime.ToShortDateString();
                 f = new Font(Font.FontFamily, clcSizeRatio(6), FontStyle.Bold);
                 stringSize = e.Graphics.MeasureString(str, f);
@@ -641,7 +634,6 @@ namespace Clock_csc_v2
                 x -= (int)stringSize.Width / 2;
                 drawString(e.Graphics, str, ref f, x, y, Brushes.SteelBlue);
             }
-
 
             if (mChkGMT)
             {
@@ -656,24 +648,20 @@ namespace Clock_csc_v2
             }
         }
 
-
         private int clcX(int sec, int size, int xCenter)
         {
             return ((int)(Math.Cos(sec * Math.PI / 30 - Math.PI / 2) * size + xCenter));
         }
-
 
         private int clcY(int sec, int size, int yCenter)
         {
             return ((int)(Math.Sin(sec * Math.PI / 30 - Math.PI / 2) * size + yCenter));
         }
 
-
         private int clcX(int hour, int min, int size, int xCenter)
         {
             return ((int)(Math.Cos((hour * 30 + min / 2) * Math.PI / 180 - Math.PI / 2) * size + xCenter));
         }
-
 
         private int clcY(int hour, int min, int size, int yCenter)
         {
@@ -710,20 +698,15 @@ namespace Clock_csc_v2
                 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 DataSet ds = new DataSet();
                 ds.ReadXml(@cPubFunc.fileNameSet());
-                ds.Tables[mTblName].Rows[0]["chkGMT"] = this.mChkGMT;
-                ds.Tables[mTblName].Rows[0]["chkDate"] = this.mChkDate;
-                ds.Tables[mTblName].Rows[0]["chkDay"] = this.mChkDay;
-                ds.Tables[mTblName].Rows[0]["chkMoving"] = this.mChkMoving;
-                ds.Tables[mTblName].Rows[0]["chkAlwaysOnTop"] = this.mChkAlwaysOnTop;
-                ds.Tables[mTblName].Rows[0]["chkTransparent"] = this.mChkTransparent;
-                ds.Tables[mTblName].Rows[0]["chkBorder"] = this.mChkBorder;
-
-                if (cPubFunc.existsTickTackWav())
-                    ds.Tables[mTblName].Rows[0]["chkSound"] = false;
-                else
-                    ds.Tables[mTblName].Rows[0]["chkSound"] = this.mChkSound;
-
-                ds.Tables[mTblName].Rows[0]["frmOpacity"] = this.mFrmOpacity;
+                ds.Tables[TBL_NAME].Rows[0]["chkGMT"] = this.mChkGMT;
+                ds.Tables[TBL_NAME].Rows[0]["chkDate"] = this.mChkDate;
+                ds.Tables[TBL_NAME].Rows[0]["chkDay"] = this.mChkDay;
+                ds.Tables[TBL_NAME].Rows[0]["chkMoving"] = this.mChkMoving;
+                ds.Tables[TBL_NAME].Rows[0]["chkAlwaysOnTop"] = this.mChkAlwaysOnTop;
+                ds.Tables[TBL_NAME].Rows[0]["chkTransparent"] = this.mChkTransparent;
+                ds.Tables[TBL_NAME].Rows[0]["chkBorder"] = this.mChkBorder;
+                ds.Tables[TBL_NAME].Rows[0]["chkSound"] = this.mChkSound;
+                ds.Tables[TBL_NAME].Rows[0]["frmOpacity"] = this.mFrmOpacity;
                 ds.WriteXml(@cPubFunc.fileNameSet());
                 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             }
@@ -752,8 +735,8 @@ namespace Clock_csc_v2
             {
                 DataSet ds = new DataSet();
                 ds.ReadXml(@cPubFunc.fileNameSet());
-                ds.Tables[mTblName].Rows[0]["deskX"] = this.Left;
-                ds.Tables[mTblName].Rows[0]["deskY"] = this.Top;
+                ds.Tables[TBL_NAME].Rows[0]["deskX"] = this.Left;
+                ds.Tables[TBL_NAME].Rows[0]["deskY"] = this.Top;
                 ds.WriteXml(@cPubFunc.fileNameSet());
             }
             catch { }

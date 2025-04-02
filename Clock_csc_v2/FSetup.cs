@@ -56,15 +56,8 @@ namespace Clock_csc_v2
             this.chkTransparent.Checked = this.mChkTransparent;
             this.chkBorder.Checked = this.mChkBorder;
             this.chkSound.Checked = this.mChkSound;
+            
             setOpacity(ValOpacity);
-
-            if (!cPubFunc.existsTickTackWav())
-            {
-                this.chkSound.Checked = false;
-                this.chkSound.Enabled = false;
-            }
-            else
-                this.chkSound.Enabled = true;
 
         }
 
@@ -82,14 +75,9 @@ namespace Clock_csc_v2
             this.mChkTransparent = this.chkTransparent.Checked;
             this.mChkBorder = this.chkBorder.Checked;
             this.mValOpacity = this.trckBarOpacity.Value;
-
-            if (!cPubFunc.existsTickTackWav())
-                this.mChkSound = false;
-            else
-                this.mChkSound = this.chkSound.Checked;
+            this.mChkSound = this.chkSound.Checked;
 
             this.Close();
-
         }
 
         public void setOpacity(int val)

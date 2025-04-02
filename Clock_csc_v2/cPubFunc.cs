@@ -19,17 +19,20 @@ namespace Clock_csc_v2
 			//
 		}
 
-
 		public static DateTime chkTime()
 		{
 			return (new DateTime(1900, 1, 1, 0, 0, 0));
 		}
 
-
 		public static string fileNameSet()
 		{
 			return Environment.CurrentDirectory + @"\clock_csc_v2.xml";
 		}
+
+        public static string getFileNameWav(string fileName)
+        {
+            return $"{Environment.CurrentDirectory}\\{fileName}";
+        }
 
         public static System.Drawing.Color setColor(bool isBlack)
         {
@@ -39,10 +42,9 @@ namespace Clock_csc_v2
                 return System.Drawing.Color.WhiteSmoke;
         }
 
-
-        public static bool existsTickTackWav()
+        public static bool existsWav(string filename)
         { 
-            System.IO.FileInfo fTt = new System.IO.FileInfo("TickTack.wav");
+            System.IO.FileInfo fTt = new System.IO.FileInfo(filename);
             return fTt.Exists;
         }
 
@@ -278,10 +280,10 @@ namespace Clock_csc_v2
 
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-        #region Звуки
+        #region Sound
 
         /// <summary>
-        /// Проигрывание звуковоко файла (winapi32)
+        /// Play sound file (winapi32)
         /// </summary>
         /// <param name="pszSound"></param>
         /// <param name="hmod"></param>
@@ -291,24 +293,33 @@ namespace Clock_csc_v2
         public static extern bool PlaySound(
             string pszSound,
             IntPtr hmod,
-            int fdwSound
-            );
+            int fdwSound);
 
         /// <summary>
-        /// Проигрывание звуковоко файла
+        /// Play sound file
         /// </summary>
         /// <param name="soundFileName"></param>
         /// <returns></returns>
         public static bool playSound(string soundFileName)
         {
-            bool r;
-            System.IntPtr resHandle = System.IntPtr.Zero;
-            r = PlaySound(soundFileName, resHandle, 0);
+            bool r = false;
+            try
+            {
+                System.IntPtr resHandle = System.IntPtr.Zero;
+                if(File.Exists(soundFileName))
+                    r = PlaySound(soundFileName, resHandle, 0);
+            }
+            catch (Exception ex) 
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+            }
+
             return r;
         }
 
 
-        #endregion Звуки
+        #endregion Sound
 
 
     }
