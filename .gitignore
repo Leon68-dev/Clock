@@ -30,3 +30,6 @@
 /Clock_csc_v2/Clock_csc_v2.csproj.user
 /Clock_csc_v2/bin
 /Clock_csc_v2/obj
+
+/x64
+/Clock_vc_mfc/x64

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34701.34
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "_Clock", "Clock_vc\_Clock.vcxproj", "{BD196EE4-C3B9-4FAF-8D4A-0F5FAE626A1C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Clock_vc", "Clock_vc\_Clock.vcxproj", "{BD196EE4-C3B9-4FAF-8D4A-0F5FAE626A1C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Toolbar", "toolbar\Toolbar.csproj", "{D44DB094-49D1-4BBE-9103-7F1CE75073C1}"
 EndProject
@@ -14,6 +14,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clock_csc_v2", "Clock_csc_v2\Clock_csc_v2.csproj", "{82D7D548-C438-4015-8D61-E86986139197}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clock_cs_v2", "Clock_cs_v2\Clock_cs_v2.csproj", "{EB64832D-3CF9-4ED1-BB03-5101A2F73666}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Clock_vc_mfc", "Clock_vc_mfc\Clock_vc_mfc.vcxproj", "{2C7BD553-A8D4-80D6-2E88-64BCC363D48F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,8 +71,19 @@ Global
 		{EB64832D-3CF9-4ED1-BB03-5101A2F73666}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EB64832D-3CF9-4ED1-BB03-5101A2F73666}.Release|Win32.ActiveCfg = Release|Any CPU
 		{EB64832D-3CF9-4ED1-BB03-5101A2F73666}.Release|Win32.Build.0 = Release|Any CPU
+		{2C7BD553-A8D4-80D6-2E88-64BCC363D48F}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{2C7BD553-A8D4-80D6-2E88-64BCC363D48F}.Debug|Any CPU.Build.0 = Debug|x64
+		{2C7BD553-A8D4-80D6-2E88-64BCC363D48F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2C7BD553-A8D4-80D6-2E88-64BCC363D48F}.Debug|Win32.Build.0 = Debug|Win32
+		{2C7BD553-A8D4-80D6-2E88-64BCC363D48F}.Release|Any CPU.ActiveCfg = Release|x64
+		{2C7BD553-A8D4-80D6-2E88-64BCC363D48F}.Release|Any CPU.Build.0 = Release|x64
+		{2C7BD553-A8D4-80D6-2E88-64BCC363D48F}.Release|Win32.ActiveCfg = Release|Win32
+		{2C7BD553-A8D4-80D6-2E88-64BCC363D48F}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8E8B2CA4-54A9-4801-90C4-1FEEA482F98D}
 	EndGlobalSection
 EndGlobal
