@@ -61,6 +61,8 @@ protected:
 	afx_msg void OnMenuCalendar();
 	afx_msg void OnMenuShutdown();
 	afx_msg void OnMenuExit();
+	afx_msg void OnMenuStartPosition();
+	afx_msg void OnMenuHide();
 
 	DECLARE_MESSAGE_MAP()
 };

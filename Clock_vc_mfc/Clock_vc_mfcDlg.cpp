@@ -62,6 +62,8 @@ BEGIN_MESSAGE_MAP(CClockvcmfcDlg, CDialogEx)
 	ON_COMMAND(ID_MENU_CALENDAR, &CClockvcmfcDlg::OnMenuCalendar)
 	ON_COMMAND(ID_MENU_SHUTDOWN, &CClockvcmfcDlg::OnMenuShutdown)
 	ON_COMMAND(ID_MENU_EXIT, &CClockvcmfcDlg::OnMenuExit)
+	ON_COMMAND(ID_MENU_STARTPOSITION, &CClockvcmfcDlg::OnMenuStartPosition)
+	ON_COMMAND(ID_MENU_HIDE, &CClockvcmfcDlg::OnMenuHide)
 END_MESSAGE_MAP()
 
 BOOL CClockvcmfcDlg::OnEraseBkgnd(CDC* pDC)
@@ -74,7 +76,7 @@ BOOL CClockvcmfcDlg::OnInitDialog()
 	CDialogEx::OnInitDialog();
 
 	// 1. Встановлюємо точний розмір вікна (140x140 пікселів)
-	int nSize = 140;
+	int nSize = 134;
 
 	// 2. Розраховуємо позицію (нижній правий кут, як у C# startPosition)
 	CRect rcWorkArea;
@@ -93,7 +95,8 @@ BOOL CClockvcmfcDlg::OnInitDialog()
 
 	// 4. Створення круглої форми вікна (тепер точно під розмір 140x140)
 	CRgn rgn;
-	rgn.CreateEllipticRgn(0, 0, nSize, nSize);
+	// Робимо регіон на 1 піксель більшим за вікно, щоб згладжування (Anti-aliasing) бордера не обрізалося
+	rgn.CreateEllipticRgn(-1, -1, nSize + 1, nSize + 1);
 	SetWindowRgn(rgn, TRUE);
 
 	// 5. Завжди зверху (якщо m_bTopMost увімкнено)
@@ -126,38 +129,40 @@ void CClockvcmfcDlg::OnPaint()
 	CRect rect;
 	GetClientRect(&rect);
 
-	// 1. Створюємо буфер у пам'яті (віртуальне полотно)
 	CDC memDC;
 	memDC.CreateCompatibleDC(&dc);
 	CBitmap memBitmap;
 	memBitmap.CreateCompatibleBitmap(&dc, rect.Width(), rect.Height());
-	CBitmap* pOldBitmap = memDC.SelectObject(&memBitmap);
+	memDC.SelectObject(&memBitmap);
 
-	// 2. Малюємо на віртуальному полотні за допомогою GDI+
 	Gdiplus::Graphics graphics(memDC.GetSafeHdc());
 	graphics.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
 
-	// Очищаємо фон буфера (прозорим або кольором фону)
-	Gdiplus::SolidBrush backBrush(Gdiplus::Color(255, 245, 245, 245));
+	// ВАЖЛИВО: Колір фону тепер такий самий, як у циферблата (Parchment)
+	Gdiplus::SolidBrush backBrush(Gdiplus::Color(255, 242, 238, 225));
 	graphics.FillRectangle(&backBrush, 0, 0, rect.Width(), rect.Height());
 
-	// Викликаємо малювання годинника
 	DrawClock(graphics);
 
-	// 3. Копіюємо готовий буфер на реальний екран одним рухом
 	dc.BitBlt(0, 0, rect.Width(), rect.Height(), &memDC, 0, 0, SRCCOPY);
-
-	// Очищення ресурсів
-	memDC.SelectObject(pOldBitmap);
 }
 
 void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 {
 	CRect rect;
 	GetClientRect(&rect);
-	int xCenter = rect.Width() / 2;
-	int yCenter = rect.Height() / 2;
-	int radius = static_cast<int>(min(xCenter, yCenter) * 0.9);
+
+	// Ваше зміщення на 1 піксель для центру
+	int xCenter = (rect.Width() / 2) - 1;
+	int yCenter = (rect.Height() / 2) - 1;
+
+	// Товщина кільця
+	int borderThickness = 6;
+
+	// ЩЕ БІЛЬШИЙ РАДІУС:
+	// Використовуємо -2 замість попередніх розрахунків. 
+	// Це виштовхне край 6-піксельного кільця впритул до межі вікна.
+	int radius = (min(rect.Width() / 2, rect.Height() / 2)) - 2;
 
 	COleDateTime now = COleDateTime::GetCurrentTime();
 	if (m_bGMT) {
@@ -166,76 +171,101 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 		now = COleDateTime(st);
 	}
 
-	// --- 1. ФОН (Колір "Parchment" як у C#) ---
+	// --- 1. ФОН ЦИФЕРБЛАТА ---
 	Gdiplus::SolidBrush faceBrush(Gdiplus::Color(255, 242, 238, 225));
 	g.FillEllipse(&faceBrush, xCenter - radius, yCenter - radius, radius * 2, radius * 2);
 
-	// --- 2. ТЕКСТОВІ НАПИСИ (LN, День, Дата) ---
+	// --- 2. ПОДВІЙНИЙ БОРДЕР (Кільце) ---
+	if (m_bBorder) {
+		// Зовнішнє чорне кільце
+		Gdiplus::Pen penBlack(Gdiplus::Color::Black, (float)borderThickness);
+		g.DrawEllipse(&penBlack, xCenter - radius, yCenter - radius, radius * 2, radius * 2);
+
+		// Внутрішня сіра лінія (відблиск)
+		Gdiplus::Pen penGray(Gdiplus::Color::Gray, 2.0f);
+		g.DrawEllipse(&penGray, xCenter - radius, yCenter - radius, radius * 2, radius * 2);
+	}
+
+	// Внутрішній радіус для елементів (відступ від центру кільця всередину)
+	int innerRadius = radius - (borderThickness / 2);
+
+	// --- 3. ПОДІЛКИ (Marks) ---
+	Gdiplus::Pen penHour(Gdiplus::Color::Black, 2.0f);
+	Gdiplus::Pen penQuarter(Gdiplus::Color::Black, 3.5f);
+	Gdiplus::SolidBrush brushDot(Gdiplus::Color::Black);
+
+	for (int i = 0; i < 60; i++) {
+		if (i % 5 == 0) {
+			float len = (i % 15 == 0) ? innerRadius * 0.18f : innerRadius * 0.12f;
+			Gdiplus::Pen* p = (i % 15 == 0) ? &penQuarter : &penHour;
+			g.DrawLine(p, ClcX(i, innerRadius - (int)len, xCenter), ClcY(i, innerRadius - (int)len, yCenter),
+				ClcX(i, innerRadius, xCenter), ClcY(i, innerRadius, yCenter));
+		}
+		else {
+			float dotR = innerRadius * 0.015f;
+			if (dotR < 1.1f) dotR = 1.1f;
+			int px = ClcX(i, innerRadius - (int)(innerRadius * 0.05f), xCenter);
+			int py = ClcY(i, innerRadius - (int)(innerRadius * 0.05f), yCenter);
+			g.FillEllipse(&brushDot, (float)px - dotR, (float)py - dotR, dotR * 2, dotR * 2);
+		}
+	}
+
+	// --- 4. ТЕКСТОВІ НАПИСИ ---
 	Gdiplus::FontFamily fontFamily(L"Arial");
 	Gdiplus::StringFormat strFormat;
 	strFormat.SetAlignment(Gdiplus::StringAlignmentCenter);
 
-	// "LN" зверху
-	Gdiplus::Font fontLN(&fontFamily, radius * 0.15f, Gdiplus::FontStyleItalic | Gdiplus::FontStyleUnderline);
-	Gdiplus::SolidBrush brushLN(Gdiplus::Color::LightCoral);
-	g.DrawString(L"LN", -1, &fontLN, Gdiplus::PointF(xCenter, yCenter - radius * 0.45f), &strFormat, &brushLN);
+	// "LN"
+	Gdiplus::Font fontLN(&fontFamily, innerRadius * 0.18f, Gdiplus::FontStyleItalic | Gdiplus::FontStyleUnderline);
+	Gdiplus::SolidBrush brushLN(Gdiplus::Color(255, 240, 128, 128));
+	g.DrawString(L"LN", -1, &fontLN, Gdiplus::PointF((float)xCenter, yCenter - innerRadius * 0.48f), &strFormat, &brushLN);
 
 	// День тижня
 	if (m_bDay) {
-		CString strDay = now.Format(_T("%A")); // Назва дня
-		Gdiplus::Font fontDay(&fontFamily, radius * 0.08f, Gdiplus::FontStyleBold);
+		CString strDay = now.Format(_T("%A"));
+		Gdiplus::Font fontDay(&fontFamily, innerRadius * 0.1f, Gdiplus::FontStyleBold);
 		Gdiplus::SolidBrush brushDay((now.GetDayOfWeek() == 1 || now.GetDayOfWeek() == 7) ?
-			Gdiplus::Color::Red : Gdiplus::Color::SaddleBrown);
-		g.DrawString(strDay, -1, &fontDay, Gdiplus::PointF(xCenter, yCenter + radius * 0.15f), &strFormat, &brushDay);
+			Gdiplus::Color::Red : Gdiplus::Color(255, 139, 69, 19));
+		g.DrawString(strDay, -1, &fontDay, Gdiplus::PointF((float)xCenter, yCenter + innerRadius * 0.18f), &strFormat, &brushDay);
 	}
 
 	// Дата
 	if (m_bDate) {
 		CString strDate = now.Format(_T("%d.%m.%Y"));
-		Gdiplus::Font fontDate(&fontFamily, radius * 0.08f, Gdiplus::FontStyleBold);
-		Gdiplus::SolidBrush brushDate(Gdiplus::Color::SteelBlue);
-		g.DrawString(strDate, -1, &fontDate, Gdiplus::PointF(xCenter, yCenter + radius * 0.35f), &strFormat, &brushDate);
+		Gdiplus::Font fontDate(&fontFamily, innerRadius * 0.1f, Gdiplus::FontStyleBold);
+		Gdiplus::SolidBrush brushDate(Gdiplus::Color(255, 70, 130, 180));
+		g.DrawString(strDate, -1, &fontDate, Gdiplus::PointF((float)xCenter, yCenter + innerRadius * 0.42f), &strFormat, &brushDate);
 	}
 
-	// --- 3. ЦИФЕРБЛАТ (Рисочки та точки) ---
-	Gdiplus::Pen penBlack(Gdiplus::Color::Black, 1);
-	Gdiplus::SolidBrush brushBlack(Gdiplus::Color::Black);
-
-	for (int i = 0; i < 60; i++) {
-		if (i % 5 == 0) { // Годинні рисочки
-			int len = (i % 15 == 0) ? radius * 0.15f : radius * 0.1f;
-			g.DrawLine(&penBlack, ClcX(i, radius - len, xCenter), ClcY(i, radius - len, yCenter),
-				ClcX(i, radius, xCenter), ClcY(i, radius, yCenter));
-		}
-		else { // Хвилинні точки
-			int dotR = 1;
-			int px = ClcX(i, radius - 5, xCenter);
-			int py = ClcY(i, radius - 5, yCenter);
-			g.FillEllipse(&brushBlack, px - dotR, py - dotR, dotR * 2, dotR * 2);
-		}
-	}
-
-	// --- 4. СТРІЛКИ (Ефект "подвійної лінії") ---
-	auto DrawHand = [&](int pos, int len, int width, Gdiplus::Color color) {
-		Gdiplus::Pen pMain(color, (float)width);
-		Gdiplus::Pen pInner(Gdiplus::Color::White, 1.0f); // Біла лінія всередині
+	// --- 5. СТРІЛКИ ---
+	auto DrawHand = [&](int pos, int len, float width, bool hasWhiteLine) {
+		Gdiplus::Pen pBlack(Gdiplus::Color::Black, width);
+		pBlack.SetEndCap(Gdiplus::LineCapRound);
 		int x = ClcX(pos, len, xCenter);
 		int y = ClcY(pos, len, yCenter);
-		g.DrawLine(&pMain, xCenter, yCenter, x, y);
-		if (width > 1) g.DrawLine(&pInner, xCenter, yCenter, x, y);
+		g.DrawLine(&pBlack, xCenter, yCenter, x, y);
+
+		if (hasWhiteLine) {
+			Gdiplus::Pen pWhite(Gdiplus::Color::White, width / 2.5f);
+			pWhite.SetEndCap(Gdiplus::LineCapRound);
+			g.DrawLine(&pWhite, xCenter, yCenter, x, y);
+		}
 		};
 
-	// Годинна
-	DrawHand(now.GetHour() * 5 + now.GetMinute() / 12, radius * 0.5, 5, Gdiplus::Color::Black);
-	// Хвилинна
-	DrawHand(now.GetMinute(), radius * 0.75, 3, Gdiplus::Color::Black);
-	// Секундна (червона, без білої лінії)
-	Gdiplus::Pen pSec(Gdiplus::Color::Red, 1);
-	g.DrawLine(&pSec, ClcX(now.GetSecond() + 30, radius * 0.15, xCenter), ClcY(now.GetSecond() + 30, radius * 0.15, yCenter),
-		ClcX(now.GetSecond(), radius * 0.85, xCenter), ClcY(now.GetSecond(), radius * 0.85, yCenter));
+	DrawHand(now.GetHour() * 5 + now.GetMinute() / 12, (int)(innerRadius * 0.55f), 6.0f, true);
+	DrawHand(now.GetMinute(), (int)(innerRadius * 0.8f), 4.0f, true);
 
-	// Центр
-	g.FillEllipse(&brushBlack, xCenter - 3, yCenter - 3, 6, 6);
+	// Секундна стрілка
+	Gdiplus::Pen pSec(Gdiplus::Color::Red, 1.5f);
+	int sX = ClcX(now.GetSecond(), (int)(innerRadius * 0.9f), xCenter);
+	int sY = ClcY(now.GetSecond(), (int)(innerRadius * 0.9f), yCenter);
+	int sX_tail = ClcX(now.GetSecond() + 30, (int)(innerRadius * 0.15f), xCenter);
+	int sY_tail = ClcY(now.GetSecond() + 30, (int)(innerRadius * 0.15f), yCenter);
+	g.DrawLine(&pSec, sX_tail, sY_tail, sX, sY);
+
+	// Центральна точка
+	Gdiplus::SolidBrush brushCenter(Gdiplus::Color::Black);
+	g.FillEllipse(&brushCenter, xCenter - 4, yCenter - 4, 8, 8);
 }
 
 int CClockvcmfcDlg::ClcX(int sec, int size, int xCenter) {
@@ -294,6 +324,28 @@ void CClockvcmfcDlg::OnMenuSetup() {
 		m_bSound = dlg.m_bSound; m_nOpacity = dlg.m_nOpacity;
 		SetLayeredWindowAttributes(0, (255 * m_nOpacity) / 100, LWA_ALPHA);
 		SetWindowPos(m_bTopMost ? &wndTopMost : &wndNoTopMost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+	}
+}
+
+void CClockvcmfcDlg::OnMenuStartPosition()
+{
+	int nSize = 140;
+	CRect rcWorkArea;
+	SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWorkArea, 0);
+	int x = rcWorkArea.right - static_cast<int>(nSize + nSize * 0.2);
+	int y = rcWorkArea.bottom - static_cast<int>(nSize + nSize * 0.2);
+
+	SetWindowPos(NULL, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_SHOWWINDOW);
+}
+
+void CClockvcmfcDlg::OnMenuHide()
+{
+	if (IsWindowVisible())
+		ShowWindow(SW_HIDE);
+	else
+	{
+		ShowWindow(SW_SHOW);
+		SetForegroundWindow(); 
 	}
 }
 
