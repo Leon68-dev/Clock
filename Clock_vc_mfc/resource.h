@@ -32,13 +32,21 @@
 #define ID_MENU_CALENDAR                32773
 #define ID_MENU_SHUTDOWN                32774
 #define ID_MENU_EXIT                    32775
+#define ID_CLOCKPOPUP_HIDE              32776
+#define ID_MENU_HIDE                    32777
+#define ID_CLOCKPOPUP_STARTPOSITION     32778
+#define ID_MENU_STARTPOSITION           32779
+#define ID_Menu                         32780
+#define ID_TRAYPOPUP_SETUP              32781
+#define ID_TRAYPOPUP_HIDE               32782
+#define ID_Menu32783                    32783
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        139
-#define _APS_NEXT_COMMAND_VALUE         32776
+#define _APS_NEXT_COMMAND_VALUE         32784
 #define _APS_NEXT_CONTROL_VALUE         1019
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
