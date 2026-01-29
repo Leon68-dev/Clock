@@ -21,6 +21,9 @@ BOOL CCalendarDlg::OnInitDialog()
 {
     CDialogEx::OnInitDialog();
 
+    ModifyStyleEx(0, WS_EX_LAYERED);
+    SetLayeredWindowAttributes(0, 216, LWA_ALPHA);
+
     // Аналог вашого setCalendar()
     SYSTEMTIME st;
     GetLocalTime(&st); // Отримуємо поточний системний час

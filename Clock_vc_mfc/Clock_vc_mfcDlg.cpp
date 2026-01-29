@@ -76,7 +76,7 @@ BOOL CClockvcmfcDlg::OnInitDialog()
 
 	ModifyStyleEx(WS_EX_APPWINDOW, WS_EX_TOOLWINDOW);
 
-	int nSize = 136;
+	int nSize = 134;
 
 	CRect rcWorkArea;
 	SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWorkArea, 0);
@@ -225,21 +225,38 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 	Gdiplus::SolidBrush brushLN(Gdiplus::Color(255, 240, 128, 128));
 	g.DrawString(L"LN", -1, &fontLN, Gdiplus::PointF(xCenter, yCenter - innerRadius * 0.52f), &strFormat, &brushLN);
 
-	COleDateTime now = COleDateTime::GetCurrentTime();
+	COleDateTime now;
+	if (m_bGMT)
+	{
+		// Отримуємо точний UTC (GMT) час через системну структуру
+		SYSTEMTIME st;
+		::GetSystemTime(&st);
+		now = COleDateTime(st);
+
+		Gdiplus::Font fontUTC(&fontFamily, innerRadius * 0.1f, Gdiplus::FontStyleBold);
+		Gdiplus::SolidBrush brushUTC(Gdiplus::Color::Olive);
+		g.DrawString(L"GMT", -1, &fontUTC, Gdiplus::PointF((float)xCenter, yCenter + innerRadius * 0.54f), &strFormat, &brushUTC);
+	}
+	else
+	{
+		// Отримуємо місцевий час
+		now = COleDateTime::GetCurrentTime();
+	}
+
 	if (m_bDay)
 	{
 		CString strDay = now.Format(_T("%A"));
-		Gdiplus::Font fontDay(&fontFamily, innerRadius * 0.12f, Gdiplus::FontStyleBold);
-		Gdiplus::SolidBrush brushDay((now.GetDayOfWeek() == 1 || now.GetDayOfWeek() == 7) ? Gdiplus::Color::Red : Gdiplus::Color(255, 139, 69, 19));
-		g.DrawString(strDay, -1, &fontDay, Gdiplus::PointF(xCenter, yCenter + innerRadius * 0.18f), &strFormat, &brushDay);
+		Gdiplus::Font fontDay(&fontFamily, innerRadius * 0.1f, Gdiplus::FontStyleBold);
+		Gdiplus::SolidBrush brushDay((now.GetDayOfWeek() == 1 || now.GetDayOfWeek() == 7) ?	Gdiplus::Color::Red : Gdiplus::Color(255, 139, 69, 19));
+		g.DrawString(strDay, -1, &fontDay, Gdiplus::PointF((float)xCenter, yCenter + innerRadius * 0.10f), &strFormat, &brushDay);
 	}
 
 	if (m_bDate)
 	{
 		CString strDate = now.Format(_T("%d.%m.%Y"));
-		Gdiplus::Font fontDate(&fontFamily, innerRadius * 0.12f, Gdiplus::FontStyleBold);
+		Gdiplus::Font fontDate(&fontFamily, innerRadius * 0.1f, Gdiplus::FontStyleBold);
 		Gdiplus::SolidBrush brushDate(Gdiplus::Color(255, 70, 130, 180));
-		g.DrawString(strDate, -1, &fontDate, Gdiplus::PointF(xCenter, yCenter + innerRadius * 0.45f), &strFormat, &brushDate);
+		g.DrawString(strDate, -1, &fontDate, Gdiplus::PointF((float)xCenter, yCenter + innerRadius * 0.32f), &strFormat, &brushDate);
 	}
 
 	auto DrawHand = [&](int pos, float len, float width, bool hasWhiteLine)
@@ -284,7 +301,34 @@ int CClockvcmfcDlg::ClcY(int sec, int size, int yCenter)
 
 void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 {
-	Invalidate(FALSE);
+
+	if (nIDEvent == 1)
+	{
+		// 1. Отримуємо час для трею
+		COleDateTime now;
+		if (m_bGMT) 
+		{
+			SYSTEMTIME st; 
+			::GetSystemTime(&st); 
+			now = COleDateTime(st);
+		}
+		else 
+		{
+			now = COleDateTime::GetCurrentTime();
+		}
+
+		// 2. Формуємо рядок підказки (аналог setTimeToTray)
+		CString strTip;
+		strTip = now.Format(_T("%A - %H:%M"));
+		if (m_bGMT) strTip += _T(" GMT");
+
+		// 3. Оновлюємо іконку в треї
+		_tcscpy_s(m_nid.szTip, strTip.Left(63)); // Обмеження довжини для трею
+		Shell_NotifyIcon(NIM_MODIFY, &m_nid);
+
+		// 4. Перемальовуємо годинник
+		Invalidate(FALSE);
+	}
 	CDialogEx::OnTimer(nIDEvent);
 }
 

@@ -19,6 +19,9 @@ BOOL CAboutDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
+	ModifyStyleEx(0, WS_EX_LAYERED);
+	SetLayeredWindowAttributes(0, 216, LWA_ALPHA);
+
 	// 1. Версія
 	SetDlgItemText(IDC_STATIC_VER, _T("Clock Version 1.0.0"));
 

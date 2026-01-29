@@ -34,6 +34,9 @@ BOOL CSetupDlg::OnInitDialog()
 {
     CDialogEx::OnInitDialog();
 
+    ModifyStyleEx(0, WS_EX_LAYERED);
+    SetLayeredWindowAttributes(0, 216, LWA_ALPHA);
+
     // Налаштування слайдера (0-100%)
     m_sliderOpacity.SetRange(0, 100);
     m_sliderOpacity.SetPos(m_nOpacity);

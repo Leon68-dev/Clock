@@ -27,6 +27,9 @@ BOOL CShutDownDlg::OnInitDialog()
 {
     CDialogEx::OnInitDialog();
 
+    ModifyStyleEx(0, WS_EX_LAYERED);
+    SetLayeredWindowAttributes(0, 216, LWA_ALPHA);
+
     // ²ν³φ³ΰλ³ηΰφ³ÿ ηνΰχενό
     m_timePicker.SetTime(m_tm);
     m_chkWork.SetCheck(m_isShutDown);
