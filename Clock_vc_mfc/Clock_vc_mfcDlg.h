@@ -29,6 +29,7 @@ protected:
 	BOOL m_bBorder;
 	BOOL m_bSound;
 	int  m_nOpacity;
+	BOOL m_bAlreadyExecuted;
 
 	// --- Налаштування вимкнення ПК ---
 	BOOL m_isShutDown;
@@ -48,6 +49,13 @@ protected:
 	CString GetIniPath();
 	void SaveSettings();
 	void LoadSettings();
+
+	BOOL SetShutdownPrivilege();
+	void ExecuteShutdown();
+
+	CString GetSoundPath(CString fileName);
+	void PlaySoundFile(CString fileName);
+	void PlayHourlyChime(int hours);
 
 	// Generated message map functions
 	virtual BOOL OnInitDialog();

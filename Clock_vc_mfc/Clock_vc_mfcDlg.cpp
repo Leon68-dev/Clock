@@ -40,6 +40,7 @@ CClockvcmfcDlg::CClockvcmfcDlg(CWnd* pParent /*=nullptr*/)
 	m_nOpacity = 80;
 	m_isShutDown = FALSE;
 	m_isSleep = FALSE;
+	m_bAlreadyExecuted = FALSE;
 	m_timeShutDown = COleDateTime::GetCurrentTime();
 }
 
@@ -306,6 +307,7 @@ void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 	{
 		// 1. Отримуємо час для трею
 		COleDateTime now;
+
 		if (m_bGMT) 
 		{
 			SYSTEMTIME st; 
@@ -325,6 +327,52 @@ void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 		// 3. Оновлюємо іконку в треї
 		_tcscpy_s(m_nid.szTip, strTip.Left(63)); // Обмеження довжини для трею
 		Shell_NotifyIcon(NIM_MODIFY, &m_nid);
+
+		if (m_isShutDown)
+		{
+			// Порівнюємо години та хвилини
+			if (now.GetHour() == m_timeShutDown.GetHour() && now.GetMinute() == m_timeShutDown.GetMinute())
+			{
+				if (!m_bAlreadyExecuted)
+				{
+					m_bAlreadyExecuted = TRUE;
+					ExecuteShutdown();
+				}
+			}
+			else
+			{
+				m_bAlreadyExecuted = FALSE; // Скидаємо флаг, коли хвилина минула
+			}
+		}
+
+		if (m_bSound)
+		{
+			int sec = now.GetSecond();
+			int min = now.GetMinute();
+
+			// 1. Щосекундне цокання (кожні 2 секунди, як у C#)
+			if (sec % 2 == 0)
+			{
+				PlaySoundFile(_T("_TickTack.wav"));
+			}
+
+			// 2. Початок нової хвилини (секунда 0)
+			if (sec == 0)
+			{
+				if (min == 0) // Рівна година
+				{
+					PlayHourlyChime(now.GetHour());
+				}
+				else if (min == 15 || min == 45) // Чверть години
+				{
+					PlaySoundFile(_T("_15.wav"));
+				}
+				else if (min == 30) // Половина години
+				{
+					PlaySoundFile(_T("_30.wav"));
+				}
+			}
+		}
 
 		// 4. Перемальовуємо годинник
 		Invalidate(FALSE);
@@ -528,4 +576,87 @@ void CClockvcmfcDlg::LoadSettings()
 	TCHAR szTime[10];
 	GetPrivateProfileString(_T("Settings"), _T("timeOff"), _T("00:00"), szTime, 10, strPath);
 	m_timeShutDown.ParseDateTime(szTime);
+}
+
+BOOL CClockvcmfcDlg::SetShutdownPrivilege()
+{
+	HANDLE hToken;
+	TOKEN_PRIVILEGES tkp;
+
+	// Отримуємо токен поточного процесу
+	if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
+		return FALSE;
+
+	// Шукаємо LUID для привілею вимкнення
+	LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &tkp.Privileges[0].Luid);
+
+	tkp.PrivilegeCount = 1;
+	tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+	// Застосовуємо привілей
+	AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES)NULL, 0);
+
+	if (GetLastError() != ERROR_SUCCESS)
+		return FALSE;
+
+	return TRUE;
+}
+
+// Сама логіка вимкнення/сну
+void CClockvcmfcDlg::ExecuteShutdown()
+{
+	if (m_isSleep)
+	{
+		// Режим сну (Sleep)
+		// Параметри: Hibernate = FALSE, ForceCritical = TRUE, DisableWakeEvent = FALSE
+		SetSuspendState(FALSE, TRUE, FALSE);
+	}
+	else
+	{
+		// Режим вимкнення (Power Off)
+		if (SetShutdownPrivilege())
+		{
+			// EWX_POWEROFF - вимкнути живлення
+			// EWX_FORCE - примусово закрити програми (як у вашому C# коді)
+			ExitWindowsEx(EWX_POWEROFF | EWX_FORCE, SHTDN_REASON_MAJOR_OTHER);
+		}
+	}
+}
+
+// Отримання повного шляху до звукового файлу
+CString CClockvcmfcDlg::GetSoundPath(CString fileName)
+{
+	TCHAR szPath[MAX_PATH];
+	GetModuleFileName(NULL, szPath, MAX_PATH);
+	CString strPath(szPath);
+	int nIndex = strPath.ReverseFind(_T('\\'));
+	if (nIndex != -1)
+		strPath = strPath.Left(nIndex + 1);
+
+	return strPath + fileName;
+}
+
+// Відтворення одного файлу (асинхронно, щоб не фризити UI)
+void CClockvcmfcDlg::PlaySoundFile(CString fileName)
+{
+	CString fullPath = GetSoundPath(fileName);
+	// SND_FILENAME - шлях до файлу, SND_ASYNC - не чекати завершення, SND_NODEFAULT - не грати звук помилки
+	::PlaySound(fullPath, NULL, SND_FILENAME | SND_ASYNC | SND_NODEFAULT);
+}
+
+void CClockvcmfcDlg::PlayHourlyChime(int hours)
+{
+	if (hours > 12) hours -= 12;
+	if (hours == 0) hours = 12;
+
+	// Запускаємо окремий потік для серії звуків
+	std::thread([this, hours]() 
+	{
+		CString fullPath = GetSoundPath(_T("_Boom.wav"));
+		for (int i = 0; i < hours; i++)
+		{
+			// Тут використовуємо SND_SYNC, щоб звуки йшли один за одним
+			::PlaySound(fullPath, NULL, SND_FILENAME | SND_SYNC | SND_NODEFAULT);
+		}
+	}).detach(); // Від'єднуємо потік, він сам завершиться
 }

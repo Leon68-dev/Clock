@@ -9,9 +9,14 @@
 
 // add headers that you want to pre-compile here
 #include "framework.h"
-
+#include <powrprof.h>
 #include <gdiplus.h>
+#include <mmsystem.h>
+#include <thread>
+
 using namespace Gdiplus;
 #pragma comment (lib,"Gdiplus.lib")
+#pragma comment(lib, "PowrProf.lib")
+#pragma comment(lib, "winmm.lib")
 
 #endif //PCH_H
