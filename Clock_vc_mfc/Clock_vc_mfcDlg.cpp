@@ -124,34 +124,6 @@ void CClockvcmfcDlg::InitTrayIcon()
 void CClockvcmfcDlg::OnPaint()
 {
 	CPaintDC dc(this);
-
-	// Якщо увімкнена прозорість, малюванням займається UpdateLayeredClock, а не OnPaint
-	if (m_bTransparent)
-	{
-		return;
-	}
-
-	CRect rect;
-	GetClientRect(&rect);
-
-	CDC memDC;
-	memDC.CreateCompatibleDC(&dc);
-	CBitmap memBitmap;
-	memBitmap.CreateCompatibleBitmap(&dc, rect.Width(), rect.Height());
-	CBitmap* pOldBitmap = memDC.SelectObject(&memBitmap);
-
-	Gdiplus::Graphics graphics(memDC.GetSafeHdc());
-	graphics.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
-
-	// Малюємо звичайний кремовий фон
-	Gdiplus::SolidBrush backBrush(Gdiplus::Color(255, 242, 238, 225));
-	graphics.FillRectangle(&backBrush, 0, 0, rect.Width(), rect.Height());
-
-	DrawClock(graphics);
-
-	dc.BitBlt(0, 0, rect.Width(), rect.Height(), &memDC, 0, 0, SRCCOPY);
-
-	memDC.SelectObject(pOldBitmap);
 }
 
 void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
@@ -336,35 +308,29 @@ int CClockvcmfcDlg::ClcY(int sec, int size, int yCenter)
 
 void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 {
-
 	if (nIDEvent == 1)
 	{
-		// 1. Отримуємо час для трею
 		COleDateTime now;
-
-		if (m_bGMT) 
+		if (m_bGMT)
 		{
 			SYSTEMTIME st; 
 			::GetSystemTime(&st); 
 			now = COleDateTime(st);
 		}
-		else 
+		else
 		{
 			now = COleDateTime::GetCurrentTime();
 		}
 
-		// 2. Формуємо рядок підказки (аналог setTimeToTray)
-		CString strTip;
-		strTip = now.Format(_T("%A - %H:%M"));
+		// Оновлення трею
+		CString strTip = now.Format(_T("%A - %H:%M"));
 		if (m_bGMT) strTip += _T(" GMT");
-
-		// 3. Оновлюємо іконку в треї
-		_tcscpy_s(m_nid.szTip, strTip.Left(63)); // Обмеження довжини для трею
+		_tcscpy_s(m_nid.szTip, strTip.Left(63));
 		Shell_NotifyIcon(NIM_MODIFY, &m_nid);
 
+		// Перевірка шатдауну
 		if (m_isShutDown)
 		{
-			// Порівнюємо години та хвилини
 			if (now.GetHour() == m_timeShutDown.GetHour() && now.GetMinute() == m_timeShutDown.GetMinute())
 			{
 				if (!m_bAlreadyExecuted)
@@ -375,44 +341,18 @@ void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 			}
 			else
 			{
-				m_bAlreadyExecuted = FALSE; // Скидаємо флаг, коли хвилина минула
+				m_bAlreadyExecuted = FALSE;
 			}
 		}
 
-		if (m_bSound)
+		// Звук
+		if (m_bSound && now.GetSecond() % 2 == 0)
 		{
-			int sec = now.GetSecond();
-			int min = now.GetMinute();
-
-			// 1. Щосекундне цокання (кожні 2 секунди, як у C#)
-			if (sec % 2 == 0)
-			{
-				PlaySoundFile(_T("_TickTack.wav"));
-			}
-
-			// 2. Початок нової хвилини (секунда 0)
-			if (sec == 0)
-			{
-				if (min == 0) // Рівна година
-				{
-					PlayHourlyChime(now.GetHour());
-				}
-				else if (min == 15 || min == 45) // Чверть години
-				{
-					PlaySoundFile(_T("_15.wav"));
-				}
-				else if (min == 30) // Половина години
-				{
-					PlaySoundFile(_T("_30.wav"));
-				}
-			}
+			PlaySoundFile(_T("_TickTack.wav"));
 		}
 
-		// 4. Перемальовуємо годинник
-		if (m_bTransparent)
-			UpdateLayeredClock(); // Для прозорого режиму
-		else
-			Invalidate(FALSE);
+		// ГОЛОВНЕ: Завжди оновлюємо вікно через шар
+		UpdateLayeredClock();
 	}
 	CDialogEx::OnTimer(nIDEvent);
 }
@@ -498,16 +438,24 @@ void CClockvcmfcDlg::OnMenuSetup()
 	CSetupDlg dlg(m_bGMT, m_bDate, m_bDay, m_bMoving, m_bTopMost, m_bTransparent, m_bBorder, m_bSound, m_nOpacity);
 	if (dlg.DoModal() == IDOK)
 	{
-		m_bGMT = dlg.m_bGMT; m_bDate = dlg.m_bDate; m_bDay = dlg.m_bDay;
-		m_bMoving = dlg.m_bMoving; m_bTopMost = dlg.m_bTopMost;
-		m_bTransparent = dlg.m_bTransparent; m_bBorder = dlg.m_bBorder;
-		m_bSound = dlg.m_bSound; m_nOpacity = dlg.m_nOpacity;
-		SetLayeredWindowAttributes(0, (255 * m_nOpacity) / 100, LWA_ALPHA);
+		// Оновлюємо змінні з діалогу
+		m_bGMT = dlg.m_bGMT;
+		m_bDate = dlg.m_bDate;
+		m_bDay = dlg.m_bDay;
+		m_bMoving = dlg.m_bMoving;
+		m_bTopMost = dlg.m_bTopMost;
+		m_bTransparent = dlg.m_bTransparent;
+		m_bBorder = dlg.m_bBorder;
+		m_bSound = dlg.m_bSound;
+		m_nOpacity = dlg.m_nOpacity;
+
+		// Встановлюємо стан "Завжди зверху"
 		SetWindowPos(m_bTopMost ? &wndTopMost : &wndNoTopMost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 
-		m_bTransparent = dlg.m_bTransparent;
+		// МИТТЄВО оновлюємо прозорість
 		UpdateTransparency();
 
+		// Зберігаємо в INI
 		SaveSettings();
 	}
 }
@@ -703,24 +651,16 @@ void CClockvcmfcDlg::PlayHourlyChime(int hours)
 
 void CClockvcmfcDlg::UpdateTransparency()
 {
-	if (m_bTransparent)
-	{
-		UpdateLayeredClock();
-	}
-	else
-	{
-		SetLayeredWindowAttributes(0, (255 * m_nOpacity) / 100, LWA_ALPHA);
-		Invalidate(FALSE);
-	}
+	UpdateLayeredClock();
 }
 
 void CClockvcmfcDlg::UpdateLayeredClock()
 {
 	CRect rect;
-	GetWindowRect(&rect); // Отримуємо поточні координати вікна на екрані
+	GetWindowRect(&rect);
 	CSize size(rect.Width(), rect.Height());
 	CPoint ptSrc(0, 0);
-	CPoint ptDest(rect.left, rect.top); // Важливо для правильного позиціонування
+	CPoint ptDest(rect.left, rect.top);
 
 	HDC hdcScreen = ::GetDC(NULL);
 	HDC hMemDC = ::CreateCompatibleDC(hdcScreen);
@@ -742,17 +682,26 @@ void CClockvcmfcDlg::UpdateLayeredClock()
 	g.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
 	g.SetPixelOffsetMode(Gdiplus::PixelOffsetModeHighQuality);
 
-	// Очищаємо все ПОВНІСТЮ прозорим кольором
+	// 1. Очищаємо все (робимо прозорим)
 	g.Clear(Gdiplus::Color(0, 0, 0, 0));
 
+	// 2. Якщо прозорість ВИМКНЕНА — малюємо кремовий фон прямо тут
+	if (!m_bTransparent)
+	{
+		Gdiplus::RectF fullRect(0.0f, 0.0f, (float)size.cx, (float)size.cy);
+		Gdiplus::SolidBrush faceBrush(Gdiplus::Color(255, 242, 238, 225));
+		g.FillRectangle(&faceBrush, fullRect);
+	}
+
+	// 3. Малюємо стрілки, риски та текст
 	DrawClock(g);
 
+	// 4. Передаємо готове зображення Windows
 	BLENDFUNCTION blend = { 0 };
 	blend.BlendOp = AC_SRC_OVER;
 	blend.SourceConstantAlpha = (BYTE)((255 * m_nOpacity) / 100);
 	blend.AlphaFormat = AC_SRC_ALPHA;
 
-	// Цей виклик оновить вікно і змусить стрілку рухатися
 	::UpdateLayeredWindow(m_hWnd, hdcScreen, &ptDest, &size, hMemDC, &ptSrc, 0, &blend, ULW_ALPHA);
 
 	::SelectObject(hMemDC, hOldBitmap);
