@@ -8,7 +8,7 @@
 #include <cmath>
 #include <gdiplus.h>
 
-// Підключаємо ваші створені діалоги (перевірте назви файлів!)
+// Підключаємо ваші створені діалоги
 #include "AboutDlg.h"
 #include "CalendarDlg.h"
 #include "SetupDlg.h"
@@ -56,7 +56,6 @@ BEGIN_MESSAGE_MAP(CClockvcmfcDlg, CDialogEx)
 	ON_WM_CONTEXTMENU()
 	ON_WM_ERASEBKGND()
 	ON_MESSAGE(WM_TRAY_ICON_MSG, &CClockvcmfcDlg::OnTrayNotify)
-	// Обробники команд меню (перевірте ID у вашому Menu Editor)
 	ON_COMMAND(ID_MENU_SETUP, &CClockvcmfcDlg::OnMenuSetup)
 	ON_COMMAND(ID_MENU_ABOUT, &CClockvcmfcDlg::OnMenuAbout)
 	ON_COMMAND(ID_MENU_CALENDAR, &CClockvcmfcDlg::OnMenuCalendar)
@@ -68,42 +67,35 @@ END_MESSAGE_MAP()
 
 BOOL CClockvcmfcDlg::OnEraseBkgnd(CDC* pDC)
 {
-	return TRUE; // Просто повертаємо TRUE, нічого не зафарбовуючи
+	return TRUE;
 }
 
 BOOL CClockvcmfcDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
-	
+
 	ModifyStyleEx(WS_EX_APPWINDOW, WS_EX_TOOLWINDOW);
 
-	// 1. Встановлюємо точний розмір вікна (140x140 пікселів)
 	int nSize = 136;
 
-	// 2. Розраховуємо позицію (нижній правий кут, як у C# startPosition)
 	CRect rcWorkArea;
-	SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWorkArea, 0); // Отримуємо робочу область (без Taskbar)
+	SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWorkArea, 0);
 
 	int x = rcWorkArea.right - static_cast<int>(nSize + nSize * 0.2);
 	int y = rcWorkArea.bottom - static_cast<int>(nSize + nSize * 0.2);
 
-	// Встановлюємо розмір та позицію вікна
-	// SWP_NOZORDER - не змінюємо порядок вікон, SWP_SHOWWINDOW - показуємо
 	SetWindowPos(NULL, x, y, nSize, nSize, SWP_NOZORDER | SWP_SHOWWINDOW);
 
-	// 3. Налаштування прозорості (Layered Window)
 	ModifyStyleEx(0, WS_EX_LAYERED);
 	LoadSettings();
 	SetLayeredWindowAttributes(0, (255 * m_nOpacity) / 100, LWA_ALPHA);
 
-	// 4. Створення круглої форми вікна (тепер точно під розмір 140x140)
 	CRgn rgn;
-	// Робимо регіон на 1 піксель більшим за вікно, щоб згладжування (Anti-aliasing) бордера не обрізалося
 	rgn.CreateEllipticRgn(-1, -1, nSize + 1, nSize + 1);
 	SetWindowRgn(rgn, TRUE);
 
-	// 5. Завжди зверху (якщо m_bTopMost увімкнено)
-	if (m_bTopMost) {
+	if (m_bTopMost)
+	{
 		SetWindowPos(&wndTopMost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 	}
 
@@ -141,7 +133,6 @@ void CClockvcmfcDlg::OnPaint()
 	Gdiplus::Graphics graphics(memDC.GetSafeHdc());
 	graphics.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
 
-	// ВАЖЛИВО: Колір фону тепер такий самий, як у циферблата (Parchment)
 	Gdiplus::SolidBrush backBrush(Gdiplus::Color(255, 242, 238, 225));
 	graphics.FillRectangle(&backBrush, 0, 0, rect.Width(), rect.Height());
 
@@ -155,17 +146,11 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 	CRect clientRect;
 	GetClientRect(&clientRect);
 
-	// Створюємо RectF на повний розмір вікна (134x134)
 	Gdiplus::RectF fullRect(0.0f, 0.0f, (float)clientRect.Width(), (float)clientRect.Height());
 
-	// Налаштування згладжування
 	g.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
 	g.SetPixelOffsetMode(Gdiplus::PixelOffsetModeHighQuality);
 
-	// --- 1. ЗАПОВНЕННЯ ВСЬОГО ПРОСТОРУ ---
-	// Замість FillEllipse малюємо прямокутник на все вікно кольором циферблата.
-	// Оскільки вікно обрізане регіоном (SetWindowRgn), кути самі стануть круглими.
-	// Це на 100% прибере білі пікселі по краях.
 	Gdiplus::SolidBrush faceBrush(Gdiplus::Color(255, 242, 238, 225));
 	g.FillRectangle(&faceBrush, fullRect);
 
@@ -173,42 +158,41 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 	float xCenter = fullRect.Width / 2.0f;
 	float yCenter = fullRect.Height / 2.0f;
 
-	// --- 2. БОРДЕР (Кільце) ---
-	if (m_bBorder) 
+	if (m_bBorder)
 	{
-		// Розрахунок: щоб край 7-піксельного пера торкався краю вікна,
-		// ми малюємо еліпс, який трохи "втиснутий" всередину.
 		Gdiplus::RectF penRect = fullRect;
-		float inset = (borderThickness / 2.0f) - 0.5f; // -0.5 для компенсації згладжування
+		float inset = (borderThickness / 2.0f) - 0.5f;
 		penRect.Inflate(-inset, -inset);
 
 		Gdiplus::Pen penBlack(Gdiplus::Color::Black, borderThickness);
 		g.DrawEllipse(&penBlack, penRect);
 
-		// Сіра лінія (відблиск)
 		Gdiplus::Pen penGray(Gdiplus::Color::Gray, 2.0f);
 		g.DrawEllipse(&penGray, penRect);
 	}
 
 	float innerRadius = (fullRect.Width / 2.0f) - borderThickness;
 
-	// --- 3. ПОДІЛКИ ---
 	Gdiplus::Pen penHour(Gdiplus::Color::Black, 2.0f);
 	Gdiplus::Pen penQuarter(Gdiplus::Color::Black, 4.0f);
 	Gdiplus::SolidBrush brushBlack(Gdiplus::Color::Black);
 
-	for (int i = 0; i < 60; i++) 
+	for (int i = 0; i < 60; i++)
 	{
 		float angle = i * PI / 30.0f - PI / 2.0f;
-		if (i % 5 == 0) 
+		if (i % 5 == 0)
 		{
 			float len = (i % 15 == 0) ? innerRadius * 0.22f : innerRadius * 0.15f;
-			if(!m_bBorder)
+			if (!m_bBorder)
+			{
 				len = (i % 15 == 0) ? innerRadius * 0.15f : innerRadius * 0.1f;
-		
+			}
+
 			float delta = 6.0f;
-			if(m_bBorder)
+			if (m_bBorder)
+			{
 				delta = 2.0f;
+			}
 
 			Gdiplus::Pen* p = (i % 15 == 0) ? &penQuarter : &penHour;
 			g.DrawLine(p,
@@ -218,13 +202,14 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 				yCenter + (float)sin(angle) * (innerRadius + delta)
 			);
 		}
-		else 
+		else
 		{
 			float dotR = 1.3f;
-
 			float delta = 3.0f;
 			if (m_bBorder)
+			{
 				delta = 0.0f;
+			}
 
 			float px = xCenter + (float)cos(angle) * (innerRadius + delta);
 			float py = yCenter + (float)sin(angle) * (innerRadius + delta);
@@ -232,7 +217,6 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 		}
 	}
 
-	// --- 4. ТЕКСТ ---
 	Gdiplus::FontFamily fontFamily(L"Arial");
 	Gdiplus::StringFormat strFormat;
 	strFormat.SetAlignment(Gdiplus::StringAlignmentCenter);
@@ -242,36 +226,37 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 	g.DrawString(L"LN", -1, &fontLN, Gdiplus::PointF(xCenter, yCenter - innerRadius * 0.52f), &strFormat, &brushLN);
 
 	COleDateTime now = COleDateTime::GetCurrentTime();
-	if (m_bDay) {
+	if (m_bDay)
+	{
 		CString strDay = now.Format(_T("%A"));
 		Gdiplus::Font fontDay(&fontFamily, innerRadius * 0.12f, Gdiplus::FontStyleBold);
 		Gdiplus::SolidBrush brushDay((now.GetDayOfWeek() == 1 || now.GetDayOfWeek() == 7) ? Gdiplus::Color::Red : Gdiplus::Color(255, 139, 69, 19));
 		g.DrawString(strDay, -1, &fontDay, Gdiplus::PointF(xCenter, yCenter + innerRadius * 0.18f), &strFormat, &brushDay);
 	}
 
-	if (m_bDate) {
+	if (m_bDate)
+	{
 		CString strDate = now.Format(_T("%d.%m.%Y"));
 		Gdiplus::Font fontDate(&fontFamily, innerRadius * 0.12f, Gdiplus::FontStyleBold);
 		Gdiplus::SolidBrush brushDate(Gdiplus::Color(255, 70, 130, 180));
 		g.DrawString(strDate, -1, &fontDate, Gdiplus::PointF(xCenter, yCenter + innerRadius * 0.45f), &strFormat, &brushDate);
 	}
 
-	// --- 5. СТРІЛКИ ---
-	auto DrawHand = [&](int pos, float len, float width, bool hasWhiteLine) 
-	{
-		Gdiplus::Pen pHand(Gdiplus::Color::Black, width);
-		pHand.SetEndCap(Gdiplus::LineCapRound);
-		float angle = pos * PI / 30.0f - PI / 2.0f;
-		float x = xCenter + (float)cos(angle) * len;
-		float y = yCenter + (float)sin(angle) * len;
-		g.DrawLine(&pHand, xCenter, yCenter, x, y);
-		if (hasWhiteLine) 
+	auto DrawHand = [&](int pos, float len, float width, bool hasWhiteLine)
 		{
-			Gdiplus::Pen pWhite(Gdiplus::Color::White, width / 2.2f);
-			pWhite.SetEndCap(Gdiplus::LineCapRound);
-			g.DrawLine(&pWhite, xCenter, yCenter, x, y);
-		}
-	};
+			Gdiplus::Pen pHand(Gdiplus::Color::Black, width);
+			pHand.SetEndCap(Gdiplus::LineCapRound);
+			float angle = pos * PI / 30.0f - PI / 2.0f;
+			float x = xCenter + (float)cos(angle) * len;
+			float y = yCenter + (float)sin(angle) * len;
+			g.DrawLine(&pHand, xCenter, yCenter, x, y);
+			if (hasWhiteLine)
+			{
+				Gdiplus::Pen pWhite(Gdiplus::Color::White, width / 2.2f);
+				pWhite.SetEndCap(Gdiplus::LineCapRound);
+				g.DrawLine(&pWhite, xCenter, yCenter, x, y);
+			}
+		};
 
 	DrawHand(now.GetHour() * 5 + now.GetMinute() / 12, innerRadius * 0.58f, 6.5f, true);
 	DrawHand(now.GetMinute(), innerRadius * 0.85f, 4.5f, true);
@@ -287,18 +272,19 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 	g.FillEllipse(&brushBlack, xCenter - 4.0f, yCenter - 4.0f, 8.0f, 8.0f);
 }
 
-
-int CClockvcmfcDlg::ClcX(int sec, int size, int xCenter) {
+int CClockvcmfcDlg::ClcX(int sec, int size, int xCenter)
+{
 	return (int)(cos(sec * PI / 30 - PI / 2) * size + xCenter);
 }
 
-int CClockvcmfcDlg::ClcY(int sec, int size, int yCenter) {
+int CClockvcmfcDlg::ClcY(int sec, int size, int yCenter)
+{
 	return (int)(sin(sec * PI / 30 - PI / 2) * size + yCenter);
 }
 
 void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 {
-	Invalidate(FALSE); // Перемалювати
+	Invalidate(FALSE);
 	CDialogEx::OnTimer(nIDEvent);
 }
 
@@ -311,7 +297,8 @@ void CClockvcmfcDlg::OnLButtonDown(UINT nFlags, CPoint point)
 void CClockvcmfcDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 {
 	CMenu menu;
-	if (menu.LoadMenu(IDR_MENU_CONTEXT)) { // ID вашого меню
+	if (menu.LoadMenu(IDR_MENU_CONTEXT))
+	{
 		CMenu* pPopup = menu.GetSubMenu(0);
 		pPopup->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this);
 	}
@@ -322,30 +309,25 @@ LRESULT CClockvcmfcDlg::OnTrayNotify(WPARAM wParam, LPARAM lParam)
 	if (lParam == WM_RBUTTONUP)
 	{
 		CPoint pos;
-		GetCursorPos(&pos); // Отримуємо координати курсора
+		GetCursorPos(&pos);
 
 		CMenu menu;
-		if (menu.LoadMenu(IDR_MENU_CONTEXT)) // ID вашого ресурсу меню
+		if (menu.LoadMenu(IDR_MENU_CONTEXT))
 		{
-			// Вибираємо TrayPopup (індекс 1, бо ClockPopup — це 0)
 			CMenu* pPopup = menu.GetSubMenu(1);
 			if (pPopup)
 			{
-				// ВАЖЛИВО: Це потрібно, щоб меню зникало, коли ви клікаєте повз нього
 				SetForegroundWindow();
 
-				// Динамічно змінюємо текст Hide/Open залежно від стану вікна
 				if (IsWindowVisible())
 					pPopup->ModifyMenu(ID_MENU_HIDE, MF_BYCOMMAND | MF_STRING, ID_MENU_HIDE, _T("Hide"));
 				else
 					pPopup->ModifyMenu(ID_MENU_HIDE, MF_BYCOMMAND | MF_STRING, ID_MENU_HIDE, _T("Open"));
 
-				// Показуємо меню
 				pPopup->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pos.x, pos.y, this);
 			}
 		}
 	}
-	// Якщо подвійний клік лівою — відкриваємо/ховаємо годинник
 	else if (lParam == WM_LBUTTONDBLCLK)
 	{
 		SendMessage(WM_COMMAND, ID_MENU_HIDE);
@@ -354,34 +336,39 @@ LRESULT CClockvcmfcDlg::OnTrayNotify(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-// Обробники меню
-void CClockvcmfcDlg::OnMenuAbout() 
-{ 
-	CAboutDlg dlg; dlg.DoModal(); 
+void CClockvcmfcDlg::OnMenuAbout()
+{
+	CAboutDlg dlg; dlg.DoModal();
 }
 
-void CClockvcmfcDlg::OnMenuCalendar() 
-{ 
-	CCalendarDlg dlg; dlg.DoModal(); 
+void CClockvcmfcDlg::OnMenuCalendar()
+{
+	CCalendarDlg dlg; dlg.DoModal();
 }
 
-void CClockvcmfcDlg::OnMenuExit() 
-{ 
+void CClockvcmfcDlg::OnMenuExit()
+{
 	SaveSettings();
-	Shell_NotifyIcon(NIM_DELETE, &m_nid); 
-	PostQuitMessage(0); 
+	Shell_NotifyIcon(NIM_DELETE, &m_nid);
+	PostQuitMessage(0);
 }
 
-void CClockvcmfcDlg::OnMenuShutdown() {
+void CClockvcmfcDlg::OnMenuShutdown()
+{
 	CShutDownDlg dlg(m_timeShutDown, m_isShutDown, m_isSleep);
-	if (dlg.DoModal() == IDOK) {
-		m_timeShutDown = dlg.m_tm; m_isShutDown = dlg.m_isShutDown; m_isSleep = dlg.m_isSleep;
+	if (dlg.DoModal() == IDOK)
+	{
+		m_timeShutDown = dlg.m_tm;
+		m_isShutDown = dlg.m_isShutDown;
+		m_isSleep = dlg.m_isSleep;
 	}
 }
 
-void CClockvcmfcDlg::OnMenuSetup() {
+void CClockvcmfcDlg::OnMenuSetup()
+{
 	CSetupDlg dlg(m_bGMT, m_bDate, m_bDay, m_bMoving, m_bTopMost, m_bTransparent, m_bBorder, m_bSound, m_nOpacity);
-	if (dlg.DoModal() == IDOK) {
+	if (dlg.DoModal() == IDOK)
+	{
 		m_bGMT = dlg.m_bGMT; m_bDate = dlg.m_bDate; m_bDay = dlg.m_bDay;
 		m_bMoving = dlg.m_bMoving; m_bTopMost = dlg.m_bTopMost;
 		m_bTransparent = dlg.m_bTransparent; m_bBorder = dlg.m_bBorder;
@@ -413,23 +400,25 @@ void CClockvcmfcDlg::OnMenuHide()
 	else
 	{
 		ShowWindow(SW_SHOW);
-		SetForegroundWindow(); 
+		SetForegroundWindow();
 	}
 }
 
-HCURSOR CClockvcmfcDlg::OnQueryDragIcon() 
-{ 
-	return static_cast<HCURSOR>(m_hIcon); 
+HCURSOR CClockvcmfcDlg::OnQueryDragIcon()
+{
+	return static_cast<HCURSOR>(m_hIcon);
 }
 
 CString CClockvcmfcDlg::GetIniPath()
 {
 	TCHAR szPath[MAX_PATH];
-	GetModuleFileName(NULL, szPath, MAX_PATH); // Отримуємо шлях до EXE
+	GetModuleFileName(NULL, szPath, MAX_PATH);
 	CString strPath(szPath);
 	int nIndex = strPath.ReverseFind(_T('\\'));
 	if (nIndex != -1)
+	{
 		strPath = strPath.Left(nIndex + 1);
+	}
 
 	return strPath + _T("clock_vc_mfc.ini");
 }
@@ -440,9 +429,9 @@ void CClockvcmfcDlg::SaveSettings()
 	CString strVal;
 
 	auto WriteBool = [&](LPCTSTR key, BOOL val)
-	{
-		WritePrivateProfileString(_T("Settings"), key, val ? _T("1") : _T("0"), strPath);
-	};
+		{
+			WritePrivateProfileString(_T("Settings"), key, val ? _T("1") : _T("0"), strPath);
+		};
 
 	WriteBool(_T("chkGMT"), m_bGMT);
 	WriteBool(_T("chkDate"), m_bDate);
@@ -456,7 +445,6 @@ void CClockvcmfcDlg::SaveSettings()
 	strVal.Format(_T("%d"), m_nOpacity);
 	WritePrivateProfileString(_T("Settings"), _T("frmOpacity"), strVal, strPath);
 
-	// Зберігаємо позицію вікна
 	CRect rect;
 	GetWindowRect(&rect);
 	strVal.Format(_T("%d"), rect.left);
@@ -464,7 +452,6 @@ void CClockvcmfcDlg::SaveSettings()
 	strVal.Format(_T("%d"), rect.top);
 	WritePrivateProfileString(_T("Settings"), _T("deskY"), strVal, strPath);
 
-	// Налаштування вимкнення
 	WriteBool(_T("chkOff"), m_isShutDown);
 	WriteBool(_T("chkSleep"), m_isSleep);
 	WritePrivateProfileString(_T("Settings"), _T("timeOff"), m_timeShutDown.Format(_T("%H:%M")), strPath);
@@ -484,13 +471,13 @@ void CClockvcmfcDlg::LoadSettings()
 	m_bSound = GetPrivateProfileInt(_T("Settings"), _T("chkSound"), 0, strPath);
 	m_nOpacity = GetPrivateProfileInt(_T("Settings"), _T("frmOpacity"), 80, strPath);
 
-	// Позиція
 	int x = GetPrivateProfileInt(_T("Settings"), _T("deskX"), -1, strPath);
 	int y = GetPrivateProfileInt(_T("Settings"), _T("deskY"), -1, strPath);
 	if (x != -1 && y != -1)
+	{
 		SetWindowPos(NULL, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+	}
 
-	// Вимкнення
 	m_isShutDown = GetPrivateProfileInt(_T("Settings"), _T("chkOff"), 0, strPath);
 	m_isSleep = GetPrivateProfileInt(_T("Settings"), _T("chkSleep"), 0, strPath);
 

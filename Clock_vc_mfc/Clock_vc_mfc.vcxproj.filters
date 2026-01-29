@@ -83,5 +83,8 @@
     <Image Include="res\Clock_vc_mfc.ico">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="res\bitmap2.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>
