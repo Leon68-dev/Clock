@@ -89,7 +89,9 @@ BOOL CClockvcmfcDlg::OnInitDialog()
 
 	ModifyStyleEx(0, WS_EX_LAYERED);
 	LoadSettings();
-	SetLayeredWindowAttributes(0, (255 * m_nOpacity) / 100, LWA_ALPHA);
+
+	// Замість прямого виклику SetLayeredWindowAttributes використовуємо наш метод
+	UpdateTransparency();
 
 	CRgn rgn;
 	rgn.CreateEllipticRgn(-1, -1, nSize + 1, nSize + 1);
@@ -122,6 +124,13 @@ void CClockvcmfcDlg::InitTrayIcon()
 void CClockvcmfcDlg::OnPaint()
 {
 	CPaintDC dc(this);
+
+	// Якщо увімкнена прозорість, малюванням займається UpdateLayeredClock, а не OnPaint
+	if (m_bTransparent)
+	{
+		return;
+	}
+
 	CRect rect;
 	GetClientRect(&rect);
 
@@ -129,17 +138,20 @@ void CClockvcmfcDlg::OnPaint()
 	memDC.CreateCompatibleDC(&dc);
 	CBitmap memBitmap;
 	memBitmap.CreateCompatibleBitmap(&dc, rect.Width(), rect.Height());
-	memDC.SelectObject(&memBitmap);
+	CBitmap* pOldBitmap = memDC.SelectObject(&memBitmap);
 
 	Gdiplus::Graphics graphics(memDC.GetSafeHdc());
 	graphics.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
 
+	// Малюємо звичайний кремовий фон
 	Gdiplus::SolidBrush backBrush(Gdiplus::Color(255, 242, 238, 225));
 	graphics.FillRectangle(&backBrush, 0, 0, rect.Width(), rect.Height());
 
 	DrawClock(graphics);
 
 	dc.BitBlt(0, 0, rect.Width(), rect.Height(), &memDC, 0, 0, SRCCOPY);
+
+	memDC.SelectObject(pOldBitmap);
 }
 
 void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
@@ -152,8 +164,11 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 	g.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
 	g.SetPixelOffsetMode(Gdiplus::PixelOffsetModeHighQuality);
 
-	Gdiplus::SolidBrush faceBrush(Gdiplus::Color(255, 242, 238, 225));
-	g.FillRectangle(&faceBrush, fullRect);
+	if (!m_bTransparent) // Малюємо фон тільки якщо прозорість ВИМКНЕНА
+	{
+		Gdiplus::SolidBrush faceBrush(Gdiplus::Color(255, 242, 238, 225));
+		g.FillEllipse(&faceBrush, fullRect);
+	}
 
 	float borderThickness = 6.0f;
 	float xCenter = fullRect.Width / 2.0f;
@@ -375,7 +390,10 @@ void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 		}
 
 		// 4. Перемальовуємо годинник
-		Invalidate(FALSE);
+		if (m_bTransparent)
+			UpdateLayeredClock(); // Для прозорого режиму
+		else
+			Invalidate(FALSE);
 	}
 	CDialogEx::OnTimer(nIDEvent);
 }
@@ -467,6 +485,9 @@ void CClockvcmfcDlg::OnMenuSetup()
 		m_bSound = dlg.m_bSound; m_nOpacity = dlg.m_nOpacity;
 		SetLayeredWindowAttributes(0, (255 * m_nOpacity) / 100, LWA_ALPHA);
 		SetWindowPos(m_bTopMost ? &wndTopMost : &wndNoTopMost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+
+		m_bTransparent = dlg.m_bTransparent;
+		UpdateTransparency();
 
 		SaveSettings();
 	}
@@ -659,4 +680,64 @@ void CClockvcmfcDlg::PlayHourlyChime(int hours)
 			::PlaySound(fullPath, NULL, SND_FILENAME | SND_SYNC | SND_NODEFAULT);
 		}
 	}).detach(); // Від'єднуємо потік, він сам завершиться
+}
+
+void CClockvcmfcDlg::UpdateTransparency()
+{
+	if (m_bTransparent)
+	{
+		UpdateLayeredClock();
+	}
+	else
+	{
+		SetLayeredWindowAttributes(0, (255 * m_nOpacity) / 100, LWA_ALPHA);
+		Invalidate(FALSE);
+	}
+}
+
+void CClockvcmfcDlg::UpdateLayeredClock()
+{
+	CRect rect;
+	GetWindowRect(&rect); // Отримуємо поточні координати вікна на екрані
+	CSize size(rect.Width(), rect.Height());
+	CPoint ptSrc(0, 0);
+	CPoint ptDest(rect.left, rect.top); // Важливо для правильного позиціонування
+
+	HDC hdcScreen = ::GetDC(NULL);
+	HDC hMemDC = ::CreateCompatibleDC(hdcScreen);
+
+	BITMAPINFO bmi;
+	memset(&bmi, 0, sizeof(bmi));
+	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	bmi.bmiHeader.biWidth = size.cx;
+	bmi.bmiHeader.biHeight = size.cy;
+	bmi.bmiHeader.biPlanes = 1;
+	bmi.bmiHeader.biBitCount = 32;
+	bmi.bmiHeader.biCompression = BI_RGB;
+
+	void* pvBits;
+	HBITMAP hBitmap = ::CreateDIBSection(hMemDC, &bmi, DIB_RGB_COLORS, &pvBits, NULL, 0);
+	HBITMAP hOldBitmap = (HBITMAP)::SelectObject(hMemDC, hBitmap);
+
+	Gdiplus::Graphics g(hMemDC);
+	g.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
+	g.SetPixelOffsetMode(Gdiplus::PixelOffsetModeHighQuality);
+
+	// Очищаємо все ПОВНІСТЮ прозорим кольором
+	g.Clear(Gdiplus::Color(0, 0, 0, 0));
+
+	DrawClock(g);
+
+	BLENDFUNCTION blend = { 0 };
+	blend.BlendOp = AC_SRC_OVER;
+	blend.SourceConstantAlpha = (BYTE)((255 * m_nOpacity) / 100);
+	blend.AlphaFormat = AC_SRC_ALPHA;
+
+	// Цей виклик оновить вікно і змусить стрілку рухатися
+	::UpdateLayeredWindow(m_hWnd, hdcScreen, &ptDest, &size, hMemDC, &ptSrc, 0, &blend, ULW_ALPHA);
+
+	::SelectObject(hMemDC, hOldBitmap);
+	::DeleteObject(hBitmap);
+	::DeleteDC(hMemDC);
+	::ReleaseDC(NULL, hdcScreen);
 }

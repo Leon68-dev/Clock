@@ -57,6 +57,9 @@ protected:
 	void PlaySoundFile(CString fileName);
 	void PlayHourlyChime(int hours);
 
+	void UpdateTransparency();
+	void UpdateLayeredClock();
+
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
 	afx_msg void OnPaint();
