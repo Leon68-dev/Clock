@@ -74,6 +74,8 @@ BOOL CClockvcmfcDlg::OnEraseBkgnd(CDC* pDC)
 BOOL CClockvcmfcDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
+	
+	ModifyStyleEx(WS_EX_APPWINDOW, WS_EX_TOOLWINDOW);
 
 	// 1. Встановлюємо точний розмір вікна (140x140 пікселів)
 	int nSize = 136;
