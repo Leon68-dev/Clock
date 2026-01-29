@@ -93,6 +93,7 @@ BOOL CClockvcmfcDlg::OnInitDialog()
 
 	// 3. Налаштування прозорості (Layered Window)
 	ModifyStyleEx(0, WS_EX_LAYERED);
+	LoadSettings();
 	SetLayeredWindowAttributes(0, (255 * m_nOpacity) / 100, LWA_ALPHA);
 
 	// 4. Створення круглої форми вікна (тепер точно під розмір 140x140)
@@ -354,9 +355,22 @@ LRESULT CClockvcmfcDlg::OnTrayNotify(WPARAM wParam, LPARAM lParam)
 }
 
 // Обробники меню
-void CClockvcmfcDlg::OnMenuAbout() { CAboutDlg dlg; dlg.DoModal(); }
-void CClockvcmfcDlg::OnMenuCalendar() { CCalendarDlg dlg; dlg.DoModal(); }
-void CClockvcmfcDlg::OnMenuExit() { Shell_NotifyIcon(NIM_DELETE, &m_nid); PostQuitMessage(0); }
+void CClockvcmfcDlg::OnMenuAbout() 
+{ 
+	CAboutDlg dlg; dlg.DoModal(); 
+}
+
+void CClockvcmfcDlg::OnMenuCalendar() 
+{ 
+	CCalendarDlg dlg; dlg.DoModal(); 
+}
+
+void CClockvcmfcDlg::OnMenuExit() 
+{ 
+	SaveSettings();
+	Shell_NotifyIcon(NIM_DELETE, &m_nid); 
+	PostQuitMessage(0); 
+}
 
 void CClockvcmfcDlg::OnMenuShutdown() {
 	CShutDownDlg dlg(m_timeShutDown, m_isShutDown, m_isSleep);
@@ -374,6 +388,8 @@ void CClockvcmfcDlg::OnMenuSetup() {
 		m_bSound = dlg.m_bSound; m_nOpacity = dlg.m_nOpacity;
 		SetLayeredWindowAttributes(0, (255 * m_nOpacity) / 100, LWA_ALPHA);
 		SetWindowPos(m_bTopMost ? &wndTopMost : &wndNoTopMost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+
+		SaveSettings();
 	}
 }
 
@@ -401,4 +417,84 @@ void CClockvcmfcDlg::OnMenuHide()
 	}
 }
 
-HCURSOR CClockvcmfcDlg::OnQueryDragIcon() { return static_cast<HCURSOR>(m_hIcon); }
+HCURSOR CClockvcmfcDlg::OnQueryDragIcon() 
+{ 
+	return static_cast<HCURSOR>(m_hIcon); 
+}
+
+CString CClockvcmfcDlg::GetIniPath()
+{
+	TCHAR szPath[MAX_PATH];
+	GetModuleFileName(NULL, szPath, MAX_PATH); // Отримуємо шлях до EXE
+	CString strPath(szPath);
+	int nIndex = strPath.ReverseFind(_T('\\'));
+	if (nIndex != -1)
+		strPath = strPath.Left(nIndex + 1);
+
+	return strPath + _T("clock_vc_mfc.ini");
+}
+
+void CClockvcmfcDlg::SaveSettings()
+{
+	CString strPath = GetIniPath();
+	CString strVal;
+
+	auto WriteBool = [&](LPCTSTR key, BOOL val)
+	{
+		WritePrivateProfileString(_T("Settings"), key, val ? _T("1") : _T("0"), strPath);
+	};
+
+	WriteBool(_T("chkGMT"), m_bGMT);
+	WriteBool(_T("chkDate"), m_bDate);
+	WriteBool(_T("chkDay"), m_bDay);
+	WriteBool(_T("chkMoving"), m_bMoving);
+	WriteBool(_T("chkAlwaysOnTop"), m_bTopMost);
+	WriteBool(_T("chkTransparent"), m_bTransparent);
+	WriteBool(_T("chkBorder"), m_bBorder);
+	WriteBool(_T("chkSound"), m_bSound);
+
+	strVal.Format(_T("%d"), m_nOpacity);
+	WritePrivateProfileString(_T("Settings"), _T("frmOpacity"), strVal, strPath);
+
+	// Зберігаємо позицію вікна
+	CRect rect;
+	GetWindowRect(&rect);
+	strVal.Format(_T("%d"), rect.left);
+	WritePrivateProfileString(_T("Settings"), _T("deskX"), strVal, strPath);
+	strVal.Format(_T("%d"), rect.top);
+	WritePrivateProfileString(_T("Settings"), _T("deskY"), strVal, strPath);
+
+	// Налаштування вимкнення
+	WriteBool(_T("chkOff"), m_isShutDown);
+	WriteBool(_T("chkSleep"), m_isSleep);
+	WritePrivateProfileString(_T("Settings"), _T("timeOff"), m_timeShutDown.Format(_T("%H:%M")), strPath);
+}
+
+void CClockvcmfcDlg::LoadSettings()
+{
+	CString strPath = GetIniPath();
+
+	m_bGMT = GetPrivateProfileInt(_T("Settings"), _T("chkGMT"), 0, strPath);
+	m_bDate = GetPrivateProfileInt(_T("Settings"), _T("chkDate"), 1, strPath);
+	m_bDay = GetPrivateProfileInt(_T("Settings"), _T("chkDay"), 1, strPath);
+	m_bMoving = GetPrivateProfileInt(_T("Settings"), _T("chkMoving"), 1, strPath);
+	m_bTopMost = GetPrivateProfileInt(_T("Settings"), _T("chkAlwaysOnTop"), 0, strPath);
+	m_bTransparent = GetPrivateProfileInt(_T("Settings"), _T("chkTransparent"), 0, strPath);
+	m_bBorder = GetPrivateProfileInt(_T("Settings"), _T("chkBorder"), 1, strPath);
+	m_bSound = GetPrivateProfileInt(_T("Settings"), _T("chkSound"), 0, strPath);
+	m_nOpacity = GetPrivateProfileInt(_T("Settings"), _T("frmOpacity"), 80, strPath);
+
+	// Позиція
+	int x = GetPrivateProfileInt(_T("Settings"), _T("deskX"), -1, strPath);
+	int y = GetPrivateProfileInt(_T("Settings"), _T("deskY"), -1, strPath);
+	if (x != -1 && y != -1)
+		SetWindowPos(NULL, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+
+	// Вимкнення
+	m_isShutDown = GetPrivateProfileInt(_T("Settings"), _T("chkOff"), 0, strPath);
+	m_isSleep = GetPrivateProfileInt(_T("Settings"), _T("chkSleep"), 0, strPath);
+
+	TCHAR szTime[10];
+	GetPrivateProfileString(_T("Settings"), _T("timeOff"), _T("00:00"), szTime, 10, strPath);
+	m_timeShutDown.ParseDateTime(szTime);
+}

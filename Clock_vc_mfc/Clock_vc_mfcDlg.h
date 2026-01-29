@@ -15,12 +15,11 @@ public:
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
 
-
 	// Implementation
 protected:
 	HICON m_hIcon;
 
-	// --- Змінні для налаштувань годинника ---
+	// --- Налаштування годинника (змінні) ---
 	BOOL m_bGMT;
 	BOOL m_bDate;
 	BOOL m_bDay;
@@ -31,7 +30,7 @@ protected:
 	BOOL m_bSound;
 	int  m_nOpacity;
 
-	// --- Змінні для вимкнення ПК ---
+	// --- Налаштування вимкнення ПК ---
 	BOOL m_isShutDown;
 	BOOL m_isSleep;
 	COleDateTime m_timeShutDown;
@@ -45,24 +44,29 @@ protected:
 	int ClcX(int sec, int size, int xCenter);
 	int ClcY(int sec, int size, int yCenter);
 
+	// --- Робота з INI-файлом (Збереження/Завантаження) ---
+	CString GetIniPath();
+	void SaveSettings();
+	void LoadSettings();
+
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
 	afx_msg void OnPaint();
+	afx_msg BOOL OnEraseBkgnd(CDC* pDC); // Для запобігання мерехтінню
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg LRESULT OnTrayNotify(WPARAM wParam, LPARAM lParam);
-	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 
-	// Обробники меню
+	// Обробники команд меню
 	afx_msg void OnMenuSetup();
 	afx_msg void OnMenuAbout();
 	afx_msg void OnMenuCalendar();
 	afx_msg void OnMenuShutdown();
 	afx_msg void OnMenuExit();
-	afx_msg void OnMenuStartPosition();
-	afx_msg void OnMenuHide();
+	afx_msg void OnMenuHide();          // Приховати/Відкрити
+	afx_msg void OnMenuStartPosition(); // Повернути в кут
 
 	DECLARE_MESSAGE_MAP()
 };
