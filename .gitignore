@@ -12,10 +12,14 @@
 /Clock_vc/Debug
 /Clock_vc/_Clock.vcxproj.user
 
+/ClockAndToolbar/.vs
 /ClockAndToolbar/bin
 /ClockAndToolbar/obj
 
+/Toolbar/.vs
 /Toolbar/obj
+
+/Weather/.vs
 /Toolbar/bin
 
 /Weather/bin
