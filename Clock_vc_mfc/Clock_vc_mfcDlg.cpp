@@ -149,8 +149,6 @@ void CClockvcmfcDlg::OnPaint()
 
 void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 {
-	const float PI = 3.1415926535f;
-
 	CRect clientRect;
 	GetClientRect(&clientRect);
 
@@ -318,7 +316,38 @@ void CClockvcmfcDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 
 LRESULT CClockvcmfcDlg::OnTrayNotify(WPARAM wParam, LPARAM lParam)
 {
-	if (lParam == WM_LBUTTONDBLCLK) ShowWindow(IsWindowVisible() ? SW_HIDE : SW_SHOW);
+	if (lParam == WM_RBUTTONUP)
+	{
+		CPoint pos;
+		GetCursorPos(&pos); // ќтримуЇмо координати курсора
+
+		CMenu menu;
+		if (menu.LoadMenu(IDR_MENU_CONTEXT)) // ID вашого ресурсу меню
+		{
+			// ¬ибираЇмо TrayPopup (≥ндекс 1, бо ClockPopup Ч це 0)
+			CMenu* pPopup = menu.GetSubMenu(1);
+			if (pPopup)
+			{
+				// ¬ј∆Ћ»¬ќ: ÷е потр≥бно, щоб меню зникало, коли ви кл≥каЇте повз нього
+				SetForegroundWindow();
+
+				// ƒинам≥чно зм≥нюЇмо текст Hide/Open залежно в≥д стану в≥кна
+				if (IsWindowVisible())
+					pPopup->ModifyMenu(ID_MENU_HIDE, MF_BYCOMMAND | MF_STRING, ID_MENU_HIDE, _T("Hide"));
+				else
+					pPopup->ModifyMenu(ID_MENU_HIDE, MF_BYCOMMAND | MF_STRING, ID_MENU_HIDE, _T("Open"));
+
+				// ѕоказуЇмо меню
+				pPopup->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pos.x, pos.y, this);
+			}
+		}
+	}
+	// якщо подв≥йний кл≥к л≥вою Ч в≥дкриваЇмо/ховаЇмо годинник
+	else if (lParam == WM_LBUTTONDBLCLK)
+	{
+		SendMessage(WM_COMMAND, ID_MENU_HIDE);
+	}
+
 	return 0;
 }
 
