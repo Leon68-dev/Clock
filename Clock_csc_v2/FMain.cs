@@ -1,28 +1,30 @@
+using System;
 using System.Data;
-using System.Diagnostics;
 using System.Drawing;
-using System.Media;
+using System.Drawing.Drawing2D;
+using System.Drawing.Text;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Clock_csc_v2
 {
     public partial class FMain : Form
     {
-        private Pen pHandHr;
-        private Pen pHandMin;
-        private Pen pHhandSec;
-        private int mSizeDefault;
-        private int mXCenter;
-        private int mYCenter;
-        private int mDeskX;
-        private int mDeskY;
-        private bool msDown;
-        private int mOldX;
-        private int mOldY;
-        int mTypeActivate = 0;
+        // --- Змінні ---
+        private Point mLastMousePos;
+        private bool mIsMouseDown = false;
+        private const string TBL_NAME = "clock_csc_v2";
+        private int mDeskX, mDeskY;
+
         private DateTime mCurDateTime;
         private DateTime mTimeShutDown;
         private bool mIsShutDown;
         private bool mIsSleep = false;
+
+        // Налаштування
         private bool mChkGMT = false;
         private bool mChkDate = true;
         private bool mChkDay = true;
@@ -30,63 +32,369 @@ namespace Clock_csc_v2
         private bool mChkAlwaysOnTop = false;
         private bool mChkTransparent = false;
         private bool mChkBorder = true;
-        private int mFrmOpacity = 80;
-        private const string TBL_NAME = "clock_csc_v2";
         private bool mChkSound = false;
-        private int mClcTick = 0;
-        private int mMaxCountTick = 0;
+        private int mFrmOpacity = 80;
         private int mIntervalRefr = 1000;
+
         private CancellationTokenSource cts = new CancellationTokenSource();
+        private bool _isRuning = false;
 
         public FMain()
         {
             InitializeComponent();
+
+            // Важливі налаштування вікна
+            this.FormBorderStyle = FormBorderStyle.None;
+            this.ShowInTaskbar = false;
+            this.StartPosition = FormStartPosition.Manual;
+            this.BackColor = Color.Magenta; // Колір для відладки (не має бути видно)
+            this.TransparencyKey = Color.Empty; // Вимикаємо стандартну прозорість
+        }
+
+        // Вмикаємо Layered Window
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams cp = base.CreateParams;
+                cp.ExStyle |= 0x80000 | 0x80; // WS_EX_LAYERED | WS_EX_TOOLWINDOW
+                return cp;
+            }
         }
 
         public void initialization()
         {
-            //this.Visible = false;
-            mClcTick = 0;
-            int sW = (int)(this.Size.Width);
-            int sH = (int)(this.Size.Height);
-            Size = new Size(sW, sH);
-            MinimumSize = new Size(sW, sH);
+            this.MinimumSize = new Size(0, 0);
+            this.Size = new Size(134, 134);
 
             startPosition(ref mDeskX, ref mDeskY);
-
-            mTimeShutDown = new DateTime();
             mTimeShutDown = cPubFunc.chkTime();
 
             string str = Environment.ExpandEnvironmentVariables("%SystemRoot%");
             cPubFunc.playSound(@str + @"\Media\tada.wav");
 
-            DataSet ds = new DataSet();
+            LoadSettings();
 
+            mCurDateTime = getCurTime(mChkGMT);
+            timer1.Interval = mIntervalRefr;
+            timer1.Enabled = true;
+
+            this.Location = new Point(mDeskX, mDeskY);
+            this.TopMost = mChkAlwaysOnTop;
+
+            UpdateLayeredClock();
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            mCurDateTime = getCurTime(mChkGMT);
+            UpdateLayeredClock();
+            setTimeToTray();
+            setShutdown(mIsShutDown, mIsSleep);
+
+            if (mCurDateTime.Minute == 8 && mCurDateTime.Second == 48) GC.Collect();
+
+            if (mChkSound)
+            {
+                if (mCurDateTime.Minute == 0 && mCurDateTime.Second == 0)
+                {
+                    int hours = mCurDateTime.Hour;
+                    if (hours > 12) hours -= 12;
+                    if (hours == 0) hours = 12;
+                    for (int i = 0; i < hours; i++) playSound(cPubFunc.getFileNameWav("_Boom.wav"));
+                }
+                else if ((mCurDateTime.Minute == 15 || mCurDateTime.Minute == 45) && mCurDateTime.Second == 0)
+                    playSound(cPubFunc.getFileNameWav("_15.wav"));
+                else if (mCurDateTime.Minute == 30 && mCurDateTime.Second == 0)
+                    playSound(cPubFunc.getFileNameWav("_30.wav"));
+                else if (mCurDateTime.Second % 2 == 0)
+                    playSoundTickTack(cPubFunc.getFileNameWav("_TickTack.wav"));
+            }
+            else stopSound();
+        }
+
+        // --- ГРАФІКА ---
+        private void UpdateLayeredClock()
+        {
+            // Створюємо бітмап. Важливо: PixelFormat.Format32bppArgb для альфа-каналу
+            using (Bitmap bitmap = new Bitmap(this.Width, this.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
+            {
+                using (Graphics g = Graphics.FromImage(bitmap))
+                {
+                    DrawClock(g);
+
+                    IntPtr screenDc = Win32.GetDC(IntPtr.Zero);
+                    IntPtr memDc = Win32.CreateCompatibleDC(screenDc);
+                    IntPtr hBitmap = IntPtr.Zero;
+                    IntPtr oldBitmap = IntPtr.Zero;
+
+                    try
+                    {
+                        // Отримуємо HBITMAP з альфа-каналом (Color.Empty або 0)
+                        hBitmap = bitmap.GetHbitmap(Color.FromArgb(0));
+                        oldBitmap = Win32.SelectObject(memDc, hBitmap);
+
+                        Win32.Size size = new Win32.Size(this.Width, this.Height);
+                        Win32.Point pointSource = new Win32.Point(0, 0);
+                        Win32.Point topPos = new Win32.Point(this.Left, this.Top);
+                        Win32.BLENDFUNCTION blend = new Win32.BLENDFUNCTION();
+                        blend.BlendOp = Win32.AC_SRC_OVER;
+                        blend.BlendFlags = 0;
+                        blend.SourceConstantAlpha = (byte)((255 * mFrmOpacity) / 100);
+                        blend.AlphaFormat = Win32.AC_SRC_ALPHA;
+
+                        Win32.UpdateLayeredWindow(this.Handle, screenDc, ref topPos, ref size, memDc, ref pointSource, 0, ref blend, Win32.ULW_ALPHA);
+                    }
+                    finally
+                    {
+                        Win32.ReleaseDC(IntPtr.Zero, screenDc);
+                        if (hBitmap != IntPtr.Zero)
+                        {
+                            Win32.SelectObject(memDc, oldBitmap);
+                            Win32.DeleteObject(hBitmap);
+                        }
+                        Win32.DeleteDC(memDc);
+                    }
+                }
+            }
+        }
+
+        private void DrawClock(Graphics g)
+        {
+            g.SmoothingMode = SmoothingMode.HighQuality;
+            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+            g.TextRenderingHint = TextRenderingHint.AntiAlias;
+
+            int w = this.Width;
+            int h = this.Height;
+
+            // 1. Очищаємо фон у повну прозорість
+            g.Clear(Color.Transparent);
+
+            // Центр вікна (для 134х134 це 67, 67)
+            float xCenter = w / 2.0f;
+            float yCenter = h / 2.0f;
+
+            // Товщина кільця
+            float borderThickness = 6.0f;
+
+            // МАКСИМАЛЬНИЙ РАДІУС для малювання
+            // Встановлюємо радіус рівно в половину ширини (67.0f)
+            float radius = Math.Min(w, h) / 2.0f;
+
+            // 2. Фон циферблата
+            if (!mChkTransparent)
+            {
+                using (SolidBrush faceBrush = new SolidBrush(Color.FromArgb(255, 242, 238, 225)))
+                {
+                    // Малюємо фон на весь розмір кола
+                    g.FillEllipse(faceBrush, 0, 0, w, h);
+                }
+            }
+
+            // 3. БОРДЕР (Кільце впритул до краю)
+            if (mChkBorder)
+            {
+                // Створюємо прямокутник на все вікно
+                RectangleF penRect = new RectangleF(0, 0, w, h);
+
+                // Щоб 6-піксельне перо не виходило за межі, звужуємо шлях на половину товщини пера (3px)
+                float inset = borderThickness / 2.0f;
+                penRect.Inflate(-inset, -inset);
+
+                using (Pen pBlack = new Pen(Color.Black, borderThickness))
+                using (Pen pGray = new Pen(Color.Gray, 2.0f))
+                {
+                    g.DrawEllipse(pBlack, penRect);
+                    g.DrawEllipse(pGray, penRect);
+                }
+            }
+
+            // ВНУТРІШНІЙ РАДІУС для крапок та рисок
+            // Відступаємо від краю на товщину бордера + невеликий запас (1-2 пікселі)
+            float innerRadius = radius - borderThickness - 1.5f;
+
+            // 4. Поділки
+            using (Pen pHour = new Pen(Color.Black, 2.0f))
+            using (Pen pQuarter = new Pen(Color.Black, 4.0f))
+            using (SolidBrush bBlack = new SolidBrush(Color.Black))
+            using (SolidBrush bFace = new SolidBrush(Color.FromArgb(255, 242, 238, 225)))
+            {
+                for (int i = 0; i < 60; i++)
+                {
+                    double angle = i * Math.PI / 30.0 - Math.PI / 2.0;
+                    float cos = (float)Math.Cos(angle);
+                    float sin = (float)Math.Sin(angle);
+
+                    if (i % 5 == 0)
+                    {
+                        float len = (i % 15 == 0) ? innerRadius * 0.22f : innerRadius * 0.15f;
+                        Pen p = (i % 15 == 0) ? pQuarter : pHour;
+
+                        // Малюємо риску так, щоб вона торкалася внутрішньої межі бордера (+3.0f)
+                        g.DrawLine(p,
+                            xCenter + cos * (innerRadius - len),
+                            yCenter + sin * (innerRadius - len),
+                            xCenter + cos * (innerRadius + 3.0f),
+                            yCenter + sin * (innerRadius + 3.0f));
+
+                        // Крапки на рисках
+                        float markDotR = 1.5f;
+                        float mx = xCenter + cos * (innerRadius - len);
+                        float my = yCenter + sin * (innerRadius - len);
+                        g.FillEllipse(bFace, mx - markDotR, my - markDotR, markDotR * 2, markDotR * 2);
+                    }
+                    else
+                    {
+                        // Хвилинні крапки (зміщуємо ближче до кільця)
+                        float dotR = 1.3f;
+                        float px = xCenter + cos * (innerRadius + 1.5f);
+                        float py = yCenter + sin * (innerRadius + 1.5f);
+                        g.FillEllipse(bBlack, px - dotR, py - dotR, dotR * 2, dotR * 2);
+                    }
+                }
+            }
+
+            // 5. Текст та стрілки (використовують оновлений innerRadius)
+            DateTime dtNow = mChkGMT ? DateTime.UtcNow : DateTime.Now;
+            using (Font fontLN = new Font("Arial", innerRadius * 0.2f, FontStyle.Italic | FontStyle.Underline))
+            using (Font fontText = new Font("Arial", innerRadius * 0.11f, FontStyle.Bold))
+            using (SolidBrush bLN = new SolidBrush(Color.FromArgb(255, 240, 128, 128)))
+            using (SolidBrush bDate = new SolidBrush(Color.SteelBlue))
+            using (SolidBrush bDayNormal = new SolidBrush(Color.SaddleBrown))
+            using (SolidBrush bDayRed = new SolidBrush(Color.Red))
+            using (SolidBrush bUTC = new SolidBrush(Color.Olive))
+            {
+                StringFormat sf = new StringFormat();
+                sf.Alignment = StringAlignment.Center;
+                sf.LineAlignment = StringAlignment.Center;
+
+                g.DrawString("LN", fontLN, bLN, xCenter, yCenter - innerRadius * 0.52f, sf);
+
+                if (mChkDay)
+                {
+                    string strDay = dtNow.DayOfWeek.ToString();
+                    Brush bDay = (dtNow.DayOfWeek == DayOfWeek.Saturday || dtNow.DayOfWeek == DayOfWeek.Sunday) ? bDayRed : bDayNormal;
+                    g.DrawString(strDay, fontText, bDay, xCenter, yCenter + innerRadius * 0.12f, sf);
+                }
+
+                if (mChkDate)
+                {
+                    g.DrawString(dtNow.ToString("dd.MM.yyyy"), fontText, bDate, xCenter, yCenter + innerRadius * 0.35f, sf);
+                }
+
+                if (mChkGMT)
+                {
+                    g.DrawString("GMT", fontText, bUTC, xCenter, yCenter + innerRadius * 0.58f, sf);
+                }
+            }
+
+            // 6. Стрілки
+            DrawHand(g, xCenter, yCenter, (dtNow.Hour % 12 + dtNow.Minute / 60.0f) * 5.0f, innerRadius * 0.58f, 6.5f, true);
+            DrawHand(g, xCenter, yCenter, dtNow.Minute + dtNow.Second / 60.0f, innerRadius * 0.85f, 4.5f, true);
+
+            float sAngle = (float)(dtNow.Second * Math.PI / 30.0 - Math.PI / 2.0);
+            using (Pen pSec = new Pen(Color.Red, 1.5f))
+            {
+                float cos = (float)Math.Cos(sAngle);
+                float sin = (float)Math.Sin(sAngle);
+                g.DrawLine(pSec,
+                    xCenter - cos * (innerRadius * 0.15f),
+                    yCenter - sin * (innerRadius * 0.15f),
+                    xCenter + cos * (innerRadius * 0.95f),
+                    yCenter + sin * (innerRadius * 0.95f));
+            }
+
+            using (SolidBrush bCenter = new SolidBrush(Color.Black))
+            {
+                g.FillEllipse(bCenter, xCenter - 4, yCenter - 4, 8, 8);
+            }
+        }
+
+        private void DrawHand(Graphics g, float xc, float yc, float val, float len, float width, bool whiteLine)
+        {
+            double angle = val * Math.PI / 30.0 - Math.PI / 2.0;
+            float x = xc + (float)Math.Cos(angle) * len;
+            float y = yc + (float)Math.Sin(angle) * len;
+
+            using (Pen pBlack = new Pen(Color.Black, width))
+            {
+                pBlack.StartCap = LineCap.Round;
+                pBlack.EndCap = LineCap.Round;
+                g.DrawLine(pBlack, xc, yc, x, y);
+            }
+
+            if (whiteLine)
+            {
+                using (Pen pWhite = new Pen(Color.White, width / 2.2f))
+                {
+                    pWhite.StartCap = LineCap.Round;
+                    pWhite.EndCap = LineCap.Round;
+                    g.DrawLine(pWhite, xc, yc, x, y);
+                }
+            }
+        }
+
+        // --- ПОДІЇ МИШІ ---
+        private void FMain_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left && mChkMoving)
+            {
+                mIsMouseDown = true;
+                mLastMousePos = e.Location;
+            }
+            if (e.Button == MouseButtons.Right)
+            {
+                if (contextMenuFMain != null) contextMenuFMain.Show(Cursor.Position);
+            }
+        }
+
+        private void FMain_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (mIsMouseDown && mChkMoving)
+            {
+                int dx = e.X - mLastMousePos.X;
+                int dy = e.Y - mLastMousePos.Y;
+                this.Location = new Point(this.Left + dx, this.Top + dy);
+                UpdateLayeredClock();
+            }
+        }
+
+        private void FMain_MouseUp(object sender, MouseEventArgs e)
+        {
+            mIsMouseDown = false;
+            if (mChkMoving) { mDeskX = this.Left; mDeskY = this.Top; SaveSettings(); }
+        }
+
+        // --- ІНШІ МЕТОДИ ---
+        private void LoadSettings()
+        {
+            DataSet ds = new DataSet();
             try
             {
-                string filename = @cPubFunc.fileNameSet();
+                string filename = cPubFunc.fileNameSet();
                 if (File.Exists(filename))
                 {
                     ds.ReadXml(filename);
-                    mTimeShutDown = Convert.ToDateTime(ds.Tables[TBL_NAME].Rows[0]["timeOff"].ToString());
-                    mIsShutDown = System.Convert.ToBoolean(ds.Tables[TBL_NAME].Rows[0]["chkOff"].ToString());
-                    mChkGMT = System.Convert.ToBoolean(ds.Tables[TBL_NAME].Rows[0]["chkGMT"].ToString());
-                    mChkDate = System.Convert.ToBoolean(ds.Tables[TBL_NAME].Rows[0]["chkDate"].ToString());
-                    mChkDay = System.Convert.ToBoolean(ds.Tables[TBL_NAME].Rows[0]["chkDay"].ToString());
-                    mChkMoving = System.Convert.ToBoolean(ds.Tables[TBL_NAME].Rows[0]["chkMoving"].ToString());
-                    mChkTransparent = System.Convert.ToBoolean(ds.Tables[TBL_NAME].Rows[0]["chkTransparent"].ToString());
-                    mChkAlwaysOnTop = System.Convert.ToBoolean(ds.Tables[TBL_NAME].Rows[0]["chkAlwaysOnTop"].ToString());
-                    mChkBorder = System.Convert.ToBoolean(ds.Tables[TBL_NAME].Rows[0]["chkBorder"].ToString());
-                    mChkSound = System.Convert.ToBoolean(ds.Tables[TBL_NAME].Rows[0]["chkSound"].ToString());
-                    mFrmOpacity = System.Convert.ToInt32(ds.Tables[TBL_NAME].Rows[0]["frmOpacity"].ToString());
-                    mDeskX = System.Convert.ToInt32(ds.Tables[TBL_NAME].Rows[0]["deskX"].ToString());
-                    mDeskY = System.Convert.ToInt32(ds.Tables[TBL_NAME].Rows[0]["deskY"].ToString());
-                    mIntervalRefr = System.Convert.ToInt32(ds.Tables[TBL_NAME].Rows[0]["intervalRefr"].ToString());
+                    DataRow dr = ds.Tables[TBL_NAME].Rows[0];
+                    mTimeShutDown = Convert.ToDateTime(dr["timeOff"]);
+                    mIsShutDown = Convert.ToBoolean(dr["chkOff"]);
+                    mChkGMT = Convert.ToBoolean(dr["chkGMT"]);
+                    mChkDate = Convert.ToBoolean(dr["chkDate"]);
+                    mChkDay = Convert.ToBoolean(dr["chkDay"]);
+                    mChkMoving = Convert.ToBoolean(dr["chkMoving"]);
+                    mChkTransparent = Convert.ToBoolean(dr["chkTransparent"]);
+                    mChkAlwaysOnTop = Convert.ToBoolean(dr["chkAlwaysOnTop"]);
+                    mChkBorder = Convert.ToBoolean(dr["chkBorder"]);
+                    mChkSound = Convert.ToBoolean(dr["chkSound"]);
+                    mFrmOpacity = Convert.ToInt32(dr["frmOpacity"]);
+                    mDeskX = Convert.ToInt32(dr["deskX"]);
+                    mDeskY = Convert.ToInt32(dr["deskY"]);
+                    mIntervalRefr = Convert.ToInt32(dr["intervalRefr"]);
                 }
                 else
                 {
                     DataTable table = new DataTable(TBL_NAME);
-
                     table.Columns.Add("timeOff", typeof(DateTime));
                     table.Columns.Add("chkOff", typeof(bool));
                     table.Columns.Add("chkGMT", typeof(bool));
@@ -102,7 +410,6 @@ namespace Clock_csc_v2
                     table.Columns.Add("deskY", typeof(int));
                     table.Columns.Add("intervalRefr", typeof(int));
                     ds.Tables.Add(table);
-
                     DataRow dr = ds.Tables[TBL_NAME].NewRow();
                     dr["timeOff"] = cPubFunc.chkTime();
                     dr["chkOff"] = false;
@@ -119,673 +426,145 @@ namespace Clock_csc_v2
                     dr["deskY"] = mDeskY;
                     dr["intervalRefr"] = mIntervalRefr;
                     ds.Tables[TBL_NAME].Rows.Add(dr);
-
-                    ds.WriteXml(@cPubFunc.fileNameSet());
+                    ds.WriteXml(cPubFunc.fileNameSet());
                 }
-            }
-            catch
-            {
-                throw;
-            }
-
-            mSizeDefault = 140;                 
-
-            mXCenter = this.ClientSize.Width / 2;
-            mYCenter = this.ClientSize.Height / 2;
-
-            mCurDateTime = getCurTime(mChkGMT);
-
-            timer1.Interval = mIntervalRefr;
-            // Enable timer.
-            timer1.Enabled = true;
-
-            int koefTick = 1000 / timer1.Interval;
-            if (koefTick > 1)
-                mMaxCountTick = 60 * koefTick;
-            else
-                mMaxCountTick = 60;
-
-            this.DesktopLocation = new Point(this.mDeskX, this.mDeskY);
-
-            this.TopMost = this.mChkAlwaysOnTop;
-        }
-
-        private DateTime getCurTime(bool isGmt)
-        {
-            if (isGmt)
-                return (DateTime.UtcNow);
-            else
-                return (DateTime.Now);
-        }
-
-        private void startPosition(ref int x, ref int y)
-        {
-            System.Drawing.Rectangle workingRectangle = Screen.PrimaryScreen.WorkingArea;
-            x = workingRectangle.Width - (int)(this.Size.Width + this.Size.Width * 0.2);
-            y = workingRectangle.Height - (int)(this.Size.Height + this.Size.Height * 0.2);
-            Point tempPoint = new Point(x, y);
-            // Set the location of the form using the Point object.
-            this.DesktopLocation = tempPoint;
-        }
-
-        private void setShutdown(bool isShutDown, bool isSleep)
-        {
-            if (isSleep && (mTimeShutDown != cPubFunc.chkTime()) && (DateTime.Now.ToString("hh:mm").Equals(mTimeShutDown.ToString("hh:mm"))))
-            {
-                cPubFunc.SetSuspendState(false, true, true);
-                return;
-            }
-            else if (isShutDown && (mTimeShutDown != cPubFunc.chkTime()) && (DateTime.Now.ToString("hh:mm").Equals(mTimeShutDown.ToString("hh:mm"))))
-            {
-                int flag = cPubFunc.Poweroff;
-                cPubFunc.DoExitWindows(flag);
-            }
-        }
-
-        private void setTimeToTray()
-        {
-            if (DateTime.Now.Second != 1)
-                return;
-
-            string str = this.mCurDateTime.DayOfWeek.ToString();
-            str += " - ";
-            str += this.mCurDateTime.ToShortTimeString();
-
-            if (mChkGMT)
-                str += " GMT";
-
-            notifyIcon1.Text = str;
-        }
-
-        private void closeForm()
-        {
-            this.Visible = true;
-            Application.Exit();
-        }
-
-        private void mCMViewClick()
-        {
-            if (this.Visible == true && mTypeActivate == 1)
-            {
-                m_Open.Text = "Hide";
-                cm_hide.Text = "Hide";
-                this.Visible = true;
-                mTypeActivate = 2;
-            }
-            else if (this.Visible == true)
-            {
-                m_Open.Text = "Open";
-                cm_hide.Text = "Open";
-                this.Visible = false;
-            }
-            else
-            {
-                m_Open.Text = "Hide";
-                cm_hide.Text = "Hide";
-                this.Visible = true;
-            }
-        }
-
-        private void mCMView_Click(object sender, System.EventArgs e)
-        {
-            mCMViewClick();
-        }
-
-        private void FMain_MouseDown(object sender, MouseEventArgs e)
-        {
-            if (mChkMoving)
-            {
-                msDown = true;
-                mOldX = e.X;
-                mOldY = e.Y;
-            }
-        }
-
-        private void FMain_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (mChkMoving && msDown)
-            {
-                this.Left = this.Left + e.X - mOldX;
-                this.Top = this.Top + e.Y - mOldY;
-            }
-        }
-
-        private void FMain_MouseUp(object sender, MouseEventArgs e)
-        {
-            msDown = false;
-        }
-
-        private void cm_hide_Click(object sender, EventArgs e)
-        {
-            m_Open.Text = "Open";
-            this.Visible = false;
-        }
-        private void cm_calendar_Click(object sender, EventArgs e)
-        {
-            FCalendar fcld = new FCalendar();
-            fcld.ShowDialog();
-        }
-
-        private void cm_setShutDownPC_Click(object sender, EventArgs e)
-        {
-            FShutDown fsd = new FShutDown(mTimeShutDown, mIsShutDown, mIsSleep);
-            fsd.ShowDialog();
-            mIsShutDown = fsd.isShutDown;
-            mIsSleep = fsd.isSleep;
-
-            if (mIsShutDown)
-            {
-                string str = fsd.tm.ToString("dd.MM.yyyy HH:mm:ss");
-                mTimeShutDown = fsd.tm;
-                this.cm_setShutDownPC.Checked = true;
-            }
-            else
-            {
-                this.cm_setShutDownPC.Checked = false;
-            }
-        }
-
-        private void cm_about_Click(object sender, EventArgs e)
-        {
-            FAbout fa = new FAbout();
-            fa.ShowDialog();
-        }
-
-        private void cm_exit_Click(object sender, EventArgs e)
-        {
-            closeForm();
-        }
-
-        private void menuItem8_Click(object sender, EventArgs e)
-        {
-            cm_exit_Click(sender, e);
-        }
-
-        private void menuItem10_Click(object sender, EventArgs e)
-        {
-            cm_about_Click(sender, e);
-        }
-
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-
-            mXCenter = this.ClientSize.Width / 2;
-            mYCenter = this.ClientSize.Height / 2;
-
-            int x_beg = (clcX(0, 0, mXCenter) - this.ClientSize.Width / 2) + this.ClientSize.Width / 10;
-            int y_beg = (clcY(15, 0, mYCenter) - (this.ClientSize.Height / 2 + (this.ClientSize.Width / 2 - this.ClientSize.Height / 2))) + this.ClientSize.Height / 10;
-            int x_end = (this.ClientSize.Width) - this.ClientSize.Width / 5;
-            int y_end = (this.ClientSize.Width) - this.ClientSize.Height / 5;
-
-            System.Drawing.Drawing2D.GraphicsPath gp = new System.Drawing.Drawing2D.GraphicsPath();
-
-            int delta = 0;
-            if (this.mChkBorder)
-                delta = 3;
-
-            gp.AddEllipse(x_beg - delta, y_beg - delta, x_end + delta * 2, y_end + delta * 2);
-
-            Region r = new Region(gp);
-            this.Region = r;
-
-            try
-            {
-                //e.Graphics.CopyFromScreen(new Point(5, 5), new Point(5, 5), new Size(new Point(1000, 20)));
-                //e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(100, Color.Black)), new Rectangle(new Point(5, 5), new Size(new Point(1000, 20))));
-
-                if (this.mChkTransparent)
-                    e.Graphics.CopyFromScreen(
-                        new Point(this.Left, this.Top),
-                        new Point(0, 0),
-                        new Size(new Point(this.ClientSize.Width * 2, this.ClientSize.Height * 2)));
-
-                this.makeFacePain(e);
-                this.makeStringDraw(e);
-                this.makeHandsPain(e);
-
-                if (this.mChkBorder)
-                {
-                    // Create a path and add an ellipse.
-                    Rectangle myEllipse = new Rectangle(x_beg, y_beg, x_end, y_end);
-                    System.Drawing.Drawing2D.GraphicsPath myPath = new System.Drawing.Drawing2D.GraphicsPath();
-                    myPath.AddEllipse(myEllipse);
-
-                    // Draw the path to the screen.
-                    Pen myPen = new Pen(Color.Black, 6);
-                    e.Graphics.DrawPath(myPen, myPath);
-                    myPen = new Pen(Color.Gray, 2);
-                    e.Graphics.DrawPath(myPen, myPath);
-                }
-                ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-                var opc = (double)this.mFrmOpacity / 100;
-                this.Opacity = opc;
-
-                base.OnPaint(e);
             }
             catch { }
         }
 
-        public void drawCircleFloat(PaintEventArgs e, ref Pen penCircle, float x, float y, float width, float height)
+        private void SaveSettings()
         {
-            float startAngle = 0.0F;
-            float sweepAngle = 360.0F;
-            e.Graphics.DrawArc(penCircle, x, y, width, height, startAngle, sweepAngle);
-        }
-
-        public void drawLineFloat(PaintEventArgs e, ref Pen penLine, float x_beg, float y_beg, float x_end, float y_end)
-        {
-            e.Graphics.DrawLine(penLine, x_beg, y_beg, x_end, y_end);
-        }
-
-        private void drawString(Graphics g, string s, ref Font f, int x, int y, Brush brush)
-        {
-            g.DrawString(s, f, brush, x, y);
-        }
-
-        private int clcSizeRatio(int defaultSize)
-        {
-            int clc = 0;
-            if (this.ClientSize.Width < this.ClientSize.Height)
-                clc = this.ClientSize.Width;
-            else
-                clc = this.ClientSize.Height;
-
-            clc = (clc * defaultSize / mSizeDefault);
-            if (clc <= 0)
-                clc = 1;
-
-            return clc;
-        }
-
-        private int sizeMin()
-        {
-            if (this.ClientSize.Width < this.ClientSize.Height)
-                return (this.ClientSize.Width / 2);
-            else
-                return (this.ClientSize.Height / 2);
-        }
-
-        private void makeHandsPain(PaintEventArgs e)
-        {
-            int sz3 = clcSizeRatio(6);
-            pHandHr = new Pen(Color.Black, sz3);
-            int sz = clcSizeRatio(5);
-            pHandMin = new Pen(Color.Black, sz);
-            sz = clcSizeRatio(2);
-            pHhandSec = new Pen(Color.Red, sz);
-
-            Pen pHhandWhite1 = new Pen(this.BackColor, 1);
-
-            int s = this.mCurDateTime.Second;
-            int s2 = this.mCurDateTime.Second + 30;
-            int secSize = sizeMin() * 7 / 10;
-            int secSize2 = sizeMin() * 1 / 6;
-
-            int m = this.mCurDateTime.Minute;
-            int m2 = this.mCurDateTime.Minute + 30;
-            int minSize = sizeMin() * 3 / 5;
-            int minSize2 = sizeMin() * 1 / 8;
-
-            int h = this.mCurDateTime.Hour;
-            int h2 = this.mCurDateTime.Hour + 30;
-            int horSize = sizeMin() * 2 / 5;
-            int horSize2 = sizeMin() * 1 / 9;
-
-            int xs = clcX(s, secSize, mXCenter);
-            int ys = clcY(s, secSize, mYCenter);
-            int xs2 = clcX(s2, secSize2, mXCenter);
-            int ys2 = clcY(s2, secSize2, mYCenter);
-
-            int xm = clcX(m, minSize, mXCenter);
-            int ym = clcY(m, minSize, mYCenter);
-            int xm2 = clcX(m2, minSize2, mXCenter);
-            int ym2 = clcY(m2, minSize2, mYCenter);
-
-            int xh = clcX(h, m, horSize, mXCenter);
-            int yh = clcY(h, m, horSize, mYCenter);
-            int xh2 = clcX(h2, m, horSize2, mXCenter);
-            int yh2 = clcY(h2, m, horSize2, mYCenter);
-
-            drawLineFloat(e, ref pHandHr, mXCenter, mYCenter, xh, yh);
-            drawLineFloat(e, ref pHandHr, mXCenter, mYCenter, xh2, yh2);
-            drawLineFloat(e, ref pHhandWhite1, mXCenter, mYCenter, xh, yh);
-            drawLineFloat(e, ref pHhandWhite1, mXCenter, mYCenter, xh2, yh2);
-
-            drawLineFloat(e, ref pHandMin, mXCenter, mYCenter, xm, ym);
-            drawLineFloat(e, ref pHandMin, mXCenter, mYCenter, xm2, ym2);
-            drawLineFloat(e, ref pHhandWhite1, mXCenter, mYCenter, xm, ym);
-            drawLineFloat(e, ref pHhandWhite1, mXCenter, mYCenter, xm2, ym2);
-
-            drawLineFloat(e, ref pHhandSec, mXCenter, mYCenter, xs, ys);
-            drawLineFloat(e, ref pHhandSec, mXCenter, mYCenter, xs2, ys2);
-
-            sz = clcSizeRatio(3);
-            pHhandSec = new Pen(Color.Black, sz);
-            drawCircleFloat(e, ref pHhandSec, mXCenter - (sz / 2), mYCenter - (sz / 2), sz, sz);
-
-            sz = clcSizeRatio(1);
-            pHhandSec = new Pen(Color.OldLace, sz);
-            drawCircleFloat(e, ref pHhandSec, mXCenter - (sz / 2), mYCenter - (sz / 2), sz, sz);
-        }
-
-        private void makeFacePain(PaintEventArgs e)
-        {
-            for (int i = 0; i < 60; i++)
+            try
             {
-                if (i == 0 || i % 15 == 0)
-                {
-                    pHandMin = new Pen(Color.Black);
-                    makeFacePain(e, i, 2, 14, 3, 5);
-                    pHandMin = new Pen(Color.OldLace);
-                    makeFacePain(e, i, 2, 12, 20);
-                }
-                else if (i % 5 == 0)
-                {
-                    pHandMin = new Pen(Color.Black);
-                    makeFacePain(e, i, 2, 8, 2, 3);
-                    pHandMin = new Pen(Color.OldLace);
-                    makeFacePain(e, i, 1, 13, 20);
-                }
-                else
-                {
-                    pHandMin = new Pen(Color.Black);
-                    makeFacePain(e, i, 1, 15, 20);
-                }
+                DataSet ds = new DataSet();
+                ds.ReadXml(cPubFunc.fileNameSet());
+                DataRow dr = ds.Tables[TBL_NAME].Rows[0];
+                dr["chkGMT"] = mChkGMT;
+                dr["chkDate"] = mChkDate;
+                dr["chkDay"] = mChkDay;
+                dr["chkMoving"] = mChkMoving;
+                dr["chkAlwaysOnTop"] = mChkAlwaysOnTop;
+                dr["chkTransparent"] = mChkTransparent;
+                dr["chkBorder"] = mChkBorder;
+                dr["chkSound"] = mChkSound;
+                dr["frmOpacity"] = mFrmOpacity;
+                dr["deskX"] = this.Left;
+                dr["deskY"] = this.Top;
+                ds.WriteXml(cPubFunc.fileNameSet());
             }
+            catch { }
         }
 
-        private void makeFacePain(PaintEventArgs e, int min, int size, int clc_ch, int clc_zh)
+        private DateTime getCurTime(bool isGmt) { return isGmt ? DateTime.UtcNow : DateTime.Now; }
+        private void startPosition(ref int x, ref int y)
         {
-            int clc = sizeMin() * clc_ch / clc_zh;
-            int sz = clcSizeRatio(size);
-            pHandMin.Width = sz;
-            int x = clcX(min, clc, mXCenter);
-            int y = clcY(min, clc, mYCenter);
-            drawCircleFloat(e, ref pHandMin, x - (sz / 2), y - (sz / 2), sz, sz);
+            Rectangle workingRectangle = Screen.PrimaryScreen.WorkingArea;
+            x = workingRectangle.Width - (int)(this.Size.Width + this.Size.Width * 0.2);
+            y = workingRectangle.Height - (int)(this.Size.Height + this.Size.Height * 0.2);
         }
-
-        private void makeFacePain(PaintEventArgs e, int min, int size, int line, int clc_ch, int clc_zh)
+        private void setTimeToTray()
         {
-            int clc = sizeMin() * clc_ch / clc_zh;
-            int sz = clcSizeRatio(size);
-            pHandMin.Width = sz;
-            int clcLine = clcSizeRatio(line);
-            int x_beg = clcX(min, clc, mXCenter);
-            int y_beg = clcY(min, clc, mYCenter);
-            int x_end = clcX(min, (clc + clcLine), mXCenter);
-            int y_end = clcY(min, (clc + clcLine), mYCenter);
-
-            drawLineFloat(e, ref pHandMin, x_beg, y_beg, x_end, y_end);
+            if (DateTime.Now.Second != 1) return;
+            string str = mCurDateTime.DayOfWeek.ToString() + " - " + mCurDateTime.ToShortTimeString();
+            if (mChkGMT) str += " GMT";
+            notifyIcon1.Text = str;
         }
-
-        private void timer1_Tick(object sender, System.EventArgs e)
+        private void setShutdown(bool isShutDown, bool isSleep)
         {
-            mCurDateTime = getCurTime(mChkGMT);
-
-            setTimeToTray();
-
-            setShutdown(this.mIsShutDown, this.mIsSleep);
-
-            //if (++mClcTick > mMaxCountTick)
-            //{
-            //    mClcTick = 0;
-            //    GC.Collect();
-            //}
-
-            if (mCurDateTime.Minute == 8 && mCurDateTime.Second == 48)
-                GC.Collect();
-
-            this.Refresh();
-
-            if (mChkSound) 
-            {
-                if (mCurDateTime.Minute == 0 && mCurDateTime.Second == 0)
-                {
-                    int hours = mCurDateTime.Hour;
-                    
-                    if (hours > 12)
-                        hours -= 12;
-
-                    if(hours == 0)
-                        hours = 12;
-
-                    for (int i = 0; i < hours; i++)
-                        playSound(cPubFunc.getFileNameWav("_Boom.wav"));
-                }
-                else if ((mCurDateTime.Minute == 15 || mCurDateTime.Minute == 45) && mCurDateTime.Second == 0)
-                {
-                    playSound(cPubFunc.getFileNameWav("_15.wav"));
-                }
-                else if (mCurDateTime.Minute == 30 && mCurDateTime.Second == 0)
-                {
-                    playSound(cPubFunc.getFileNameWav("_30.wav"));
-                }
-                else if (mCurDateTime.Second % 2 == 0)
-                {
-                    playSoundTickTack(cPubFunc.getFileNameWav("_TickTack.wav"));
-                }
-            }
-            else 
-            {
-                stopSound();
-            }
+            if (isSleep && (mTimeShutDown != cPubFunc.chkTime()) && (DateTime.Now.ToString("hh:mm").Equals(mTimeShutDown.ToString("hh:mm"))))
+                cPubFunc.SetSuspendState(false, true, true);
+            else if (isShutDown && (mTimeShutDown != cPubFunc.chkTime()) && (DateTime.Now.ToString("hh:mm").Equals(mTimeShutDown.ToString("hh:mm"))))
+                cPubFunc.DoExitWindows(cPubFunc.Poweroff);
         }
-
-        private bool _isRuning = false;
         private void playSoundTickTack(string filename)
         {
-            Debug.WriteLine($"  run: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}");
-
-            if (string.IsNullOrEmpty(filename))
-                return;
-
+            if (string.IsNullOrEmpty(filename)) return;
             if (!_isRuning && mChkSound)
             {
                 _isRuning = true;
-                cts = new CancellationTokenSource(); // Reset the token
-                Task.Run(() =>
-                {
-                    if (!cts.Token.IsCancellationRequested)
-                    {
-                        cPubFunc.playSound(filename);
-                        Debug.WriteLine($"sound: {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}");
-                    }
-                    _isRuning = false;
-
-                    playSoundTickTack(filename);
-                }, cts.Token);
-            }            
+                cts = new CancellationTokenSource();
+                Task.Run(() => { if (!cts.Token.IsCancellationRequested) cPubFunc.playSound(filename); _isRuning = false; }, cts.Token);
+            }
         }
-
         private void playSound(string filename)
         {
-            if(string.IsNullOrEmpty(filename))
-                return;
-
-            cts = new CancellationTokenSource(); // Reset the token
-            Task.Run(() =>
-            {
-                if (!cts.Token.IsCancellationRequested)
-                    cPubFunc.playSound(filename);
-            }, cts.Token);
+            if (string.IsNullOrEmpty(filename)) return;
+            cts = new CancellationTokenSource();
+            Task.Run(() => { if (!cts.Token.IsCancellationRequested) cPubFunc.playSound(filename); }, cts.Token);
         }
-
-        private void stopSound()
-        {
-            cts.Cancel(); // Signals cancellation
-        }
-
-        private void makeStringDraw(PaintEventArgs e)
-        {
-            int x, y, clc;
-
-            Font f = new Font(Font.FontFamily, clcSizeRatio(1));
-
-            string str = "LN";
-            f = new Font(Font.FontFamily, clcSizeRatio(10), FontStyle.Italic | FontStyle.Underline);
-            SizeF stringSize = e.Graphics.MeasureString(str, f);
-            clc = sizeMin() * 2 / 5;
-            x = clcX(0, clc, mXCenter);
-            y = clcY(0, clc, mYCenter);
-            x -= (int)stringSize.Width / 2;
-            drawString(e.Graphics, str, ref f, x, y, Brushes.LightCoral);
-
-            if (mChkDay)
-            {
-                str = this.mCurDateTime.DayOfWeek.ToString();
-                f = new Font(Font.FontFamily, clcSizeRatio(6), FontStyle.Bold);
-                stringSize = e.Graphics.MeasureString(str, f);
-                clc = sizeMin() * 1 / 10;
-                x = clcX(30, clc, mXCenter);
-                y = clcY(30, clc, mYCenter);
-                x -= (int)stringSize.Width / 2;
-
-                if (this.mCurDateTime.DayOfWeek == System.DayOfWeek.Saturday || this.mCurDateTime.DayOfWeek == System.DayOfWeek.Sunday)
-                    drawString(e.Graphics, str, ref f, x, y, Brushes.Red);
-                else
-                    drawString(e.Graphics, str, ref f, x, y, Brushes.SaddleBrown);
-            }
-
-            if (mChkDate)
-            {
-                str = this.mCurDateTime.ToShortDateString();
-                f = new Font(Font.FontFamily, clcSizeRatio(6), FontStyle.Bold);
-                stringSize = e.Graphics.MeasureString(str, f);
-                clc = sizeMin() * 5 / 21;
-                x = clcX(30, clc, mXCenter);
-                y = clcY(30, clc, mYCenter);
-                x -= (int)stringSize.Width / 2;
-                drawString(e.Graphics, str, ref f, x, y, Brushes.SteelBlue);
-            }
-
-            if (mChkGMT)
-            {
-                str = "GMT";
-                f = new Font(Font.FontFamily, clcSizeRatio(6), FontStyle.Bold);
-                stringSize = e.Graphics.MeasureString(str, f);
-                clc = sizeMin() * 9 / 20;
-                x = clcX(30, clc, mXCenter);
-                y = clcY(30, clc, mYCenter);
-                x = x - (int)stringSize.Width / 2;
-                drawString(e.Graphics, str, ref f, x, y, Brushes.Olive);
-            }
-        }
-
-        private int clcX(int sec, int size, int xCenter)
-        {
-            return ((int)(Math.Cos(sec * Math.PI / 30 - Math.PI / 2) * size + xCenter));
-        }
-
-        private int clcY(int sec, int size, int yCenter)
-        {
-            return ((int)(Math.Sin(sec * Math.PI / 30 - Math.PI / 2) * size + yCenter));
-        }
-
-        private int clcX(int hour, int min, int size, int xCenter)
-        {
-            return ((int)(Math.Cos((hour * 30 + min / 2) * Math.PI / 180 - Math.PI / 2) * size + xCenter));
-        }
-
-        private int clcY(int hour, int min, int size, int yCenter)
-        {
-            return ((int)(Math.Sin((hour * 30 + min / 2) * Math.PI / 180 - Math.PI / 2) * size + yCenter));
-        }
-
-        private void notifyIcon1_DoubleClick(object sender, EventArgs e)
-        {
-            mCMViewClick();
-        }
+        private void stopSound() { cts.Cancel(); }
+        private void closeForm() { this.Visible = true; Application.Exit(); }
 
         private void cm_SetupClick()
         {
             FSetup fs = new FSetup();
             fs.initialization(mChkGMT, mChkDate, mChkDay, mChkMoving, mChkAlwaysOnTop, mChkTransparent, mChkBorder, mChkSound, mFrmOpacity);
             fs.ShowDialog();
-
-            if (fs.mClose <= 0)
-                return;
-
-            try
-            {
-                this.mChkGMT = fs.mChkGMT;
-                this.mChkDate = fs.mChkDate;
-                this.mChkDay = fs.mChkDay;
-                this.mChkMoving = fs.mChkMoving;
-                this.mChkAlwaysOnTop = fs.mChkAlwaysOnTop;
-                this.mChkTransparent = fs.mChkTransparent;
-                this.mChkBorder = fs.mChkBorder;
-                this.TopMost = this.mChkAlwaysOnTop;
-                this.mChkSound = fs.mChkSound;
-                this.mFrmOpacity = fs.mValOpacity;
-
-                ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                DataSet ds = new DataSet();
-                ds.ReadXml(@cPubFunc.fileNameSet());
-                ds.Tables[TBL_NAME].Rows[0]["chkGMT"] = this.mChkGMT;
-                ds.Tables[TBL_NAME].Rows[0]["chkDate"] = this.mChkDate;
-                ds.Tables[TBL_NAME].Rows[0]["chkDay"] = this.mChkDay;
-                ds.Tables[TBL_NAME].Rows[0]["chkMoving"] = this.mChkMoving;
-                ds.Tables[TBL_NAME].Rows[0]["chkAlwaysOnTop"] = this.mChkAlwaysOnTop;
-                ds.Tables[TBL_NAME].Rows[0]["chkTransparent"] = this.mChkTransparent;
-                ds.Tables[TBL_NAME].Rows[0]["chkBorder"] = this.mChkBorder;
-                ds.Tables[TBL_NAME].Rows[0]["chkSound"] = this.mChkSound;
-                ds.Tables[TBL_NAME].Rows[0]["frmOpacity"] = this.mFrmOpacity;
-                ds.WriteXml(@cPubFunc.fileNameSet());
-                ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            }
-            catch { }
+            if (fs.mClose <= 0) return;
+            mChkGMT = fs.mChkGMT; mChkDate = fs.mChkDate; mChkDay = fs.mChkDay; mChkMoving = fs.mChkMoving;
+            mChkAlwaysOnTop = fs.mChkAlwaysOnTop; mChkTransparent = fs.mChkTransparent; mChkBorder = fs.mChkBorder;
+            mChkSound = fs.mChkSound; mFrmOpacity = fs.mValOpacity;
+            this.TopMost = mChkAlwaysOnTop;
+            UpdateLayeredClock();
+            SaveSettings();
         }
 
-
-        private void cm_Setup_Click(object sender, EventArgs e)
+        private void cm_Setup_Click(object sender, EventArgs e) { cm_SetupClick(); }
+        private void cm_StartPosition_Click(object sender, EventArgs e) { startPosition(ref mDeskX, ref mDeskY); this.Location = new Point(mDeskX, mDeskY); UpdateLayeredClock(); }
+        private void cm_hide_Click(object sender, EventArgs e) { this.Visible = false; }
+        private void cm_calendar_Click(object sender, EventArgs e) { new FCalendar().ShowDialog(); }
+        private void cm_setShutDownPC_Click(object sender, EventArgs e)
         {
-            cm_SetupClick();
+            FShutDown fsd = new FShutDown(mTimeShutDown, mIsShutDown, mIsSleep);
+            fsd.ShowDialog();
+            mIsShutDown = fsd.isShutDown; mIsSleep = fsd.isSleep;
+            if (mIsShutDown) { mTimeShutDown = fsd.tm; cm_setShutDownPC.Checked = true; } else { cm_setShutDownPC.Checked = false; }
         }
+        private void cm_about_Click(object sender, EventArgs e) { new FAbout().ShowDialog(); }
+        private void cm_exit_Click(object sender, EventArgs e) { closeForm(); }
+        private void mCMViewClick() { if (this.Visible) this.Visible = false; else { this.Visible = true; this.Activate(); } }
+        private void notifyIcon1_DoubleClick(object sender, EventArgs e) { mCMViewClick(); }
+        private void m_Open_Click(object sender, EventArgs e) { mCMViewClick(); }
+        private void m_Setup_Click(object sender, EventArgs e) { cm_SetupClick(); }
+        private void m_About_Click(object sender, EventArgs e) { cm_about_Click(sender, e); }
+        private void m_Exit_Click(object sender, EventArgs e) { cm_exit_Click(sender, e); }
+        private void FMain_FormClosing(object sender, FormClosingEventArgs e) { SaveSettings(); }
+    }
 
-        private void cm_StartPosition_Click(object sender, EventArgs e)
-        {
-            startPosition(ref mDeskX, ref mDeskY);
-        }
+    internal static class Win32
+    {
+        public const int ULW_ALPHA = 0x00000002;
+        public const byte AC_SRC_OVER = 0x00;
+        public const byte AC_SRC_ALPHA = 0x01;
 
-        private void mSetup_Click(object sender, EventArgs e)
-        {
-            cm_SetupClick();
-        }
+        [StructLayout(LayoutKind.Sequential)]
+        public struct Point { public int x; public int y; public Point(int x, int y) { this.x = x; this.y = y; } }
 
-        private void FMain_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            try
-            {
-                DataSet ds = new DataSet();
-                ds.ReadXml(@cPubFunc.fileNameSet());
-                ds.Tables[TBL_NAME].Rows[0]["deskX"] = this.Left;
-                ds.Tables[TBL_NAME].Rows[0]["deskY"] = this.Top;
-                ds.WriteXml(@cPubFunc.fileNameSet());
-            }
-            catch { }
-        }
+        [StructLayout(LayoutKind.Sequential)]
+        public struct Size { public int cx; public int cy; public Size(int cx, int cy) { this.cx = cx; this.cy = cy; } }
 
-        private void m_Setup_Click(object sender, EventArgs e)
-        {
-            cm_SetupClick();
-        }
+        [StructLayout(LayoutKind.Sequential)]
+        public struct BLENDFUNCTION { public byte BlendOp; public byte BlendFlags; public byte SourceConstantAlpha; public byte AlphaFormat; }
 
-        private void m_Open_Click(object sender, EventArgs e)
-        {
-            mCMViewClick();
-        }
+        [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
+        public static extern bool UpdateLayeredWindow(IntPtr hwnd, IntPtr hdcDst, ref Point pptDst, ref Size psize, IntPtr hdcSrc, ref Point pptSrc, int crKey, ref BLENDFUNCTION pblend, int dwFlags);
 
-        private void m_About_Click(object sender, EventArgs e)
-        {
-            cm_about_Click(sender, e);
-        }
+        [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
+        public static extern IntPtr GetDC(IntPtr hWnd);
 
-        private void m_Exit_Click(object sender, EventArgs e)
-        {
-            cm_exit_Click(sender, e);
-        }
+        [DllImport("user32.dll", ExactSpelling = true)]
+        public static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
 
+        [DllImport("gdi32.dll", ExactSpelling = true, SetLastError = true)]
+        public static extern IntPtr CreateCompatibleDC(IntPtr hDC);
+
+        [DllImport("gdi32.dll", ExactSpelling = true, SetLastError = true)]
+        public static extern bool DeleteDC(IntPtr hdc);
+
+        [DllImport("gdi32.dll", ExactSpelling = true)]
+        public static extern IntPtr SelectObject(IntPtr hDC, IntPtr hObject);
+
+        [DllImport("gdi32.dll", ExactSpelling = true, SetLastError = true)]
+        public static extern bool DeleteObject(IntPtr hObject);
     }
 }
