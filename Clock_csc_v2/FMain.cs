@@ -457,13 +457,18 @@ namespace Clock_csc_v2
             catch { }
         }
 
-        private DateTime getCurTime(bool isGmt) { return isGmt ? DateTime.UtcNow : DateTime.Now; }
+        private DateTime getCurTime(bool isGmt) 
+        {
+            return isGmt ? DateTime.UtcNow : DateTime.Now;
+        } 
+
         private void startPosition(ref int x, ref int y)
         {
             Rectangle workingRectangle = Screen.PrimaryScreen.WorkingArea;
             x = workingRectangle.Width - (int)(this.Size.Width + this.Size.Width * 0.2);
             y = workingRectangle.Height - (int)(this.Size.Height + this.Size.Height * 0.2);
         }
+
         private void setTimeToTray()
         {
             if (DateTime.Now.Second != 1) return;
@@ -471,6 +476,7 @@ namespace Clock_csc_v2
             if (mChkGMT) str += " GMT";
             notifyIcon1.Text = str;
         }
+
         private void setShutdown(bool isShutDown, bool isSleep)
         {
             if (isSleep && (mTimeShutDown != cPubFunc.chkTime()) && (DateTime.Now.ToString("hh:mm").Equals(mTimeShutDown.ToString("hh:mm"))))
@@ -478,6 +484,7 @@ namespace Clock_csc_v2
             else if (isShutDown && (mTimeShutDown != cPubFunc.chkTime()) && (DateTime.Now.ToString("hh:mm").Equals(mTimeShutDown.ToString("hh:mm"))))
                 cPubFunc.DoExitWindows(cPubFunc.Poweroff);
         }
+
         private void playSoundTickTack(string filename)
         {
             if (string.IsNullOrEmpty(filename)) return;
@@ -488,14 +495,21 @@ namespace Clock_csc_v2
                 Task.Run(() => { if (!cts.Token.IsCancellationRequested) cPubFunc.playSound(filename); _isRuning = false; }, cts.Token);
             }
         }
+
         private void playSound(string filename)
         {
             if (string.IsNullOrEmpty(filename)) return;
             cts = new CancellationTokenSource();
             Task.Run(() => { if (!cts.Token.IsCancellationRequested) cPubFunc.playSound(filename); }, cts.Token);
         }
-        private void stopSound() { cts.Cancel(); }
-        private void closeForm() { this.Visible = true; Application.Exit(); }
+
+        private void stopSound() => cts.Cancel();
+        
+        private void closeForm() 
+        { 
+            this.Visible = true; 
+            Application.Exit(); 
+        }
 
         private void cm_SetupClick()
         {
@@ -512,9 +526,18 @@ namespace Clock_csc_v2
         }
 
         private void cm_Setup_Click(object sender, EventArgs e) => cm_SetupClick();
-        private void cm_StartPosition_Click(object sender, EventArgs e) { startPosition(ref mDeskX, ref mDeskY); this.Location = new Point(mDeskX, mDeskY); UpdateLayeredClock(); }
-        private void cm_hide_Click(object sender, EventArgs e) { this.Visible = false; }
-        private void cm_calendar_Click(object sender, EventArgs e) { new FCalendar().ShowDialog(); }
+        
+        private void cm_StartPosition_Click(object sender, EventArgs e) 
+        { 
+            startPosition(ref mDeskX, ref mDeskY); 
+            this.Location = new Point(mDeskX, mDeskY); 
+            UpdateLayeredClock(); 
+        }
+        
+        private void cm_hide_Click(object sender, EventArgs e) => this.Visible = false; 
+
+        private void cm_calendar_Click(object sender, EventArgs e) => new FCalendar().ShowDialog();
+        
         private void cm_setShutDownPC_Click(object sender, EventArgs e)
         {
             FShutDown fsd = new FShutDown(mTimeShutDown, mIsShutDown, mIsSleep);
@@ -523,15 +546,9 @@ namespace Clock_csc_v2
             if (mIsShutDown) { mTimeShutDown = fsd.tm; cm_setShutDownPC.Checked = true; } else { cm_setShutDownPC.Checked = false; }
         }
         
-        private void cm_about_Click(object sender, EventArgs e) 
-        { 
-            new FAbout().ShowDialog(); 
-        }
-        
-        private void cm_exit_Click(object sender, EventArgs e) 
-        { 
-            closeForm(); 
-        }
+        private void cm_about_Click(object sender, EventArgs e) => new FAbout().ShowDialog(); 
+                
+        private void cm_exit_Click(object sender, EventArgs e) => closeForm(); 
         
         private void mCMViewClick() 
         { 
@@ -551,7 +568,9 @@ namespace Clock_csc_v2
         private void m_Setup_Click(object sender, EventArgs e) => cm_SetupClick(); 
 
         private void m_About_Click(object sender, EventArgs e) => cm_about_Click(sender, e);
+
         private void m_Exit_Click(object sender, EventArgs e) => cm_exit_Click(sender, e);
+        
         private void FMain_FormClosing(object sender, FormClosingEventArgs e) => SaveSettings(); 
 
         private void cm_world_map_Click(object sender, EventArgs e)
