@@ -30,13 +30,14 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FAbout));
             groupBox1 = new GroupBox();
+            lblAvailablePhysicalMem = new Label();
             lblWinVersion = new Label();
             lblTotalPhysicalMem = new Label();
             label1 = new Label();
             button1 = new Button();
             lblCopyright = new Label();
             pictureBox1 = new PictureBox();
-            lblAvailablePhysicalMem = new Label();
+            label2 = new Label();
             groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             SuspendLayout();
@@ -52,6 +53,17 @@
             groupBox1.Size = new Size(437, 98);
             groupBox1.TabIndex = 11;
             groupBox1.TabStop = false;
+            // 
+            // lblAvailablePhysicalMem
+            // 
+            lblAvailablePhysicalMem.AutoSize = true;
+            lblAvailablePhysicalMem.FlatStyle = FlatStyle.System;
+            lblAvailablePhysicalMem.ImeMode = ImeMode.NoControl;
+            lblAvailablePhysicalMem.Location = new Point(9, 66);
+            lblAvailablePhysicalMem.Name = "lblAvailablePhysicalMem";
+            lblAvailablePhysicalMem.Size = new Size(186, 20);
+            lblAvailablePhysicalMem.TabIndex = 6;
+            lblAvailablePhysicalMem.Text = "Available Physical Memory";
             // 
             // lblWinVersion
             // 
@@ -118,16 +130,15 @@
             pictureBox1.TabIndex = 13;
             pictureBox1.TabStop = false;
             // 
-            // lblAvailablePhysicalMem
+            // label2
             // 
-            lblAvailablePhysicalMem.AutoSize = true;
-            lblAvailablePhysicalMem.FlatStyle = FlatStyle.System;
-            lblAvailablePhysicalMem.ImeMode = ImeMode.NoControl;
-            lblAvailablePhysicalMem.Location = new Point(9, 66);
-            lblAvailablePhysicalMem.Name = "lblAvailablePhysicalMem";
-            lblAvailablePhysicalMem.Size = new Size(186, 20);
-            lblAvailablePhysicalMem.TabIndex = 6;
-            lblAvailablePhysicalMem.Text = "Available Physical Memory";
+            label2.AutoSize = true;
+            label2.Location = new Point(135, 12);
+            label2.Name = "label2";
+            label2.Size = new Size(27, 20);
+            label2.TabIndex = 14;
+            label2.Text = "C#";
+            label2.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // FAbout
             // 
@@ -135,6 +146,7 @@
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(454, 211);
+            Controls.Add(label2);
             Controls.Add(pictureBox1);
             Controls.Add(groupBox1);
             Controls.Add(label1);
@@ -167,5 +179,6 @@
         private Label lblCopyright;
         private PictureBox pictureBox1;
         private Label lblAvailablePhysicalMem;
+        private Label label2;
     }
 }
