@@ -35,6 +35,8 @@ BOOL CWorldMapDlg::OnInitDialog()
 {
     CDialogEx::OnInitDialog();
 
+    SetWindowText(_T("World Day/Night Map"));
+
     // 1. Встановлюємо розмір вікна 1000x500 (клієнтська область)
     CRect rc(0, 0, 1000, 500);
     CalcWindowRect(&rc);
