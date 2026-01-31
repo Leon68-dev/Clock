@@ -133,169 +133,173 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 	CRect clientRect;
 	GetClientRect(&clientRect);
 
-	// Використовуємо float для максимальної точності
 	float w = (float)clientRect.Width();
 	float h = (float)clientRect.Height();
 
-	// Налаштування максимальної якості згладжування
+	// Налаштування якості (ідентично C#)
 	g.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
-	// HighQuality дозволяє уникнути "зубців" на межах прозорості
 	g.SetPixelOffsetMode(Gdiplus::PixelOffsetModeHighQuality);
 	g.SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAlias);
-
-	// Створюємо робочу область з відступом 0.5 пікселя, щоб краї не обрізалися
-	Gdiplus::RectF drawingRect(0.5f, 0.5f, w - 1.0f, h - 1.0f);
 
 	float xCenter = w / 2.0f;
 	float yCenter = h / 2.0f;
 
-	// Колір циферблата (Parchment)
-	Gdiplus::Color faceColor(255, 242, 238, 225);
-	Gdiplus::SolidBrush faceBrush(faceColor);
-
-	// --- 1. ЗАПОВНЕННЯ ФОНУ (КРУГЛЕ) ---
-	if (!m_bTransparent)
-	{
-		// Малюємо ЕЛІПС замість прямокутника, щоб прибрати квадратні кути
-		g.FillEllipse(&faceBrush, drawingRect);
-	}
+	// 1. Очищення фону (в UpdateLayeredClock вже є g.Clear, але про всяк випадок)
+	// g.Clear(Gdiplus::Color(0, 0, 0, 0)); 
 
 	float borderThickness = 6.0f;
+	float radius = (w < h ? w : h) / 2.0f;
 
-	// --- 2. БОРДЕР (Кільце) ---
+	// 2. Фон циферблата
+	if (!m_bTransparent)
+	{
+		Gdiplus::SolidBrush faceBrush(Gdiplus::Color(255, 242, 238, 225));
+		g.FillEllipse(&faceBrush, 0.0f, 0.0f, w, h);
+	}
+
+	// 3. БОРДЕР (Кільце)
 	if (m_bBorder)
 	{
-		Gdiplus::RectF penRect = drawingRect;
-		// Зміщуємо лінію всередину на половину її товщини
+		Gdiplus::RectF penRect(0.0f, 0.0f, w, h);
 		float inset = borderThickness / 2.0f;
 		penRect.Inflate(-inset, -inset);
 
 		Gdiplus::Pen penBlack(Gdiplus::Color::Black, borderThickness);
-		g.DrawEllipse(&penBlack, penRect);
-
 		Gdiplus::Pen penGray(Gdiplus::Color::Gray, 2.0f);
+
+		g.DrawEllipse(&penBlack, penRect);
 		g.DrawEllipse(&penGray, penRect);
 	}
 
-	// Розрахунок внутрішнього радіуса для поділок
-	float innerRadius = (w / 2.0f) - borderThickness - 1.0f;
+	// ВНУТРІШНІЙ РАДІУС (точно як в C#)
+	float innerRadius = radius - borderThickness - 1.5f;
 
-	// --- 3. ПОДІЛКИ ---
+	// 4. ПОДІЛКИ
 	Gdiplus::Pen penHour(Gdiplus::Color::Black, 2.0f);
 	Gdiplus::Pen penQuarter(Gdiplus::Color::Black, 4.0f);
 	Gdiplus::SolidBrush brushBlack(Gdiplus::Color::Black);
+	Gdiplus::SolidBrush faceBrush(Gdiplus::Color(255, 242, 238, 225));
 
 	for (int i = 0; i < 60; i++)
 	{
 		float angle = i * PI / 30.0f - PI / 2.0f;
-		float cosA = (float)cos(angle);
-		float sinA = (float)sin(angle);
+		float cosA = cosf(angle);
+		float sinA = sinf(angle);
 
 		if (i % 5 == 0)
 		{
 			float len = (i % 15 == 0) ? innerRadius * 0.22f : innerRadius * 0.15f;
-			if (!m_bBorder)
-			{
-				len = (i % 15 == 0) ? innerRadius * 0.15f : innerRadius * 0.1f;
-			}
-
-			float delta = m_bBorder ? 2.0f : 6.0f;
-
 			Gdiplus::Pen* p = (i % 15 == 0) ? &penQuarter : &penHour;
 
+			// Малюємо риску (відступ +3.0f як в C#)
 			g.DrawLine(p,
 				xCenter + cosA * (innerRadius - len),
 				yCenter + sinA * (innerRadius - len),
-				xCenter + cosA * (innerRadius + delta),
-				yCenter + sinA * (innerRadius + delta)
+				xCenter + cosA * (innerRadius + 3.0f),
+				yCenter + sinA * (innerRadius + 3.0f)
 			);
 
-			// Крапки на рисках (кольору циферблата)
+			// Крапки на рисках
 			float markDotR = 1.5f;
-			float mx = xCenter + cosA * (innerRadius - len - 1.0f);
-			float my = yCenter + sinA * (innerRadius - len - 1.0f);
+			float mx = xCenter + cosA * (innerRadius - len);
+			float my = yCenter + sinA * (innerRadius - len);
 			g.FillEllipse(&faceBrush, mx - markDotR, my - markDotR, markDotR * 2.0f, markDotR * 2.0f);
 		}
 		else
 		{
+			// Хвилинні крапки
 			float dotR = 1.3f;
-			float delta = m_bBorder ? 0.0f : 3.0f;
-
-			float px = xCenter + cosA * (innerRadius + delta);
-			float py = yCenter + sinA * (innerRadius + delta);
+			float px = xCenter + cosA * (innerRadius + 1.5f);
+			float py = yCenter + sinA * (innerRadius + 1.5f);
 			g.FillEllipse(&brushBlack, px - dotR, py - dotR, dotR * 2.0f, dotR * 2.0f);
 		}
 	}
 
-	// --- 4. ТЕКСТ ---
+	// 5. ТЕКСТ
 	Gdiplus::FontFamily fontFamily(L"Arial");
 	Gdiplus::StringFormat strFormat;
 	strFormat.SetAlignment(Gdiplus::StringAlignmentCenter);
+	strFormat.SetLineAlignment(Gdiplus::StringAlignmentCenter);
 
+	// LN
 	Gdiplus::Font fontLN(&fontFamily, innerRadius * 0.2f, Gdiplus::FontStyleItalic | Gdiplus::FontStyleUnderline);
 	Gdiplus::SolidBrush brushLN(Gdiplus::Color(255, 240, 128, 128));
 	g.DrawString(L"LN", -1, &fontLN, Gdiplus::PointF(xCenter, yCenter - innerRadius * 0.52f), &strFormat, &brushLN);
 
 	COleDateTime now;
-	if (m_bGMT)
-	{
-		SYSTEMTIME st;
-		::GetSystemTime(&st);
-		now = COleDateTime(st);
-
-		Gdiplus::Font fontUTC(&fontFamily, innerRadius * 0.1f, Gdiplus::FontStyleBold);
-		Gdiplus::SolidBrush brushUTC(Gdiplus::Color::Olive);
-		g.DrawString(L"GMT", -1, &fontUTC, Gdiplus::PointF(xCenter, yCenter + innerRadius * 0.54f), &strFormat, &brushUTC);
+	if (m_bGMT) {
+		SYSTEMTIME st; ::GetSystemTime(&st); now = COleDateTime(st);
 	}
-	else
-	{
+	else {
 		now = COleDateTime::GetCurrentTime();
 	}
 
+	// Day
 	if (m_bDay)
 	{
 		CString strDay = now.Format(_T("%A"));
-		Gdiplus::Font fontDay(&fontFamily, innerRadius * 0.1f, Gdiplus::FontStyleBold);
-		Gdiplus::SolidBrush brushDay((now.GetDayOfWeek() == 1 || now.GetDayOfWeek() == 7) ? Gdiplus::Color::Red : Gdiplus::Color(255, 139, 69, 19));
-		g.DrawString(strDay, -1, &fontDay, Gdiplus::PointF(xCenter, yCenter + innerRadius * 0.10f), &strFormat, &brushDay);
+		Gdiplus::Font fontText(&fontFamily, innerRadius * 0.11f, Gdiplus::FontStyleBold);
+		// Неділя в COleDateTime = 1, Субота = 7
+		bool isWeekend = (now.GetDayOfWeek() == 1 || now.GetDayOfWeek() == 7);
+		Gdiplus::SolidBrush brushDay(isWeekend ? Gdiplus::Color::Red : Gdiplus::Color(255, 139, 69, 19));
+		g.DrawString(strDay, -1, &fontText, Gdiplus::PointF(xCenter, yCenter + innerRadius * 0.12f), &strFormat, &brushDay);
 	}
 
+	// Date
 	if (m_bDate)
 	{
 		CString strDate = now.Format(_T("%d.%m.%Y"));
-		Gdiplus::Font fontDate(&fontFamily, innerRadius * 0.1f, Gdiplus::FontStyleBold);
+		Gdiplus::Font fontText(&fontFamily, innerRadius * 0.11f, Gdiplus::FontStyleBold);
 		Gdiplus::SolidBrush brushDate(Gdiplus::Color(255, 70, 130, 180));
-		g.DrawString(strDate, -1, &fontDate, Gdiplus::PointF(xCenter, yCenter + innerRadius * 0.32f), &strFormat, &brushDate);
+		g.DrawString(strDate, -1, &fontText, Gdiplus::PointF(xCenter, yCenter + innerRadius * 0.35f), &strFormat, &brushDate);
 	}
 
-	// --- 5. СТРІЛКИ ---
-	auto DrawHand = [&](float val, float len, float width, bool hasWhiteLine)
+	// GMT
+	if (m_bGMT)
+	{
+		Gdiplus::Font fontText(&fontFamily, innerRadius * 0.11f, Gdiplus::FontStyleBold);
+		Gdiplus::SolidBrush brushUTC(Gdiplus::Color::Olive);
+		g.DrawString(L"GMT", -1, &fontText, Gdiplus::PointF(xCenter, yCenter + innerRadius * 0.58f), &strFormat, &brushUTC);
+	}
+
+	// 6. СТРІЛКИ
+	auto DrawHandMFC = [&](float val, float len, float width, bool hasWhiteLine)
 		{
-			Gdiplus::Pen pHand(Gdiplus::Color::Black, width);
-			pHand.SetEndCap(Gdiplus::LineCapRound);
 			float a = val * PI / 30.0f - PI / 2.0f;
-			float x = xCenter + (float)cos(a) * len;
-			float y = yCenter + (float)sin(a) * len;
-			g.DrawLine(&pHand, xCenter, yCenter, x, y);
+			float x = xCenter + cosf(a) * len;
+			float y = yCenter + sinf(a) * len;
+
+			Gdiplus::Pen pBlack(Gdiplus::Color::Black, width);
+			pBlack.SetStartCap(Gdiplus::LineCapRound);
+			pBlack.SetEndCap(Gdiplus::LineCapRound);
+			g.DrawLine(&pBlack, xCenter, yCenter, x, y);
+
 			if (hasWhiteLine)
 			{
 				Gdiplus::Pen pWhite(Gdiplus::Color::White, width / 2.2f);
+				pWhite.SetStartCap(Gdiplus::LineCapRound);
 				pWhite.SetEndCap(Gdiplus::LineCapRound);
 				g.DrawLine(&pWhite, xCenter, yCenter, x, y);
 			}
 		};
 
-	DrawHand((float)(now.GetHour() % 12 * 5 + now.GetMinute() / 12.0f), innerRadius * 0.58f, 6.5f, true);
-	DrawHand((float)now.GetMinute(), innerRadius * 0.85f, 4.5f, true);
+	// Годинна та хвилинна
+	DrawHandMFC((float)(now.GetHour() % 12 * 5 + now.GetMinute() / 12.0f), innerRadius * 0.58f, 6.5f, true);
+	DrawHandMFC((float)now.GetMinute() + now.GetSecond() / 60.0f, innerRadius * 0.85f, 4.5f, true);
 
+	// Секундна (червона)
 	Gdiplus::Pen pSec(Gdiplus::Color::Red, 1.5f);
 	float sAngle = now.GetSecond() * PI / 30.0f - PI / 2.0f;
+	float cosS = cosf(sAngle);
+	float sinS = sinf(sAngle);
 	g.DrawLine(&pSec,
-		xCenter + (float)cos(sAngle + PI) * (innerRadius * 0.15f),
-		yCenter + (float)sin(sAngle + PI) * (innerRadius * 0.15f),
-		xCenter + (float)cos(sAngle) * (innerRadius * 0.92f),
-		yCenter + (float)sin(sAngle) * (innerRadius * 0.92f));
+		xCenter - cosS * (innerRadius * 0.15f),
+		yCenter - sinS * (innerRadius * 0.15f),
+		xCenter + cosS * (innerRadius * 0.95f),
+		yCenter + sinS * (innerRadius * 0.95f)
+	);
 
+	// Центр
 	g.FillEllipse(&brushBlack, xCenter - 4.0f, yCenter - 4.0f, 8.0f, 8.0f);
 }
 
