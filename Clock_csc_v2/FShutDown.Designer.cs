@@ -41,7 +41,7 @@
             // 
             chkIsSleep.FlatStyle = FlatStyle.System;
             chkIsSleep.ImeMode = ImeMode.NoControl;
-            chkIsSleep.Location = new Point(50, 87);
+            chkIsSleep.Location = new Point(23, 87);
             chkIsSleep.Name = "chkIsSleep";
             chkIsSleep.Size = new Size(184, 30);
             chkIsSleep.TabIndex = 14;
@@ -52,7 +52,7 @@
             // 
             chkIsWork.FlatStyle = FlatStyle.System;
             chkIsWork.ImeMode = ImeMode.NoControl;
-            chkIsWork.Location = new Point(50, 43);
+            chkIsWork.Location = new Point(23, 43);
             chkIsWork.Name = "chkIsWork";
             chkIsWork.Size = new Size(184, 30);
             chkIsWork.TabIndex = 13;
@@ -129,6 +129,8 @@
             MinimizeBox = false;
             Name = "FShutDown";
             Opacity = 0.85D;
+            ShowIcon = false;
+            ShowInTaskbar = false;
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Shut down";
             ResumeLayout(false);
