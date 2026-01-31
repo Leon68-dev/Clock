@@ -1,5 +1,7 @@
 #pragma once
 
+class CWorldMapDlg;
+
 // CClockvcmfcDlg dialog
 class CClockvcmfcDlg : public CDialogEx
 {
@@ -18,6 +20,8 @@ protected:
 	// Implementation
 protected:
 	HICON m_hIcon;
+
+	CWorldMapDlg* m_pMapDlg = nullptr;
 
 	// --- Налаштування годинника (змінні) ---
 	BOOL m_bGMT;
@@ -78,6 +82,7 @@ protected:
 	afx_msg void OnMenuExit();
 	afx_msg void OnMenuHide();          // Приховати/Відкрити
 	afx_msg void OnMenuStartPosition(); // Повернути в кут
-
+	afx_msg void OnMenuWorldmap();
+	
 	DECLARE_MESSAGE_MAP()
 };

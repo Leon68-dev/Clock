@@ -45,6 +45,9 @@
     <ClInclude Include="SetupDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="WorldMapDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Clock_vc_mfc.cpp">
@@ -68,6 +71,9 @@
     <ClCompile Include="SetupDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="WorldMapDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Clockvcmfc.rc">
@@ -84,6 +90,9 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="res\bitmap2.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\world_map.jpg">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

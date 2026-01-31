@@ -10,6 +10,8 @@
 #define IDD_SETUP_DLG                   135
 #define IDR_MENU_CONTEXT                138
 #define IDB_BITMAP1                     139
+#define IDR_WORLD_MAP                   140
+#define IDD_WORLD_MAP                   141
 #define IDC_STATIC_IMG                  1000
 #define IDC_STATIC_VER                  1001
 #define IDC_STATIC_COPY                 1002
@@ -43,13 +45,16 @@
 #define ID_TRAYPOPUP_SETUP              32781
 #define ID_TRAYPOPUP_HIDE               32782
 #define ID_Menu32783                    32783
+#define ID_CLOCKPOPUP_WOFLDMAP          32784
+#define ID_CLOCKPOPUP_WORLDMAP          32785
+#define ID_MENU_WORLDMAP                32786
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        140
-#define _APS_NEXT_COMMAND_VALUE         32784
+#define _APS_NEXT_RESOURCE_VALUE        143
+#define _APS_NEXT_COMMAND_VALUE         32787
 #define _APS_NEXT_CONTROL_VALUE         1020
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

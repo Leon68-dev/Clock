@@ -13,6 +13,7 @@
 #include "CalendarDlg.h"
 #include "SetupDlg.h"
 #include "ShutDownDlg.h"
+#include "WorldMapDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -64,6 +65,7 @@ BEGIN_MESSAGE_MAP(CClockvcmfcDlg, CDialogEx)
 	ON_COMMAND(ID_MENU_EXIT, &CClockvcmfcDlg::OnMenuExit)
 	ON_COMMAND(ID_MENU_STARTPOSITION, &CClockvcmfcDlg::OnMenuStartPosition)
 	ON_COMMAND(ID_MENU_HIDE, &CClockvcmfcDlg::OnMenuHide)
+	ON_COMMAND(ID_MENU_WORLDMAP, &CClockvcmfcDlg::OnMenuWorldmap)
 END_MESSAGE_MAP()
 
 BOOL CClockvcmfcDlg::OnEraseBkgnd(CDC* pDC)
@@ -702,4 +704,31 @@ void CClockvcmfcDlg::UpdateLayeredClock()
 	::DeleteObject(hBitmap);
 	::DeleteDC(hMemDC);
 	::ReleaseDC(NULL, hdcScreen);
+}
+
+void CClockvcmfcDlg::OnMenuWorldmap()
+{
+	// Перевіряємо: чи існує об'єкт І чи існує саме вікно в системі
+	if (m_pMapDlg != nullptr && ::IsWindow(m_pMapDlg->GetSafeHwnd()))
+	{
+		// Вікно вже на екрані, просто виводимо на передній план
+		m_pMapDlg->ShowWindow(SW_SHOW);
+		m_pMapDlg->SetForegroundWindow();
+	}
+	else
+	{
+		// Якщо об'єкт є (залишився в пам'яті), але вікно (HWND) знищене хрестиком
+		if (m_pMapDlg != nullptr)
+		{
+			delete m_pMapDlg; // Очищаємо пам'ять
+			m_pMapDlg = nullptr;
+		}
+
+		// Створюємо нове вікно
+		m_pMapDlg = new CWorldMapDlg(this);
+		if (m_pMapDlg->Create(IDD_WORLD_MAP, this))
+		{
+			m_pMapDlg->ShowWindow(SW_SHOW);
+		}
+	}
 }

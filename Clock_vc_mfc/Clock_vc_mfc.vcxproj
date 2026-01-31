@@ -188,6 +188,7 @@
     <ClInclude Include="CalendarDlg.h" />
     <ClInclude Include="Clock_vc_mfc.h" />
     <ClInclude Include="Clock_vc_mfcDlg.h" />
+    <ClInclude Include="WorldMapDlg.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
@@ -200,6 +201,7 @@
     <ClCompile Include="CalendarDlg.cpp" />
     <ClCompile Include="Clock_vc_mfc.cpp" />
     <ClCompile Include="Clock_vc_mfcDlg.cpp" />
+    <ClCompile Include="WorldMapDlg.cpp" />
     <ClCompile Include="SetupDlg.cpp" />
     <ClCompile Include="ShutDownDlg.cpp" />
     <ClCompile Include="pch.cpp">
@@ -218,6 +220,7 @@
   <ItemGroup>
     <Image Include="res\bitmap2.bmp" />
     <Image Include="res\Clock_vc_mfc.ico" />
+    <Image Include="res\world_map.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
