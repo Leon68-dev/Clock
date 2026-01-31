@@ -511,7 +511,7 @@ namespace Clock_csc_v2
             SaveSettings();
         }
 
-        private void cm_Setup_Click(object sender, EventArgs e) { cm_SetupClick(); }
+        private void cm_Setup_Click(object sender, EventArgs e) => cm_SetupClick();
         private void cm_StartPosition_Click(object sender, EventArgs e) { startPosition(ref mDeskX, ref mDeskY); this.Location = new Point(mDeskX, mDeskY); UpdateLayeredClock(); }
         private void cm_hide_Click(object sender, EventArgs e) { this.Visible = false; }
         private void cm_calendar_Click(object sender, EventArgs e) { new FCalendar().ShowDialog(); }
@@ -522,15 +522,55 @@ namespace Clock_csc_v2
             mIsShutDown = fsd.isShutDown; mIsSleep = fsd.isSleep;
             if (mIsShutDown) { mTimeShutDown = fsd.tm; cm_setShutDownPC.Checked = true; } else { cm_setShutDownPC.Checked = false; }
         }
-        private void cm_about_Click(object sender, EventArgs e) { new FAbout().ShowDialog(); }
-        private void cm_exit_Click(object sender, EventArgs e) { closeForm(); }
-        private void mCMViewClick() { if (this.Visible) this.Visible = false; else { this.Visible = true; this.Activate(); } }
-        private void notifyIcon1_DoubleClick(object sender, EventArgs e) { mCMViewClick(); }
-        private void m_Open_Click(object sender, EventArgs e) { mCMViewClick(); }
-        private void m_Setup_Click(object sender, EventArgs e) { cm_SetupClick(); }
-        private void m_About_Click(object sender, EventArgs e) { cm_about_Click(sender, e); }
-        private void m_Exit_Click(object sender, EventArgs e) { cm_exit_Click(sender, e); }
-        private void FMain_FormClosing(object sender, FormClosingEventArgs e) { SaveSettings(); }
+        
+        private void cm_about_Click(object sender, EventArgs e) 
+        { 
+            new FAbout().ShowDialog(); 
+        }
+        
+        private void cm_exit_Click(object sender, EventArgs e) 
+        { 
+            closeForm(); 
+        }
+        
+        private void mCMViewClick() 
+        { 
+            if (this.Visible) 
+                this.Visible = false; 
+            else 
+            { 
+                this.Visible = true; 
+                this.Activate(); 
+            } 
+        }
+
+        private void notifyIcon1_DoubleClick(object sender, EventArgs e) => mCMViewClick(); 
+        
+        private void m_Open_Click(object sender, EventArgs e) => mCMViewClick(); 
+                
+        private void m_Setup_Click(object sender, EventArgs e) => cm_SetupClick(); 
+
+        private void m_About_Click(object sender, EventArgs e) => cm_about_Click(sender, e);
+        private void m_Exit_Click(object sender, EventArgs e) => cm_exit_Click(sender, e);
+        private void FMain_FormClosing(object sender, FormClosingEventArgs e) => SaveSettings(); 
+
+        private void cm_world_map_Click(object sender, EventArgs e)
+        {
+            // ѕерев≥р€Їмо, чи в≥кно вже в≥дкрите
+            FWorldMap frmMap = null;
+
+            if (frmMap == null || frmMap.IsDisposed)
+            {
+                frmMap = new FWorldMap();
+                frmMap.Show(); // ¬≥дкриваЇмо €к окреме в≥кно (Modeless)
+            }
+            else
+            {
+                frmMap.Activate(); // якщо вже в≥дкрите Ч виводимо на передн≥й план
+                if (frmMap.WindowState == FormWindowState.Minimized)
+                    frmMap.WindowState = FormWindowState.Normal;
+            }
+        }
     }
 
     internal static class Win32
