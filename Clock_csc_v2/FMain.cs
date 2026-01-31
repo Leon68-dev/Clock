@@ -271,21 +271,23 @@ namespace Clock_csc_v2
 
                 g.DrawString("LN", fontLN, bLN, xCenter, yCenter - innerRadius * 0.52f, sf);
 
+                float yDelta = 5.0f;
+
                 if (mChkDay)
                 {
                     string strDay = dtNow.DayOfWeek.ToString();
                     Brush bDay = (dtNow.DayOfWeek == DayOfWeek.Saturday || dtNow.DayOfWeek == DayOfWeek.Sunday) ? bDayRed : bDayNormal;
-                    g.DrawString(strDay, fontText, bDay, xCenter, yCenter + innerRadius * 0.12f, sf);
+                    g.DrawString(strDay, fontText, bDay, xCenter, yCenter + yDelta + innerRadius * 0.12f, sf);
                 }
 
                 if (mChkDate)
                 {
-                    g.DrawString(dtNow.ToString("dd.MM.yyyy"), fontText, bDate, xCenter, yCenter + innerRadius * 0.35f, sf);
+                    g.DrawString(dtNow.ToString("dd.MM.yyyy"), fontText, bDate, xCenter, yCenter + yDelta + innerRadius * 0.35f, sf);
                 }
 
                 if (mChkGMT)
                 {
-                    g.DrawString("GMT", fontText, bUTC, xCenter, yCenter + innerRadius * 0.58f, sf);
+                    g.DrawString("GMT", fontText, bUTC, xCenter, yCenter + yDelta + innerRadius * 0.58f, sf);
                 }
             }
 

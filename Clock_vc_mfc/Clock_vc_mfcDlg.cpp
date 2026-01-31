@@ -135,10 +135,10 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 	float w = (float)clientRect.Width();
 	float h = (float)clientRect.Height();
 
-	g.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias); // Чистіші краї для круглих форм
+	// Налаштування якості
+	g.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
 	g.SetPixelOffsetMode(Gdiplus::PixelOffsetModeHighQuality);
-	g.SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAlias);
-	g.SetCompositingMode(Gdiplus::CompositingModeSourceOver);
+	g.SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAlias); // М'яке згладжування
 
 	float xCenter = w / 2.0f;
 	float yCenter = h / 2.0f;
@@ -149,41 +149,32 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 	if (!m_bTransparent)
 	{
 		Gdiplus::SolidBrush faceBrush(Gdiplus::Color(255, 242, 238, 225));
-		// Малюємо фон трохи меншим (на 1 піксель), щоб він гарантовано 
-		// сховався під чорною рамкою і не створював світлий ореол
-		g.FillEllipse(&faceBrush, 1.0f, 1.0f, w - 2.0f, h - 2.0f);
+		// Малюємо фон на 0.5 пікселя меншим, щоб прибрати світлий ореол
+		g.FillEllipse(&faceBrush, 0.5f, 0.5f, w - 1.0f, h - 1.0f);
 	}
 
 	// 2. БОРДЕР (Кільце)
 	if (m_bBorder)
 	{
-		// Малюємо чорне кільце точно по краю
 		Gdiplus::RectF penRect(0.0f, 0.0f, w, h);
 		float inset = borderThickness / 2.0f;
 		penRect.Inflate(-inset, -inset);
 
-		// Використовуємо окрему якість для бордера, щоб прибрати "пухнастість"
-		g.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
-
 		Gdiplus::Pen penBlack(Gdiplus::Color::Black, borderThickness);
-		g.DrawEllipse(&penBlack, penRect);
-
-		// Внутрішня сіра лінія
 		Gdiplus::Pen penGray(Gdiplus::Color::Gray, 2.0f);
+
+		g.DrawEllipse(&penBlack, penRect);
 		g.DrawEllipse(&penGray, penRect);
 	}
 
-	// Повертаємо стандартне згладжування для решти елементів
-	g.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
-
-	// ВНУТРІШНІЙ РАДІУС (як у C#)
+	// ВНУТРІШНІЙ РАДІУС
 	float innerRadius = radius - borderThickness - 1.5f;
 
 	// 3. ПОДІЛКИ (Ticks)
 	Gdiplus::Pen penHour(Gdiplus::Color::Black, 2.0f);
 	Gdiplus::Pen penQuarter(Gdiplus::Color::Black, 4.0f);
 	Gdiplus::SolidBrush brushBlack(Gdiplus::Color::Black);
-	Gdiplus::SolidBrush faceBrush(Gdiplus::Color(255, 242, 238, 225));
+	Gdiplus::SolidBrush brushFace(Gdiplus::Color(255, 242, 238, 225));
 
 	for (int i = 0; i < 60; i++)
 	{
@@ -204,54 +195,60 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 			);
 
 			float markDotR = 1.5f;
-			float mx = xCenter + cosA * (innerRadius - len);
-			float my = yCenter + sinA * (innerRadius - len);
-			g.FillEllipse(&faceBrush, mx - markDotR, my - markDotR, markDotR * 2.0f, markDotR * 2.0f);
+			g.FillEllipse(&brushFace,
+				xCenter + cosA * (innerRadius - len) - markDotR,
+				yCenter + sinA * (innerRadius - len) - markDotR,
+				markDotR * 2.0f, markDotR * 2.0f);
 		}
 		else
 		{
 			float dotR = 1.3f;
-			float px = xCenter + cosA * (innerRadius + 1.5f);
-			float py = yCenter + sinA * (innerRadius + 1.5f);
-			g.FillEllipse(&brushBlack, px - dotR, py - dotR, dotR * 2.0f, dotR * 2.0f);
+			g.FillEllipse(&brushBlack,
+				xCenter + cosA * (innerRadius + 1.5f) - dotR,
+				yCenter + sinA * (innerRadius + 1.5f) - dotR,
+				dotR * 2.0f, dotR * 2.0f);
 		}
 	}
 
-	// 4. ТЕКСТ (LN, Day, Date, GMT)
+	// 4. ТЕКСТ (Повертаємо розмір 0.1f та 0.2f, але додаємо Bold)
 	Gdiplus::FontFamily fontFamily(L"Arial");
-	Gdiplus::StringFormat strFormat;
-	strFormat.SetAlignment(Gdiplus::StringAlignmentCenter);
-	strFormat.SetLineAlignment(Gdiplus::StringAlignmentCenter);
+	Gdiplus::StringFormat sf;
+	sf.SetAlignment(Gdiplus::StringAlignmentCenter);
+	sf.SetLineAlignment(Gdiplus::StringAlignmentCenter);
 
+	// LN (Розмір як був - 0.2f)
 	Gdiplus::Font fontLN(&fontFamily, innerRadius * 0.2f, Gdiplus::FontStyleItalic | Gdiplus::FontStyleUnderline);
-	Gdiplus::SolidBrush brushLN(Gdiplus::Color(255, 240, 128, 128));
-	g.DrawString(L"LN", -1, &fontLN, Gdiplus::PointF(xCenter, yCenter - innerRadius * 0.52f), &strFormat, &brushLN);
+	Gdiplus::SolidBrush bLN(Gdiplus::Color(255, 240, 128, 128));
+	g.DrawString(L"LN", -1, &fontLN, Gdiplus::PointF(xCenter, yCenter - innerRadius * 0.52f), &sf, &bLN);
 
 	COleDateTime now;
 	if (m_bGMT) { SYSTEMTIME st; ::GetSystemTime(&st); now = COleDateTime(st); }
 	else { now = COleDateTime::GetCurrentTime(); }
 
+	// Основний текст (Розмір як був - 0.1f, але тепер Bold)
 	Gdiplus::Font fontText(&fontFamily, innerRadius * 0.11f, Gdiplus::FontStyleBold);
+
+	float yDelta = 5.0f;
 
 	if (m_bDay)
 	{
 		CString strDay = now.Format(_T("%A"));
 		bool isWeekend = (now.GetDayOfWeek() == 1 || now.GetDayOfWeek() == 7);
-		Gdiplus::SolidBrush brushDay(isWeekend ? Gdiplus::Color::Red : Gdiplus::Color(255, 139, 69, 19));
-		g.DrawString(strDay, -1, &fontText, Gdiplus::PointF(xCenter, yCenter + innerRadius * 0.12f), &strFormat, &brushDay);
+		Gdiplus::SolidBrush bDay(isWeekend ? Gdiplus::Color::Red : Gdiplus::Color(255, 139, 69, 19));
+		g.DrawString(strDay, -1, &fontText, Gdiplus::PointF(xCenter, yCenter + yDelta + innerRadius * 0.12f), &sf, &bDay);
 	}
 
 	if (m_bDate)
 	{
 		CString strDate = now.Format(_T("%d.%m.%Y"));
-		Gdiplus::SolidBrush brushDate(Gdiplus::Color(255, 70, 130, 180));
-		g.DrawString(strDate, -1, &fontText, Gdiplus::PointF(xCenter, yCenter + innerRadius * 0.35f), &strFormat, &brushDate);
+		Gdiplus::SolidBrush bDate(Gdiplus::Color(255, 70, 130, 180));
+		g.DrawString(strDate, -1, &fontText, Gdiplus::PointF(xCenter, yCenter + yDelta + innerRadius * 0.35f), &sf, &bDate);
 	}
 
 	if (m_bGMT)
 	{
-		Gdiplus::SolidBrush brushUTC(Gdiplus::Color::Olive);
-		g.DrawString(L"GMT", -1, &fontText, Gdiplus::PointF(xCenter, yCenter + innerRadius * 0.58f), &strFormat, &brushUTC);
+		Gdiplus::SolidBrush bUTC(Gdiplus::Color(255, 128, 128, 0));
+		g.DrawString(L"GMT", -1, &fontText, Gdiplus::PointF(xCenter, yCenter + yDelta + innerRadius * 0.58f), &sf, &bUTC);
 	}
 
 	// 5. СТРІЛКИ
@@ -260,10 +257,12 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 			float a = val * PI / 30.0f - PI / 2.0f;
 			float x = xCenter + cosf(a) * len;
 			float y = yCenter + sinf(a) * len;
+
 			Gdiplus::Pen pBlack(Gdiplus::Color::Black, width);
 			pBlack.SetStartCap(Gdiplus::LineCapRound);
 			pBlack.SetEndCap(Gdiplus::LineCapRound);
 			g.DrawLine(&pBlack, xCenter, yCenter, x, y);
+
 			if (hasWhiteLine)
 			{
 				Gdiplus::Pen pWhite(Gdiplus::Color::White, width / 2.2f);
