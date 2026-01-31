@@ -42,6 +42,8 @@ BOOL CWorldMapDlg::OnInitDialog()
     CalcWindowRect(&rc);
     SetWindowPos(NULL, 0, 0, rc.Width(), rc.Height(), SWP_NOMOVE | SWP_NOZORDER);
 
+    CenterWindow(GetDesktopWindow());
+
     // 2. Завантажуємо карту з ресурсів
     // IDR_WORLD_MAP - це ID вашого JPG, lpszType - "IMAGE"
     m_pMapImage = LoadImageFromResource(IDR_WORLD_MAP, _T("IMAGE"));
