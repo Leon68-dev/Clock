@@ -78,7 +78,7 @@ namespace Clock_csc_v2
             this.Location = new Point(mDeskX, mDeskY);
             this.TopMost = mChkAlwaysOnTop;
 
-            // 3. Налаштовуємо таймер на плавність (200 мс)
+            // 3. Налаштовуємо таймер
             timer1.Interval = mChkSmooth ? 200 : 1000;
             timer1.Enabled = true;
 
@@ -104,16 +104,22 @@ namespace Clock_csc_v2
                 setTimeToTray();
                 setShutdown(mIsShutDown, mIsSleep);
 
-                if (mCurDateTime.Minute == 8 && mCurDateTime.Second == 48) GC.Collect();
+                if (mCurDateTime.Minute == 8 && mCurDateTime.Second == 48) 
+                    GC.Collect();
 
                 if (mChkSound)
                 {
                     if (mCurDateTime.Minute == 0 && mCurDateTime.Second == 0)
                     {
                         int hours = mCurDateTime.Hour;
-                        if (hours > 12) hours -= 12;
-                        if (hours == 0) hours = 12;
-                        for (int i = 0; i < hours; i++) playSound(cPubFunc.getFileNameWav("_Boom.wav"));
+                        if (hours > 12) 
+                            hours -= 12;
+                        
+                        if (hours == 0) 
+                            hours = 12;
+                        
+                        for (int i = 0; i < hours; i++) 
+                            playSound(cPubFunc.getFileNameWav("_Boom.wav"));
                     }
                     else if ((mCurDateTime.Minute == 15 || mCurDateTime.Minute == 45) && mCurDateTime.Second == 0)
                         playSound(cPubFunc.getFileNameWav("_15.wav"));
@@ -122,7 +128,8 @@ namespace Clock_csc_v2
                     else if (mCurDateTime.Second % 2 == 0)
                         playSoundTickTack(cPubFunc.getFileNameWav("_TickTack.wav"));
                 }
-                else stopSound();
+                else 
+                    stopSound();
             }
         }
 
