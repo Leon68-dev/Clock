@@ -225,26 +225,32 @@ namespace Clock_csc_v2
             // “ÂÍÒÚ
             using (Font fontLN = new Font("Arial", innerRadius * 0.2f, FontStyle.Italic | FontStyle.Underline))
             using (Font fontText = new Font("Arial", innerRadius * 0.11f, FontStyle.Bold))
-            using (SolidBrush bLN = new SolidBrush(Color.FromArgb(255, 240, 128, 128)))
-            using (SolidBrush bDate = new SolidBrush(Color.SteelBlue))
-            using (SolidBrush bDayNormal = new SolidBrush(Color.SaddleBrown))
-            using (SolidBrush bDayRed = new SolidBrush(Color.Red))
-            using (SolidBrush bUTC = new SolidBrush(Color.Olive))
+            using (SolidBrush bLN = new SolidBrush(Color.Gray))
+            using (SolidBrush bCS = new SolidBrush(Color.Gray))
+            using (SolidBrush bDate = new SolidBrush(Color.Gray))
+            using (SolidBrush bDayNormal = new SolidBrush(Color.Gray))
+            using (SolidBrush bDayRed = new SolidBrush(Color.FromArgb(255, 240, 128, 128)))
+            using (SolidBrush bUTC = new SolidBrush(Color.Gray))
             {
                 StringFormat sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
                 g.DrawString("LN", fontLN, bLN, xCenter, yCenter - innerRadius * 0.52f, sf);
 
                 sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                g.DrawString("C#", fontText, bLN, xCenter, yCenter + 16.0f - innerRadius * 0.52f, sf);
+                g.DrawString("C#", fontText, bCS, xCenter, yCenter + 16.0f - innerRadius * 0.52f, sf);
 
                 float yDelta = 5.0f;
                 if (mChkDay)
                 {
                     Brush bDay = (mCurDateTime.DayOfWeek == DayOfWeek.Saturday || mCurDateTime.DayOfWeek == DayOfWeek.Sunday) ? bDayRed : bDayNormal;
-                    g.DrawString(mCurDateTime.DayOfWeek.ToString(), fontText, bDay, xCenter, yCenter + yDelta + innerRadius * 0.12f, sf);
+                    g.DrawString(mCurDateTime.ToString("ddd", System.Globalization.CultureInfo.InvariantCulture).ToUpper(), 
+                        fontText, bDay, xCenter, yCenter + yDelta + innerRadius * 0.12f, sf); 
                 }
-                if (mChkDate) g.DrawString(mCurDateTime.ToString("dd.MM.yyyy"), fontText, bDate, xCenter, yCenter + yDelta + innerRadius * 0.35f, sf);
-                if (mChkGMT) g.DrawString("GMT", fontText, bUTC, xCenter, yCenter + yDelta + innerRadius * 0.58f, sf);
+
+                if (mChkDate)
+                    g.DrawString(mCurDateTime.ToString("dd-MM-yy"), fontText, bDate, xCenter, yCenter + yDelta + innerRadius * 0.35f, sf);
+                
+                if (mChkGMT) 
+                    g.DrawString("GMT", fontText, bUTC, xCenter, yCenter + yDelta + innerRadius * 0.58f, sf);
             }
 
             // —“–≤À » (œÀ¿¬Õ≤)
