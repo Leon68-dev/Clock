@@ -38,7 +38,7 @@ namespace Clock_csc_v2
         private bool mChkBorder = true;
         private bool mChkSound = false;
         private int mFrmOpacity = 80;
-        private int mIntervalRefr = 200; // Встановили 200 за замовчуванням
+        private bool mChkSmooth = true;
 
         private CancellationTokenSource cts = new CancellationTokenSource();
         private bool _isRuning = false;
@@ -79,7 +79,7 @@ namespace Clock_csc_v2
             this.TopMost = mChkAlwaysOnTop;
 
             // 3. Налаштовуємо таймер на плавність (200 мс)
-            timer1.Interval = 200;
+            timer1.Interval = mChkSmooth ? 200 : 1000;
             timer1.Enabled = true;
 
             mTimeShutDown = cPubFunc.chkTime();
@@ -254,7 +254,8 @@ namespace Clock_csc_v2
             }
 
             // СТРІЛКИ (ПЛАВНІ)
-            float fSeconds = mCurDateTime.Second + mCurDateTime.Millisecond / 1000.0f;
+            float fSeconds = mChkSmooth ? (mCurDateTime.Second + mCurDateTime.Millisecond / 1000.0f) : mCurDateTime.Second;
+
             float fMinutes = mCurDateTime.Minute + fSeconds / 60.0f;
             float fHours = (mCurDateTime.Hour % 12 + fMinutes / 60.0f) * 5.0f;
 
@@ -366,6 +367,9 @@ namespace Clock_csc_v2
                     
                     if (dr.Table.Columns.Contains("deskY")) 
                         mDeskY = Convert.ToInt32(dr["deskY"]);
+
+                    if (dr.Table.Columns.Contains("chkSmooth")) 
+                        mChkSmooth = Convert.ToBoolean(dr["chkSmooth"]);
                 }
                 else
                 {
@@ -384,6 +388,7 @@ namespace Clock_csc_v2
                     table.Columns.Add("frmOpacity", typeof(int));
                     table.Columns.Add("deskX", typeof(int));
                     table.Columns.Add("deskY", typeof(int));
+                    table.Columns.Add("chkSmooth", typeof(bool));
 
                     ds.Tables.Add(table);
                     DataRow dr = ds.Tables[TBL_NAME].NewRow();
@@ -400,6 +405,7 @@ namespace Clock_csc_v2
                     dr["frmOpacity"] = 80;
                     dr["deskX"] = 0;
                     dr["deskY"] = 0;
+                    dr["chkSmooth"] = mChkSmooth;
                     ds.Tables[TBL_NAME].Rows.Add(dr);
                     ds.WriteXml(filename);
                 }
@@ -414,11 +420,18 @@ namespace Clock_csc_v2
                 DataSet ds = new DataSet();
                 ds.ReadXml(cPubFunc.fileNameSet());
                 DataRow dr = ds.Tables[TBL_NAME].Rows[0];
-                dr["chkGMT"] = mChkGMT; dr["chkDate"] = mChkDate; dr["chkDay"] = mChkDay;
-                dr["chkMoving"] = mChkMoving; dr["chkAlwaysOnTop"] = mChkAlwaysOnTop;
-                dr["chkTransparent"] = mChkTransparent; dr["chkBorder"] = mChkBorder;
-                dr["chkSound"] = mChkSound; dr["frmOpacity"] = mFrmOpacity;
-                dr["deskX"] = this.Left; dr["deskY"] = this.Top;
+                dr["chkGMT"] = mChkGMT; 
+                dr["chkDate"] = mChkDate; 
+                dr["chkDay"] = mChkDay;
+                dr["chkMoving"] = mChkMoving; 
+                dr["chkAlwaysOnTop"] = mChkAlwaysOnTop;
+                dr["chkTransparent"] = mChkTransparent; 
+                dr["chkBorder"] = mChkBorder;
+                dr["chkSound"] = mChkSound; 
+                dr["frmOpacity"] = mFrmOpacity;
+                dr["deskX"] = this.Left; 
+                dr["deskY"] = this.Top;
+                dr["chkSmooth"] = this.mChkSmooth;
                 ds.WriteXml(cPubFunc.fileNameSet());
             }
             catch { }
@@ -483,7 +496,7 @@ namespace Clock_csc_v2
         private void cm_SetupClick()
         {
             FSetup fs = new FSetup();
-            fs.initialization(mChkGMT, mChkDate, mChkDay, mChkMoving, mChkAlwaysOnTop, mChkTransparent, mChkBorder, mChkSound, mFrmOpacity);
+            fs.initialization(mChkGMT, mChkDate, mChkDay, mChkMoving, mChkAlwaysOnTop, mChkTransparent, mChkBorder, mChkSound, mFrmOpacity, mChkSmooth);
             fs.ShowDialog();
 
             if (fs.mClose <= 0) 
@@ -498,8 +511,11 @@ namespace Clock_csc_v2
             mChkBorder = fs.mChkBorder;
             mChkSound = fs.mChkSound; 
             mFrmOpacity = fs.mValOpacity;
-            this.TopMost = mChkAlwaysOnTop; 
-            
+            this.TopMost = mChkAlwaysOnTop;
+            mChkSmooth = fs.mChkSmooth;
+
+            timer1.Interval = mChkSmooth ? 200 : 1000;
+
             UpdateLayeredClock(); 
             SaveSettings();
         }

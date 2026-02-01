@@ -22,6 +22,7 @@ namespace Clock_csc_v2
         public int mValOpacity = 100;
         public int mClose = -1;
         public bool mChkSound = false;
+        public bool mChkSmooth = false;
 
         public FSetup()
         {
@@ -37,7 +38,8 @@ namespace Clock_csc_v2
             bool ChkTransparent,
             bool ChkBorder,
             bool ChkSound,
-            int ValOpacity)
+            int ValOpacity,
+            bool ChkSmooth)
         {
             this.mChkGMT = ChkGMT;
             this.mChkDate = ChkDate;
@@ -47,6 +49,7 @@ namespace Clock_csc_v2
             this.mChkTransparent = ChkTransparent;
             this.mChkBorder = ChkBorder;
             this.mChkSound = ChkSound;
+            this.mChkSmooth = ChkSmooth;
 
             this.chkGMT.Checked = this.mChkGMT;
             this.chkDate.Checked = this.mChkDate;
@@ -56,11 +59,10 @@ namespace Clock_csc_v2
             this.chkTransparent.Checked = this.mChkTransparent;
             this.chkBorder.Checked = this.mChkBorder;
             this.chkSound.Checked = this.mChkSound;
-            
+            this.chkSmooth.Checked = this.mChkSmooth;
+
             setOpacity(ValOpacity);
-
         }
-
 
         private void btnOk_Click(object sender, EventArgs e)
         {
@@ -76,6 +78,7 @@ namespace Clock_csc_v2
             this.mChkBorder = this.chkBorder.Checked;
             this.mValOpacity = this.trckBarOpacity.Value;
             this.mChkSound = this.chkSound.Checked;
+            this.mChkSmooth = this.chkSmooth.Checked;
 
             this.Close();
         }

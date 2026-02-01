@@ -43,6 +43,7 @@
             chkGMT = new CheckBox();
             btnOk = new Button();
             toolTip1 = new ToolTip(components);
+            chkSmooth = new CheckBox();
             groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)trckBarOpacity).BeginInit();
             groupBox1.SuspendLayout();
@@ -90,6 +91,7 @@
             // 
             // groupBox1
             // 
+            groupBox1.Controls.Add(chkSmooth);
             groupBox1.Controls.Add(groupBox3);
             groupBox1.Controls.Add(chkBorder);
             groupBox1.Controls.Add(chkAlwaysOnTop);
@@ -212,6 +214,17 @@
             btnOk.UseVisualStyleBackColor = true;
             btnOk.Click += btnOk_Click;
             // 
+            // chkSmooth
+            // 
+            chkSmooth.FlatStyle = FlatStyle.System;
+            chkSmooth.Location = new Point(85, 85);
+            chkSmooth.Margin = new Padding(4, 5, 4, 5);
+            chkSmooth.Name = "chkSmooth";
+            chkSmooth.Size = new Size(111, 31);
+            chkSmooth.TabIndex = 13;
+            chkSmooth.Text = "Smooth";
+            chkSmooth.UseVisualStyleBackColor = true;
+            // 
             // FSetup
             // 
             AcceptButton = btnOk;
@@ -254,5 +267,6 @@
         private CheckBox chkGMT;
         private Button btnOk;
         private ToolTip toolTip1;
+        private CheckBox chkSmooth;
     }
 }
