@@ -42,6 +42,7 @@ CClockvcmfcDlg::CClockvcmfcDlg(CWnd* pParent /*=nullptr*/)
 	m_isShutDown = FALSE;
 	m_isSleep = FALSE;
 	m_bAlreadyExecuted = FALSE;
+	m_bSmooth = false;
 	m_timeShutDown = COleDateTime::GetCurrentTime();
 }
 
@@ -105,7 +106,7 @@ BOOL CClockvcmfcDlg::OnInitDialog()
 	}
 
 	InitTrayIcon();
-	SetTimer(1, 1000, NULL);
+	SetTimer(1, m_bSmooth ? 200 : 1000, NULL);
 
 	return TRUE;
 }
@@ -140,7 +141,7 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 	// Налаштування якості
 	g.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
 	g.SetPixelOffsetMode(Gdiplus::PixelOffsetModeHighQuality);
-	g.SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAlias); // М'яке згладжування
+	g.SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAlias);
 
 	float xCenter = w / 2.0f;
 	float yCenter = h / 2.0f;
@@ -151,7 +152,6 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 	if (!m_bTransparent)
 	{
 		Gdiplus::SolidBrush faceBrush(Gdiplus::Color(255, 242, 238, 225));
-		// Малюємо фон на 0.5 пікселя меншим, щоб прибрати світлий ореол
 		g.FillEllipse(&faceBrush, 0.5f, 0.5f, w - 1.0f, h - 1.0f);
 	}
 
@@ -169,7 +169,6 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 		g.DrawEllipse(&penGray, penRect);
 	}
 
-	// ВНУТРІШНІЙ РАДІУС
 	float innerRadius = radius - borderThickness - 1.5f;
 
 	// 3. ПОДІЛКИ (Ticks)
@@ -212,48 +211,58 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 		}
 	}
 
-	// 4. ТЕКСТ (Повертаємо розмір 0.1f та 0.2f, але додаємо Bold)
+	// --- ОТРИМАННЯ ЧАСУ З МІЛІСЕКУНДАМИ ---
+	SYSTEMTIME st;
+	if (m_bGMT) ::GetSystemTime(&st);
+	else ::GetLocalTime(&st);
+	COleDateTime now(st);
+
+	// 4. ТЕКСТ
 	Gdiplus::FontFamily fontFamily(L"Arial");
 	Gdiplus::StringFormat sf;
 	sf.SetAlignment(Gdiplus::StringAlignmentCenter);
 	sf.SetLineAlignment(Gdiplus::StringAlignmentCenter);
 
-	// LN (Розмір як був - 0.2f)
 	Gdiplus::Font fontLN(&fontFamily, innerRadius * 0.2f, Gdiplus::FontStyleItalic | Gdiplus::FontStyleUnderline);
-	Gdiplus::SolidBrush bLN(Gdiplus::Color(255, 240, 128, 128));
+	Gdiplus::SolidBrush bLN(Gdiplus::Color::Gray);
 	g.DrawString(L"LN", -1, &fontLN, Gdiplus::PointF(xCenter, yCenter - innerRadius * 0.52f), &sf, &bLN);
 
-	COleDateTime now;
-	if (m_bGMT) { SYSTEMTIME st; ::GetSystemTime(&st); now = COleDateTime(st); }
-	else { now = COleDateTime::GetCurrentTime(); }
+	Gdiplus::Font fontCpp(&fontFamily, innerRadius * 0.11f, Gdiplus::FontStyleBold);
+	Gdiplus::SolidBrush bCpp(Gdiplus::Color::Gray);
+	g.DrawString(L"C++", -1, &fontCpp, Gdiplus::PointF(xCenter, yCenter + 16.0f - innerRadius * 0.52f), &sf, &bCpp);
 
-	// Основний текст (Розмір як був - 0.1f, але тепер Bold)
 	Gdiplus::Font fontText(&fontFamily, innerRadius * 0.11f, Gdiplus::FontStyleBold);
-
 	float yDelta = 5.0f;
 
 	if (m_bDay)
 	{
-		CString strDay = now.Format(_T("%A"));
+		// Формат %a дає скорочену назву (Mon, Tue...), MakeUpper робить її великими літерами
+		CString strDay = now.Format(_T("%a"));
+		strDay.MakeUpper();
+
 		bool isWeekend = (now.GetDayOfWeek() == 1 || now.GetDayOfWeek() == 7);
-		Gdiplus::SolidBrush bDay(isWeekend ? Gdiplus::Color::Red : Gdiplus::Color(255, 139, 69, 19));
+		Gdiplus::SolidBrush bDay(isWeekend ? Gdiplus::Color(255, 240, 128, 128) : Gdiplus::Color::Gray); // Сірий для буднів
 		g.DrawString(strDay, -1, &fontText, Gdiplus::PointF(xCenter, yCenter + yDelta + innerRadius * 0.12f), &sf, &bDay);
 	}
 
 	if (m_bDate)
 	{
-		CString strDate = now.Format(_T("%d.%m.%Y"));
-		Gdiplus::SolidBrush bDate(Gdiplus::Color(255, 70, 130, 180));
+		CString strDate = now.Format(_T("%d-%m-%y"));
+		Gdiplus::SolidBrush bDate(Gdiplus::Color::Gray);
 		g.DrawString(strDate, -1, &fontText, Gdiplus::PointF(xCenter, yCenter + yDelta + innerRadius * 0.35f), &sf, &bDate);
 	}
 
 	if (m_bGMT)
 	{
-		Gdiplus::SolidBrush bUTC(Gdiplus::Color(255, 128, 128, 0));
+		Gdiplus::SolidBrush bUTC(Gdiplus::Color::Gray);
 		g.DrawString(L"GMT", -1, &fontText, Gdiplus::PointF(xCenter, yCenter + yDelta + innerRadius * 0.58f), &sf, &bUTC);
 	}
 
-	// 5. СТРІЛКИ
+	// 5. СТРІЛКИ (ПЛАВНИЙ РУХ)
+	float fSeconds = m_bSmooth ? (st.wSecond + st.wMilliseconds / 1000.0f) : (float)st.wSecond;
+	float fMinutes = st.wMinute + fSeconds / 60.0f;
+	float fHours = (st.wHour % 12 + fMinutes / 60.0f) * 5.0f;
+
 	auto DrawHandMFC = [&](float val, float len, float width, bool hasWhiteLine)
 		{
 			float a = val * PI / 30.0f - PI / 2.0f;
@@ -274,11 +283,12 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 			}
 		};
 
-	DrawHandMFC((float)(now.GetHour() % 12 * 5 + now.GetMinute() / 12.0f), innerRadius * 0.58f, 6.5f, true);
-	DrawHandMFC((float)now.GetMinute() + now.GetSecond() / 60.0f, innerRadius * 0.85f, 4.5f, true);
+	DrawHandMFC(fHours, innerRadius * 0.58f, 6.5f, true);
+	DrawHandMFC(fMinutes, innerRadius * 0.85f, 4.5f, true);
 
+	// Секундна стрілка
 	Gdiplus::Pen pSec(Gdiplus::Color::Red, 1.5f);
-	float sAngle = now.GetSecond() * PI / 30.0f - PI / 2.0f;
+	float sAngle = fSeconds * PI / 30.0f - PI / 2.0f;
 	g.DrawLine(&pSec,
 		xCenter - cosf(sAngle) * (innerRadius * 0.15f),
 		yCenter - sinf(sAngle) * (innerRadius * 0.15f),
@@ -303,49 +313,52 @@ void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	if (nIDEvent == 1)
 	{
-		COleDateTime now;
-		if (m_bGMT)
-		{
-			SYSTEMTIME st; 
-			::GetSystemTime(&st); 
-			now = COleDateTime(st);
-		}
-		else
-		{
-			now = COleDateTime::GetCurrentTime();
-		}
+		// 1. Отримуємо системний час (з мілісекундами)
+		SYSTEMTIME st;
+		if (m_bGMT) ::GetSystemTime(&st);
+		else ::GetLocalTime(&st);
 
-		// Оновлення трею
-		CString strTip = now.Format(_T("%A - %H:%M"));
-		if (m_bGMT) strTip += _T(" GMT");
-		_tcscpy_s(m_nid.szTip, strTip.Left(63));
-		Shell_NotifyIcon(NIM_MODIFY, &m_nid);
+		// 2. ГОЛОВНЕ: Завжди оновлюємо вікно (для плавності стрілок)
+		UpdateLayeredClock();
 
-		// Перевірка шатдауну
-		if (m_isShutDown)
+		// 3. Виконуємо "важку" логіку лише раз на секунду
+		if (st.wSecond != m_lastSecond)
 		{
-			if (now.GetHour() == m_timeShutDown.GetHour() && now.GetMinute() == m_timeShutDown.GetMinute())
+			m_lastSecond = st.wSecond; // Запам'ятовуємо поточну секунду
+
+			// Конвертуємо для зручності в COleDateTime (для трею та шатдауну)
+			COleDateTime now(st);
+
+			// Оновлення трею
+			CString strTip = now.Format(_T("%A - %H:%M"));
+			if (m_bGMT) strTip += _T(" GMT");
+			_tcscpy_s(m_nid.szTip, strTip.Left(63));
+			Shell_NotifyIcon(NIM_MODIFY, &m_nid);
+
+			// Перевірка шатдауну
+			if (m_isShutDown)
 			{
-				if (!m_bAlreadyExecuted)
+				if (now.GetHour() == m_timeShutDown.GetHour() &&
+					now.GetMinute() == m_timeShutDown.GetMinute())
 				{
-					m_bAlreadyExecuted = TRUE;
-					ExecuteShutdown();
+					if (!m_bAlreadyExecuted)
+					{
+						m_bAlreadyExecuted = TRUE;
+						ExecuteShutdown();
+					}
+				}
+				else
+				{
+					m_bAlreadyExecuted = FALSE;
 				}
 			}
-			else
+
+			// Звук (Tick-Tack кожні 2 секунди)
+			if (m_bSound && st.wSecond % 2 == 0)
 			{
-				m_bAlreadyExecuted = FALSE;
+				PlaySoundFile(_T("_TickTack.wav"));
 			}
 		}
-
-		// Звук
-		if (m_bSound && now.GetSecond() % 2 == 0)
-		{
-			PlaySoundFile(_T("_TickTack.wav"));
-		}
-
-		// ГОЛОВНЕ: Завжди оновлюємо вікно через шар
-		UpdateLayeredClock();
 	}
 	CDialogEx::OnTimer(nIDEvent);
 }
@@ -418,6 +431,7 @@ void CClockvcmfcDlg::OnMenuExit()
 void CClockvcmfcDlg::OnMenuShutdown()
 {
 	CShutDownDlg dlg(m_timeShutDown, m_isShutDown, m_isSleep);
+
 	if (dlg.DoModal() == IDOK)
 	{
 		m_timeShutDown = dlg.m_tm;
@@ -428,7 +442,8 @@ void CClockvcmfcDlg::OnMenuShutdown()
 
 void CClockvcmfcDlg::OnMenuSetup()
 {
-	CSetupDlg dlg(m_bGMT, m_bDate, m_bDay, m_bMoving, m_bTopMost, m_bTransparent, m_bBorder, m_bSound, m_nOpacity);
+	CSetupDlg dlg(m_bGMT, m_bDate, m_bDay, m_bMoving, m_bTopMost, m_bTransparent, m_bBorder, m_bSound, m_nOpacity, m_bSmooth);
+
 	if (dlg.DoModal() == IDOK)
 	{
 		// Оновлюємо змінні з діалогу
@@ -441,6 +456,13 @@ void CClockvcmfcDlg::OnMenuSetup()
 		m_bBorder = dlg.m_bBorder;
 		m_bSound = dlg.m_bSound;
 		m_nOpacity = dlg.m_nOpacity;
+		m_bSmooth = dlg.m_bSmooth; // Отримуємо значення з діалогу
+
+		// Перезапускаємо таймер з новим інтервалом
+		KillTimer(1);
+		SetTimer(1, m_bSmooth ? 200 : 1000, NULL);
+
+		UpdateLayeredClock();
 
 		// Встановлюємо стан "Завжди зверху"
 		SetWindowPos(m_bTopMost ? &wndTopMost : &wndNoTopMost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
@@ -518,6 +540,8 @@ void CClockvcmfcDlg::SaveSettings()
 	strVal.Format(_T("%d"), m_nOpacity);
 	WritePrivateProfileString(_T("Settings"), _T("frmOpacity"), strVal, strPath);
 
+	WritePrivateProfileString(_T("Settings"), _T("chkSmooth"), m_bSmooth ? _T("1") : _T("0"), strPath);
+
 	CRect rect;
 	GetWindowRect(&rect);
 	strVal.Format(_T("%d"), rect.left);
@@ -543,6 +567,7 @@ void CClockvcmfcDlg::LoadSettings()
 	m_bBorder = GetPrivateProfileInt(_T("Settings"), _T("chkBorder"), 1, strPath);
 	m_bSound = GetPrivateProfileInt(_T("Settings"), _T("chkSound"), 0, strPath);
 	m_nOpacity = GetPrivateProfileInt(_T("Settings"), _T("frmOpacity"), 80, strPath);
+	m_bSmooth = GetPrivateProfileInt(_T("Settings"), _T("chkSmooth"), 1, strPath);
 
 	int x = GetPrivateProfileInt(_T("Settings"), _T("deskX"), -1, strPath);
 	int y = GetPrivateProfileInt(_T("Settings"), _T("deskY"), -1, strPath);

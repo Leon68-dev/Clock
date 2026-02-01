@@ -2,11 +2,11 @@
 #include "Clock_vc_mfc.h"
 #include "SetupDlg.h"
 
-CSetupDlg::CSetupDlg(BOOL gmt, BOOL date, BOOL day, BOOL moving, BOOL top, BOOL trans, BOOL border, BOOL sound, int opacity, CWnd* pParent)
+CSetupDlg::CSetupDlg(BOOL gmt, BOOL date, BOOL day, BOOL moving, BOOL top, BOOL trans, BOOL border, BOOL sound, int opacity, BOOL smooth, CWnd* pParent)
     : CDialogEx(IDD_SETUP_DLG, pParent)
     , m_bGMT(gmt), m_bDate(date), m_bDay(day), m_bMoving(moving)
     , m_bTopMost(top), m_bTransparent(trans), m_bBorder(border)
-    , m_bSound(sound), m_nOpacity(opacity)
+    , m_bSound(sound), m_nOpacity(opacity), m_bSmooth(smooth)
 {
 }
 
@@ -24,6 +24,7 @@ void CSetupDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Check(pDX, IDC_CHK_TRANSPARENT, m_bTransparent);
     DDX_Check(pDX, IDC_CHK_BORDER, m_bBorder);
     DDX_Check(pDX, IDC_CHK_SOUND, m_bSound);
+    DDX_Check(pDX, IDC_CHK_SMOOTH, m_bSmooth);
 }
 
 BEGIN_MESSAGE_MAP(CSetupDlg, CDialogEx)

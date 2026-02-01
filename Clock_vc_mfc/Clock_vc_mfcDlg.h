@@ -34,6 +34,8 @@ protected:
 	BOOL m_bSound;
 	int  m_nOpacity;
 	BOOL m_bAlreadyExecuted;
+	BOOL m_bSmooth; 
+	int m_lastSecond = -1; 
 
 	// --- Налаштування вимкнення ПК ---
 	BOOL m_isShutDown;
