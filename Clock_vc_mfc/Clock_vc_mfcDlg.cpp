@@ -649,8 +649,11 @@ void CClockvcmfcDlg::PlaySoundFile(CString fileName)
 
 void CClockvcmfcDlg::PlayHourlyChime(int hours)
 {
-	if (hours > 12) hours -= 12;
-	if (hours == 0) hours = 12;
+	if (hours > 12) 
+		hours -= 12;
+	
+	if (hours == 0) 
+		hours = 12;
 
 	// Запускаємо окремий потік для серії звуків
 	std::thread([this, hours]() 
