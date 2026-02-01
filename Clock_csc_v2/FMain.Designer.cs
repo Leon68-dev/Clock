@@ -46,18 +46,18 @@
             toolStripSeparator3 = new ToolStripSeparator();
             cm_calendar = new ToolStripMenuItem();
             cm_setShutDownPC = new ToolStripMenuItem();
+            cm_world_map = new ToolStripMenuItem();
             toolStripSeparator1 = new ToolStripSeparator();
             cm_about = new ToolStripMenuItem();
             toolStripSeparator2 = new ToolStripSeparator();
             cm_exit = new ToolStripMenuItem();
-            cm_world_map = new ToolStripMenuItem();
             contextMenu1.SuspendLayout();
             contextMenuFMain.SuspendLayout();
             SuspendLayout();
             // 
             // timer1
             // 
-            timer1.Interval = 1000;
+            timer1.Interval = 200;
             timer1.Tick += timer1_Tick;
             // 
             // notifyIcon1
@@ -118,78 +118,78 @@
             contextMenuFMain.ImageScalingSize = new Size(20, 20);
             contextMenuFMain.Items.AddRange(new ToolStripItem[] { cm_Setup, cm_hide, cm_StartPosition, toolStripSeparator3, cm_calendar, cm_setShutDownPC, cm_world_map, toolStripSeparator1, cm_about, toolStripSeparator2, cm_exit });
             contextMenuFMain.Name = "contextMenuFMain";
-            contextMenuFMain.Size = new Size(211, 242);
+            contextMenuFMain.Size = new Size(206, 214);
             // 
             // cm_Setup
             // 
             cm_Setup.Name = "cm_Setup";
-            cm_Setup.Size = new Size(211, 24);
+            cm_Setup.Size = new Size(205, 24);
             cm_Setup.Text = "Setup...";
             cm_Setup.Click += cm_Setup_Click;
             // 
             // cm_hide
             // 
             cm_hide.Name = "cm_hide";
-            cm_hide.Size = new Size(211, 24);
+            cm_hide.Size = new Size(205, 24);
             cm_hide.Text = "Hide";
             cm_hide.Click += cm_hide_Click;
             // 
             // cm_StartPosition
             // 
             cm_StartPosition.Name = "cm_StartPosition";
-            cm_StartPosition.Size = new Size(211, 24);
+            cm_StartPosition.Size = new Size(205, 24);
             cm_StartPosition.Text = "Start position";
             cm_StartPosition.Click += cm_StartPosition_Click;
             // 
             // toolStripSeparator3
             // 
             toolStripSeparator3.Name = "toolStripSeparator3";
-            toolStripSeparator3.Size = new Size(208, 6);
+            toolStripSeparator3.Size = new Size(202, 6);
             // 
             // cm_calendar
             // 
             cm_calendar.Name = "cm_calendar";
-            cm_calendar.Size = new Size(211, 24);
+            cm_calendar.Size = new Size(205, 24);
             cm_calendar.Text = "Calendar...";
             cm_calendar.Click += cm_calendar_Click;
             // 
             // cm_setShutDownPC
             // 
             cm_setShutDownPC.Name = "cm_setShutDownPC";
-            cm_setShutDownPC.Size = new Size(211, 24);
+            cm_setShutDownPC.Size = new Size(205, 24);
             cm_setShutDownPC.Text = "Set Shut Down PC...";
             cm_setShutDownPC.Click += cm_setShutDownPC_Click;
+            // 
+            // cm_world_map
+            // 
+            cm_world_map.Name = "cm_world_map";
+            cm_world_map.Size = new Size(205, 24);
+            cm_world_map.Text = "World Map...";
+            cm_world_map.Click += cm_world_map_Click;
             // 
             // toolStripSeparator1
             // 
             toolStripSeparator1.Name = "toolStripSeparator1";
-            toolStripSeparator1.Size = new Size(208, 6);
+            toolStripSeparator1.Size = new Size(202, 6);
             // 
             // cm_about
             // 
             cm_about.Name = "cm_about";
-            cm_about.Size = new Size(211, 24);
+            cm_about.Size = new Size(205, 24);
             cm_about.Text = "About...";
             cm_about.Click += cm_about_Click;
             // 
             // toolStripSeparator2
             // 
             toolStripSeparator2.Name = "toolStripSeparator2";
-            toolStripSeparator2.Size = new Size(208, 6);
+            toolStripSeparator2.Size = new Size(202, 6);
             // 
             // cm_exit
             // 
             cm_exit.Name = "cm_exit";
-            cm_exit.Size = new Size(211, 24);
+            cm_exit.Size = new Size(205, 24);
             cm_exit.Text = "Exit";
             cm_exit.Click += cm_exit_Click;
-            // 
-            // cm_world_map
-            // 
-            cm_world_map.Name = "cm_world_map";
-            cm_world_map.Size = new Size(210, 24);
-            cm_world_map.Text = "World Map...";
-            cm_world_map.Click += cm_world_map_Click;
             // 
             // FMain
             // 
