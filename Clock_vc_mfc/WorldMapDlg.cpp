@@ -7,14 +7,13 @@
 IMPLEMENT_DYNAMIC(CWorldMapDlg, CDialogEx)
 
 CWorldMapDlg::CWorldMapDlg(CWnd* pParent /*=nullptr*/)
-    : CDialogEx(IDD_WORLD_MAP, pParent)
-{
-}
+    : CDialogEx(IDD_WORLD_MAP, pParent){ }
 
 CWorldMapDlg::~CWorldMapDlg()
 {
-    if (m_pMapImage) {
-        delete m_pMapImage;
+    if (m_pMapImage != nullptr)
+    {
+        delete m_pMapImage; // Видаляємо GDI+ об'єкт
         m_pMapImage = nullptr;
     }
 }
@@ -147,10 +146,20 @@ Gdiplus::Image* CWorldMapDlg::LoadImageFromResource(UINT nID, LPCTSTR lpszType)
     ::GlobalUnlock(hGlobal);
 
     IStream* pStream = nullptr;
-    if (::CreateStreamOnHGlobal(hGlobal, TRUE, &pStream) == S_OK) {
-        return Gdiplus::Image::FromStream(pStream);
+    // TRUE означає, що Stream сам видалить hGlobal при закритті
+    if (::CreateStreamOnHGlobal(hGlobal, TRUE, &pStream) != S_OK)
+    {
+        ::GlobalFree(hGlobal);
+        return nullptr;
     }
-    return nullptr;
+
+    Gdiplus::Image* pImg = Gdiplus::Image::FromStream(pStream);
+
+    // ВАЖЛИВО: Звільняємо потік. GDI+ Image вже скопіював дані або 
+    // тримає власне посилання. Без цього буде витік!
+    pStream->Release();
+
+    return pImg;
 }
 
 void CWorldMapDlg::OnTimer(UINT_PTR nIDEvent)

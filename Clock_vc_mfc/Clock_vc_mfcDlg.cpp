@@ -96,10 +96,6 @@ BOOL CClockvcmfcDlg::OnInitDialog()
 	// Замість прямого виклику SetLayeredWindowAttributes використовуємо наш метод
 	UpdateTransparency();
 
-	/*CRgn rgn;
-	rgn.CreateEllipticRgn(-1, -1, nSize + 1, nSize + 1);
-	SetWindowRgn(rgn, TRUE);*/
-
 	if (m_bTopMost)
 	{
 		SetWindowPos(&wndTopMost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
@@ -131,7 +127,6 @@ void CClockvcmfcDlg::OnPaint()
 
 void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 {
-	const float PI = 3.1415926535f;
 	CRect clientRect;
 	GetClientRect(&clientRect);
 
@@ -227,11 +222,11 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 	Gdiplus::SolidBrush bLN(Gdiplus::Color::Gray);
 	g.DrawString(L"LN", -1, &fontLN, Gdiplus::PointF(xCenter, yCenter - innerRadius * 0.52f), &sf, &bLN);
 
-	Gdiplus::Font fontCpp(&fontFamily, innerRadius * 0.11f, Gdiplus::FontStyleBold);
-	Gdiplus::SolidBrush bCpp(Gdiplus::Color::Gray);
-	g.DrawString(L"C++", -1, &fontCpp, Gdiplus::PointF(xCenter, yCenter + 16.0f - innerRadius * 0.52f), &sf, &bCpp);
-
 	Gdiplus::Font fontText(&fontFamily, innerRadius * 0.11f, Gdiplus::FontStyleBold);
+
+	Gdiplus::SolidBrush bCpp(Gdiplus::Color::Gray);
+	g.DrawString(L"C++", -1, &fontText, Gdiplus::PointF(xCenter, yCenter + 16.0f - innerRadius * 0.52f), &sf, &bCpp);
+	
 	float yDelta = 5.0f;
 
 	if (m_bDay)
@@ -365,7 +360,9 @@ void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 
 void CClockvcmfcDlg::OnLButtonDown(UINT nFlags, CPoint point)
 {
-	if (m_bMoving) PostMessage(WM_NCLBUTTONDOWN, HTCAPTION, 0);
+	if (m_bMoving)
+		PostMessage(WM_NCLBUTTONDOWN, HTCAPTION, 0);
+	
 	CDialogEx::OnLButtonDown(nFlags, point);
 }
 
@@ -524,9 +521,9 @@ void CClockvcmfcDlg::SaveSettings()
 	CString strVal;
 
 	auto WriteBool = [&](LPCTSTR key, BOOL val)
-		{
-			WritePrivateProfileString(_T("Settings"), key, val ? _T("1") : _T("0"), strPath);
-		};
+	{
+		WritePrivateProfileString(_T("Settings"), key, val ? _T("1") : _T("0"), strPath);
+	};
 
 	WriteBool(_T("chkGMT"), m_bGMT);
 	WriteBool(_T("chkDate"), m_bDate);
@@ -733,23 +730,20 @@ void CClockvcmfcDlg::UpdateLayeredClock()
 
 void CClockvcmfcDlg::OnMenuWorldmap()
 {
-	// Перевіряємо: чи існує об'єкт І чи існує саме вікно в системі
 	if (m_pMapDlg != nullptr && ::IsWindow(m_pMapDlg->GetSafeHwnd()))
 	{
-		// Вікно вже на екрані, просто виводимо на передній план
 		m_pMapDlg->ShowWindow(SW_SHOW);
 		m_pMapDlg->SetForegroundWindow();
 	}
 	else
 	{
-		// Якщо об'єкт є (залишився в пам'яті), але вікно (HWND) знищене хрестиком
+		// Якщо об'єкт існує, але вікно закрите - ВИДАЛЯЄМО ОБ'ЄКТ
 		if (m_pMapDlg != nullptr)
 		{
-			delete m_pMapDlg; // Очищаємо пам'ять
+			delete m_pMapDlg; // Це викличе деструктор і видалить Image
 			m_pMapDlg = nullptr;
 		}
 
-		// Створюємо нове вікно
 		m_pMapDlg = new CWorldMapDlg(this);
 		if (m_pMapDlg->Create(IDD_WORLD_MAP, this))
 		{
