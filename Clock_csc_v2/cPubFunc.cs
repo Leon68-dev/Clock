@@ -282,6 +282,12 @@ namespace Clock_csc_v2
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
         #region Sound
 
+        public const int SND_SYNC = 0x0000;             // грати синхронно (блокує)
+        public const int SND_ASYNC = 0x0001;            // грати асинхронно (не блокує)
+        public const int SND_NODEFAULT = 0x0002;        // не грати звук помилки, якщо файл не знайдено
+        public const int SND_FILENAME = 0x00020000;     // перший параметр - це ім'я файлу
+        public const int SND_PURGE = 0x0040;            // зупинити всі звуки
+
         /// <summary>
         /// Play sound file (winapi32)
         /// </summary>
@@ -300,15 +306,19 @@ namespace Clock_csc_v2
         /// </summary>
         /// <param name="soundFileName"></param>
         /// <returns></returns>
-        public static bool playSound(string soundFileName)
+        public static bool playSound(string soundFileName, bool async = true)
         {
             bool r = false;
             try
             {
-                System.IntPtr resHandle = System.IntPtr.Zero;
-                
-                if(File.Exists(soundFileName))
-                    r = PlaySound(soundFileName, resHandle, 0);
+                if (!File.Exists(soundFileName)) 
+                    return r;
+
+                int flags = SND_FILENAME | SND_NODEFAULT;
+                if (async) 
+                    flags |= SND_ASYNC;
+
+                r = PlaySound(soundFileName, IntPtr.Zero, flags);
             }
             catch (Exception ex) 
             {
@@ -321,7 +331,6 @@ namespace Clock_csc_v2
 
 
         #endregion Sound
-
 
     }
 }

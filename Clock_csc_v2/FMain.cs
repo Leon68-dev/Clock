@@ -109,38 +109,45 @@ namespace Clock_csc_v2
                 setTimeToTray();
                 setShutdown(mIsShutDown, mIsSleep);
 
-                if (mCurDateTime.Minute == 8 && mCurDateTime.Second == 48) 
+                if (mCurDateTime.Minute == 8 && mCurDateTime.Second == 48)
                     GC.Collect();
 
-                if (mChkHours && mCurDateTime.Minute == 0 && mCurDateTime.Second == 0)
+                if (mChkHours)
                 {
-                    int count = mCurDateTime.Hour % 12;
-                    if (count == 0) 
-                        count = 12;
+                    if (mCurDateTime.Minute == 0 && mCurDateTime.Second == 0)
+                    {
+                        int count = mCurDateTime.Hour % 12;
+                        if (count == 0)
+                            count = 12;
 
-                    for (int i = 0; i < count; i++)
-                        playSoundHours(cPubFunc.getFileNameWav("_Boom.wav"));
+                        for (int i = 0; i < count; i++)
+                            playSoundHours(cPubFunc.getFileNameWav("_Boom.wav"));
+                    }
                 }
                 else
-                {
                     stopSoundHours();
-                }
 
-                if (mChk1530 && mCurDateTime.Second == 0)
+                if (mChk1530)
                 {
-                    int min = mCurDateTime.Minute;
-                    if (min == 15 || min == 45)
-                        playSound1530(cPubFunc.getFileNameWav("_15.wav"));
-                    else if (min == 30)
-                        playSound1530(cPubFunc.getFileNameWav("_30.wav"));
-                    else
-                        stopSound1530();
+                    if (mCurDateTime.Second == 0)
+                    {
+                        int min = mCurDateTime.Minute;
+                        if (min == 15 || min == 45)
+                            playSound1530(cPubFunc.getFileNameWav("_15.wav"));
+                        else if (min == 30)
+                            playSound1530(cPubFunc.getFileNameWav("_30.wav"));
+                    }
                 }
-
-                if (mChkTickTack && mCurDateTime.Second % 2 == 0)
-                    playSoundTickTack(cPubFunc.getFileNameWav("_TickTack.wav"));
                 else
-                    stopSoundTickTack();
+                    stopSound1530();
+
+                if (mChkTickTack)
+                {
+                    if (mCurDateTime.Second % 2 == 0)
+                        playSoundTickTack(cPubFunc.getFileNameWav("_TickTack.wav"));
+                }
+                else
+                    stopSoundTickTack(); 
             }
         }
 
@@ -400,7 +407,6 @@ namespace Clock_csc_v2
 
                     if (dr.Table.Columns.Contains("chkTickTack"))
                         mChkTickTack = Convert.ToBoolean(dr["chkTickTack"]);
-
                 }
                 else
                 {
@@ -486,7 +492,8 @@ namespace Clock_csc_v2
         private void setTimeToTray()
         {
             string str = mCurDateTime.DayOfWeek.ToString() + " - " + mCurDateTime.ToShortTimeString();
-            if (mChkGMT) str += " GMT";
+            if (mChkGMT) 
+                str += " GMT";
             notifyIcon1.Text = str;
         }
 
@@ -494,28 +501,45 @@ namespace Clock_csc_v2
         {
             if ((isSleep || isShutDown) && DateTime.Now.ToString("HH:mm") == mTimeShutDown.ToString("HH:mm"))
             {
-                if (isSleep) cPubFunc.SetSuspendState(false, true, true);
-                else cPubFunc.DoExitWindows(cPubFunc.Poweroff);
+                if (isSleep) 
+                    cPubFunc.SetSuspendState(false, true, true);
+                else 
+                    cPubFunc.DoExitWindows(cPubFunc.Poweroff);
             }
         }
 
         private void playSoundTickTack(string f) 
         { 
-            if (!_isRuning && mChkTickTack) 
-            { 
-                //_isRuning = true; 
-                ctsTickTack = new CancellationTokenSource(); 
-                Task.Run(() => 
-                { 
-                    cPubFunc.playSound(f); 
-                    _isRuning = false; 
-                }, ctsTickTack.Token); 
-            } 
+            if (!mChkTickTack) 
+                return;
+
+            try
+            {
+                // 1. Скасовуємо попередній запуск, якщо він ще не завершився
+                ctsTickTack.Cancel();
+                ctsTickTack = new CancellationTokenSource();
+
+                var token = ctsTickTack.Token;
+
+                Task.Run(() =>
+                {
+                    // 2. Перевіряємо, чи не скасували нас поки задача запускалася
+                    if (token.IsCancellationRequested) return;
+
+                    cPubFunc.playSound(f);
+                }, token);
+            }
+            catch { }
         }
         
         private void playSoundHours(string f) 
         {
+            if (!mChkHours)
+                return;
+
+            ctsHours.Cancel();
             ctsHours = new CancellationTokenSource(); 
+
             Task.Run(() => 
             { 
                 cPubFunc.playSound(f); 
@@ -524,7 +548,12 @@ namespace Clock_csc_v2
 
         private void playSound1530(string f)
         {
+            if (!mChk1530)
+                return;
+            
+            cts1530.Cancel();
             cts1530 = new CancellationTokenSource();
+
             Task.Run(() =>
             {
                 cPubFunc.playSound(f);
