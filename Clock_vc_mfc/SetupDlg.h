@@ -5,14 +5,17 @@ class CSetupDlg : public CDialogEx
 {
 public:
     // Конструктор, що приймає всі поточні налаштування
-    CSetupDlg(BOOL gmt, BOOL date, BOOL day, BOOL moving, BOOL top, BOOL trans, BOOL border, BOOL sound, int opacity, BOOL smooth, CWnd* pParent = nullptr);
+    CSetupDlg(BOOL gmt, BOOL date, BOOL day, BOOL moving, BOOL top, 
+        BOOL trans, BOOL border, int opacity, BOOL smooth, 
+        BOOL soundTickTack, BOOL sound1530, BOOL soundHours,
+        CWnd* pParent = nullptr);
 
 #ifdef AFX_DESIGN_TIME
     enum { IDD = IDD_SETUP_DLG };
 #endif
 
     // Публічні змінні для результату
-    BOOL m_bGMT, m_bDate, m_bDay, m_bMoving, m_bTopMost, m_bTransparent, m_bBorder, m_bSound, m_bSmooth;
+    BOOL m_bGMT, m_bDate, m_bDay, m_bMoving, m_bTopMost, m_bTransparent, m_bBorder, m_bSmooth, m_bHours, m_b1530, m_bTickTack;
     int m_nOpacity;
 
 protected:
@@ -28,4 +31,6 @@ protected:
     virtual void OnOK();
 
     DECLARE_MESSAGE_MAP()
+public:
+    afx_msg void OnBnClickedChkSoundHours();
 };

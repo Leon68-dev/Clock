@@ -37,12 +37,14 @@ CClockvcmfcDlg::CClockvcmfcDlg(CWnd* pParent /*=nullptr*/)
 	m_bTopMost = FALSE;
 	m_bTransparent = FALSE;
 	m_bBorder = TRUE;
-	m_bSound = FALSE;
 	m_nOpacity = 80;
 	m_isShutDown = FALSE;
 	m_isSleep = FALSE;
 	m_bAlreadyExecuted = FALSE;
 	m_bSmooth = false;
+	m_bTickTack = FALSE;
+	m_b1530 = FALSE;
+	m_bHours = FALSE;
 	m_timeShutDown = COleDateTime::GetCurrentTime();
 }
 
@@ -236,7 +238,7 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 		strDay.MakeUpper();
 
 		bool isWeekend = (now.GetDayOfWeek() == 1 || now.GetDayOfWeek() == 7);
-		Gdiplus::SolidBrush bDay(isWeekend ? Gdiplus::Color(255, 240, 128, 128) : Gdiplus::Color::Gray); // Сірий для буднів
+		Gdiplus::SolidBrush bDay(isWeekend ? Gdiplus::Color::RosyBrown : Gdiplus::Color::Gray); // Сірий для буднів
 		g.DrawString(strDay, -1, &fontText, Gdiplus::PointF(xCenter, yCenter + yDelta + innerRadius * 0.12f), &sf, &bDay);
 	}
 
@@ -308,20 +310,17 @@ void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	if (nIDEvent == 1)
 	{
-		// 1. Отримуємо системний час (з мілісекундами)
 		SYSTEMTIME st;
 		if (m_bGMT) ::GetSystemTime(&st);
 		else ::GetLocalTime(&st);
 
-		// 2. ГОЛОВНЕ: Завжди оновлюємо вікно (для плавності стрілок)
+		// Завжди оновлюємо графіку (для плавності)
 		UpdateLayeredClock();
 
-		// 3. Виконуємо "важку" логіку лише раз на секунду
+		// Логіка, що спрацьовує раз на секунду
 		if (st.wSecond != m_lastSecond)
 		{
-			m_lastSecond = st.wSecond; // Запам'ятовуємо поточну секунду
-
-			// Конвертуємо для зручності в COleDateTime (для трею та шатдауну)
+			m_lastSecond = st.wSecond;
 			COleDateTime now(st);
 
 			// Оновлення трею
@@ -330,8 +329,8 @@ void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 			_tcscpy_s(m_nid.szTip, strTip.Left(63));
 			Shell_NotifyIcon(NIM_MODIFY, &m_nid);
 
-			// Перевірка шатдауну
-			if (m_isShutDown)
+			// Перевірка автоматичного вимкнення
+			if (m_isShutDown || m_isSleep)
 			{
 				if (now.GetHour() == m_timeShutDown.GetHour() &&
 					now.GetMinute() == m_timeShutDown.GetMinute())
@@ -342,14 +341,28 @@ void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 						ExecuteShutdown();
 					}
 				}
-				else
-				{
-					m_bAlreadyExecuted = FALSE;
-				}
+				else m_bAlreadyExecuted = FALSE;
 			}
 
-			// Звук (Tick-Tack кожні 2 секунди)
-			if (m_bSound && st.wSecond % 2 == 0)
+			// --- ЛОГІКА ЗВУКУ (як у C#) ---
+
+			// 1. Щогодинний бій (_Boom.wav)
+			if (m_bHours && st.wMinute == 0 && st.wSecond == 0)
+			{
+				PlayHourlyChime(st.wHour);
+			}
+
+			// 2. Чверті години (_15.wav, _30.wav)
+			if (m_b1530 && st.wSecond == 0)
+			{
+				if (st.wMinute == 15 || st.wMinute == 45)
+					PlaySoundFile(_T("_15.wav"));
+				else if (st.wMinute == 30)
+					PlaySoundFile(_T("_30.wav"));
+			}
+
+			// 3. Тікання кожні 2 секунди (_TickTack.wav)
+			if (m_bTickTack && st.wSecond % 2 == 0)
 			{
 				PlaySoundFile(_T("_TickTack.wav"));
 			}
@@ -439,11 +452,11 @@ void CClockvcmfcDlg::OnMenuShutdown()
 
 void CClockvcmfcDlg::OnMenuSetup()
 {
-	CSetupDlg dlg(m_bGMT, m_bDate, m_bDay, m_bMoving, m_bTopMost, m_bTransparent, m_bBorder, m_bSound, m_nOpacity, m_bSmooth);
+	CSetupDlg dlg(m_bGMT, m_bDate, m_bDay, m_bMoving, m_bTopMost, m_bTransparent,
+		m_bBorder, m_nOpacity, m_bSmooth, m_bTickTack, m_b1530, m_bHours);
 
 	if (dlg.DoModal() == IDOK)
 	{
-		// Оновлюємо змінні з діалогу
 		m_bGMT = dlg.m_bGMT;
 		m_bDate = dlg.m_bDate;
 		m_bDay = dlg.m_bDay;
@@ -451,23 +464,19 @@ void CClockvcmfcDlg::OnMenuSetup()
 		m_bTopMost = dlg.m_bTopMost;
 		m_bTransparent = dlg.m_bTransparent;
 		m_bBorder = dlg.m_bBorder;
-		m_bSound = dlg.m_bSound;
 		m_nOpacity = dlg.m_nOpacity;
-		m_bSmooth = dlg.m_bSmooth; // Отримуємо значення з діалогу
+		m_bSmooth = dlg.m_bSmooth;
+		m_bTickTack = dlg.m_bTickTack;
+		m_b1530 = dlg.m_b1530;
+		m_bHours = dlg.m_bHours;
 
-		// Перезапускаємо таймер з новим інтервалом
+		// Оновлюємо інтервал таймера
 		KillTimer(1);
 		SetTimer(1, m_bSmooth ? 200 : 1000, NULL);
 
-		UpdateLayeredClock();
-
-		// Встановлюємо стан "Завжди зверху"
 		SetWindowPos(m_bTopMost ? &wndTopMost : &wndNoTopMost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-
-		// МИТТЄВО оновлюємо прозорість
 		UpdateTransparency();
-
-		// Зберігаємо в INI
+		UpdateLayeredClock();
 		SaveSettings();
 	}
 }
@@ -515,12 +524,12 @@ CString CClockvcmfcDlg::GetIniPath()
 	return strPath + _T("clock_vc_mfc.ini");
 }
 
+
 void CClockvcmfcDlg::SaveSettings()
 {
 	CString strPath = GetIniPath();
 	CString strVal;
-
-	auto WriteBool = [&](LPCTSTR key, BOOL val)
+	auto WriteBool = [&](LPCTSTR key, BOOL val) 
 	{
 		WritePrivateProfileString(_T("Settings"), key, val ? _T("1") : _T("0"), strPath);
 	};
@@ -532,19 +541,17 @@ void CClockvcmfcDlg::SaveSettings()
 	WriteBool(_T("chkAlwaysOnTop"), m_bTopMost);
 	WriteBool(_T("chkTransparent"), m_bTransparent);
 	WriteBool(_T("chkBorder"), m_bBorder);
-	WriteBool(_T("chkSound"), m_bSound);
+	WriteBool(_T("chkSmooth"), m_bSmooth);
+	WriteBool(_T("chkTickTack"), m_bTickTack);
+	WriteBool(_T("chk1530"), m_b1530);
+	WriteBool(_T("chkHours"), m_bHours);
 
 	strVal.Format(_T("%d"), m_nOpacity);
 	WritePrivateProfileString(_T("Settings"), _T("frmOpacity"), strVal, strPath);
 
-	WritePrivateProfileString(_T("Settings"), _T("chkSmooth"), m_bSmooth ? _T("1") : _T("0"), strPath);
-
-	CRect rect;
-	GetWindowRect(&rect);
-	strVal.Format(_T("%d"), rect.left);
-	WritePrivateProfileString(_T("Settings"), _T("deskX"), strVal, strPath);
-	strVal.Format(_T("%d"), rect.top);
-	WritePrivateProfileString(_T("Settings"), _T("deskY"), strVal, strPath);
+	CRect rect; GetWindowRect(&rect);
+	strVal.Format(_T("%d"), rect.left); WritePrivateProfileString(_T("Settings"), _T("deskX"), strVal, strPath);
+	strVal.Format(_T("%d"), rect.top); WritePrivateProfileString(_T("Settings"), _T("deskY"), strVal, strPath);
 
 	WriteBool(_T("chkOff"), m_isShutDown);
 	WriteBool(_T("chkSleep"), m_isSleep);
@@ -554,28 +561,29 @@ void CClockvcmfcDlg::SaveSettings()
 void CClockvcmfcDlg::LoadSettings()
 {
 	CString strPath = GetIniPath();
+	auto GetBool = [&](LPCTSTR key, int def) {
+		return GetPrivateProfileInt(_T("Settings"), key, def, strPath);
+		};
 
-	m_bGMT = GetPrivateProfileInt(_T("Settings"), _T("chkGMT"), 0, strPath);
-	m_bDate = GetPrivateProfileInt(_T("Settings"), _T("chkDate"), 1, strPath);
-	m_bDay = GetPrivateProfileInt(_T("Settings"), _T("chkDay"), 1, strPath);
-	m_bMoving = GetPrivateProfileInt(_T("Settings"), _T("chkMoving"), 1, strPath);
-	m_bTopMost = GetPrivateProfileInt(_T("Settings"), _T("chkAlwaysOnTop"), 0, strPath);
-	m_bTransparent = GetPrivateProfileInt(_T("Settings"), _T("chkTransparent"), 0, strPath);
-	m_bBorder = GetPrivateProfileInt(_T("Settings"), _T("chkBorder"), 1, strPath);
-	m_bSound = GetPrivateProfileInt(_T("Settings"), _T("chkSound"), 0, strPath);
+	m_bGMT = GetBool(_T("chkGMT"), 0);
+	m_bDate = GetBool(_T("chkDate"), 1);
+	m_bDay = GetBool(_T("chkDay"), 1);
+	m_bMoving = GetBool(_T("chkMoving"), 1);
+	m_bTopMost = GetBool(_T("chkAlwaysOnTop"), 0);
+	m_bTransparent = GetBool(_T("chkTransparent"), 0);
+	m_bBorder = GetBool(_T("chkBorder"), 1);
+	m_bSmooth = GetBool(_T("chkSmooth"), 1);
+	m_bTickTack = GetBool(_T("chkTickTack"), 0);
+	m_b1530 = GetBool(_T("chk1530"), 0);
+	m_bHours = GetBool(_T("chkHours"), 0);
 	m_nOpacity = GetPrivateProfileInt(_T("Settings"), _T("frmOpacity"), 80, strPath);
-	m_bSmooth = GetPrivateProfileInt(_T("Settings"), _T("chkSmooth"), 1, strPath);
 
 	int x = GetPrivateProfileInt(_T("Settings"), _T("deskX"), -1, strPath);
 	int y = GetPrivateProfileInt(_T("Settings"), _T("deskY"), -1, strPath);
-	if (x != -1 && y != -1)
-	{
-		SetWindowPos(NULL, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
-	}
+	if (x != -1 && y != -1) SetWindowPos(NULL, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
 
-	m_isShutDown = GetPrivateProfileInt(_T("Settings"), _T("chkOff"), 0, strPath);
-	m_isSleep = GetPrivateProfileInt(_T("Settings"), _T("chkSleep"), 0, strPath);
-
+	m_isShutDown = GetBool(_T("chkOff"), 0);
+	m_isSleep = GetBool(_T("chkSleep"), 0);
 	TCHAR szTime[10];
 	GetPrivateProfileString(_T("Settings"), _T("timeOff"), _T("00:00"), szTime, 10, strPath);
 	m_timeShutDown.ParseDateTime(szTime);
@@ -643,7 +651,7 @@ CString CClockvcmfcDlg::GetSoundPath(CString fileName)
 void CClockvcmfcDlg::PlaySoundFile(CString fileName)
 {
 	CString fullPath = GetSoundPath(fileName);
-	// SND_FILENAME - шлях до файлу, SND_ASYNC - не чекати завершення, SND_NODEFAULT - не грати звук помилки
+	// SND_ASYNC - не чекати завершення, SND_FILENAME - шлях до файлу
 	::PlaySound(fullPath, NULL, SND_FILENAME | SND_ASYNC | SND_NODEFAULT);
 }
 
@@ -655,16 +663,17 @@ void CClockvcmfcDlg::PlayHourlyChime(int hours)
 	if (hours == 0) 
 		hours = 12;
 
-	// Запускаємо окремий потік для серії звуків
-	std::thread([this, hours]() 
-	{
-		CString fullPath = GetSoundPath(_T("_Boom.wav"));
-		for (int i = 0; i < hours; i++)
+	CString fullPath = GetSoundPath(_T("_Boom.wav"));
+
+	// Передаємо шлях у потік за значенням (копію), щоб він не зник
+	std::thread([fullPath, hours]()
 		{
-			// Тут використовуємо SND_SYNC, щоб звуки йшли один за одним
-			::PlaySound(fullPath, NULL, SND_FILENAME | SND_SYNC | SND_NODEFAULT);
-		}
-	}).detach(); // Від'єднуємо потік, він сам завершиться
+			for (int i = 0; i < hours; i++)
+			{
+				// Тут SND_SYNC, щоб звуки йшли один за одним
+				::PlaySound(fullPath, NULL, SND_FILENAME | SND_SYNC | SND_NODEFAULT);
+			}
+		}).detach();
 }
 
 void CClockvcmfcDlg::UpdateTransparency()

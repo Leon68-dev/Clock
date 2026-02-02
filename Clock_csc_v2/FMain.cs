@@ -114,14 +114,11 @@ namespace Clock_csc_v2
 
                 if (mChkHours && mCurDateTime.Minute == 0 && mCurDateTime.Second == 0)
                 {
-                    int hours = mCurDateTime.Hour;
-                    if (hours > 12) 
-                        hours -= 12;
-                        
-                    if (hours == 0) 
-                        hours = 12;
-                        
-                    for (int i = 0; i < hours; i++) 
+                    int count = mCurDateTime.Hour % 12;
+                    if (count == 0) 
+                        count = 12;
+
+                    for (int i = 0; i < count; i++)
                         playSoundHours(cPubFunc.getFileNameWav("_Boom.wav"));
                 }
                 else
@@ -129,21 +126,21 @@ namespace Clock_csc_v2
                     stopSoundHours();
                 }
 
-                if (mChk1530 && (mCurDateTime.Minute == 15 || mCurDateTime.Minute == 45) && mCurDateTime.Second == 0)
-                    playSound1530(cPubFunc.getFileNameWav("_15.wav"));
-                else
-                    stopSound1530();
-
-                if (mChk1530 && mCurDateTime.Minute == 30 && mCurDateTime.Second == 0)
-                    playSound1530(cPubFunc.getFileNameWav("_30.wav"));
-                else
-                    stopSound1530();
+                if (mChk1530 && mCurDateTime.Second == 0)
+                {
+                    int min = mCurDateTime.Minute;
+                    if (min == 15 || min == 45)
+                        playSound1530(cPubFunc.getFileNameWav("_15.wav"));
+                    else if (min == 30)
+                        playSound1530(cPubFunc.getFileNameWav("_30.wav"));
+                    else
+                        stopSound1530();
+                }
 
                 if (mChkTickTack && mCurDateTime.Second % 2 == 0)
                     playSoundTickTack(cPubFunc.getFileNameWav("_TickTack.wav"));
                 else
                     stopSoundTickTack();
-                    
             }
         }
 
@@ -319,8 +316,14 @@ namespace Clock_csc_v2
         // --- ÏÎÄ²¯ ÌÈØ² ---
         private void FMain_MouseDown(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left && mChkMoving) { mIsMouseDown = true; mLastMousePos = e.Location; }
-            if (e.Button == MouseButtons.Right && contextMenuFMain != null) contextMenuFMain.Show(Cursor.Position);
+            if (e.Button == MouseButtons.Left && mChkMoving) 
+            { 
+                mIsMouseDown = true; 
+                mLastMousePos = e.Location; 
+            }
+
+            if (e.Button == MouseButtons.Right && contextMenuFMain != null) 
+                contextMenuFMain.Show(Cursor.Position);
         }
 
         private void FMain_MouseMove(object sender, MouseEventArgs e)

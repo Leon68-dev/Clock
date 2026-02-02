@@ -31,11 +31,13 @@ protected:
 	BOOL m_bTopMost;
 	BOOL m_bTransparent;
 	BOOL m_bBorder;
-	BOOL m_bSound;
 	int  m_nOpacity;
 	BOOL m_bAlreadyExecuted;
 	BOOL m_bSmooth; 
 	int m_lastSecond = -1; 
+	BOOL m_bHours;
+	BOOL m_b1530;
+	BOOL m_bTickTack;
 
 	// --- Налаштування вимкнення ПК ---
 	BOOL m_isShutDown;
