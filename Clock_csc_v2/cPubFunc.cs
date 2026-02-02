@@ -282,45 +282,74 @@ namespace Clock_csc_v2
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
         #region Sound
 
-        public const int SND_SYNC = 0x0000;             // грати синхронно (блокує)
-        public const int SND_ASYNC = 0x0001;            // грати асинхронно (не блокує)
-        public const int SND_NODEFAULT = 0x0002;        // не грати звук помилки, якщо файл не знайдено
-        public const int SND_FILENAME = 0x00020000;     // перший параметр - це ім'я файлу
-        public const int SND_PURGE = 0x0040;            // зупинити всі звуки
+        //public const int SND_SYNC = 0x0000;             // грати синхронно (блокує)
+        //public const int SND_ASYNC = 0x0001;            // грати асинхронно (не блокує)
+        //public const int SND_NODEFAULT = 0x0002;        // не грати звук помилки, якщо файл не знайдено
+        //public const int SND_FILENAME = 0x00020000;     // перший параметр - це ім'я файлу
+        //public const int SND_PURGE = 0x0040;            // зупинити всі звуки
 
-        /// <summary>
-        /// Play sound file (winapi32)
-        /// </summary>
-        /// <param name="pszSound"></param>
-        /// <param name="hmod"></param>
-        /// <param name="fdwSound"></param>
-        /// <returns></returns>
-        [System.Runtime.InteropServices.DllImport("Winmm")]
-        public static extern bool PlaySound(
-            string pszSound,
-            IntPtr hmod,
-            int fdwSound);
+        ///// <summary>
+        ///// Play sound file (winapi32)
+        ///// </summary>
+        ///// <param name="pszSound"></param>
+        ///// <param name="hmod"></param>
+        ///// <param name="fdwSound"></param>
+        ///// <returns></returns>
+        //[System.Runtime.InteropServices.DllImport("Winmm")]
+        //public static extern bool PlaySound(
+        //    string pszSound,
+        //    IntPtr hmod,
+        //    int fdwSound);
 
-        /// <summary>
-        /// Play sound file
-        /// </summary>
-        /// <param name="soundFileName"></param>
-        /// <returns></returns>
-        public static bool playSound(string soundFileName, bool async = true)
+        ///// <summary>
+        ///// Play sound file
+        ///// </summary>
+        ///// <param name="soundFileName"></param>
+        ///// <returns></returns>
+        //public static bool playSound(string soundFileName, bool async = true)
+        //{
+        //    bool r = false;
+        //    try
+        //    {
+        //        if (!File.Exists(soundFileName)) 
+        //            return r;
+
+        //        int flags = SND_FILENAME | SND_NODEFAULT;
+        //        if (async) 
+        //            flags |= SND_ASYNC;
+
+        //        r = PlaySound(soundFileName, IntPtr.Zero, flags);
+        //    }
+        //    catch (Exception ex) 
+        //    {
+        //        Debug.WriteLine(ex.Message);
+        //        Debug.WriteLine(ex.StackTrace);
+        //    }
+
+        //    return r;
+        //}
+
+        //public static void stopAllSounds()
+        //{
+        //    PlaySound(null, IntPtr.Zero, SND_PURGE);
+        //}
+
+        private static System.Media.SoundPlayer _soundPlayer = new System.Media.SoundPlayer();
+
+        public static bool playSound(string soundFileName)
         {
             bool r = false;
             try
             {
-                if (!File.Exists(soundFileName)) 
+                if (!File.Exists(soundFileName))
                     return r;
 
-                int flags = SND_FILENAME | SND_NODEFAULT;
-                if (async) 
-                    flags |= SND_ASYNC;
+                _soundPlayer.SoundLocation = soundFileName;
+                _soundPlayer.Play();
 
-                r = PlaySound(soundFileName, IntPtr.Zero, flags);
+                r = true;
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
                 Debug.WriteLine(ex.StackTrace);
@@ -331,7 +360,7 @@ namespace Clock_csc_v2
 
         public static void stopAllSounds()
         {
-            PlaySound(null, IntPtr.Zero, SND_PURGE);
+            _soundPlayer.Stop();
         }
 
         #endregion Sound
