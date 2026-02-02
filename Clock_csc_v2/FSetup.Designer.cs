@@ -29,10 +29,10 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            chkSound = new CheckBox();
             groupBox2 = new GroupBox();
             trckBarOpacity = new TrackBar();
             groupBox1 = new GroupBox();
+            chkSmooth = new CheckBox();
             groupBox3 = new GroupBox();
             chkBorder = new CheckBox();
             chkAlwaysOnTop = new CheckBox();
@@ -43,23 +43,13 @@
             chkGMT = new CheckBox();
             btnOk = new Button();
             toolTip1 = new ToolTip(components);
-            chkSmooth = new CheckBox();
+            chkTickTack = new CheckBox();
+            chkHours = new CheckBox();
+            chk1530 = new CheckBox();
             groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)trckBarOpacity).BeginInit();
             groupBox1.SuspendLayout();
             SuspendLayout();
-            // 
-            // chkSound
-            // 
-            chkSound.AutoSize = true;
-            chkSound.FlatStyle = FlatStyle.System;
-            chkSound.Location = new Point(336, 114);
-            chkSound.Margin = new Padding(4, 5, 4, 5);
-            chkSound.Name = "chkSound";
-            chkSound.Size = new Size(82, 25);
-            chkSound.TabIndex = 17;
-            chkSound.Text = "Sound";
-            chkSound.UseVisualStyleBackColor = true;
             // 
             // groupBox2
             // 
@@ -69,7 +59,7 @@
             groupBox2.Margin = new Padding(4, 5, 4, 5);
             groupBox2.Name = "groupBox2";
             groupBox2.Padding = new Padding(4, 5, 4, 5);
-            groupBox2.Size = new Size(496, 81);
+            groupBox2.Size = new Size(495, 72);
             groupBox2.TabIndex = 16;
             groupBox2.TabStop = false;
             groupBox2.Text = "Opacity";
@@ -82,7 +72,7 @@
             trckBarOpacity.Margin = new Padding(4, 5, 4, 5);
             trckBarOpacity.Maximum = 100;
             trckBarOpacity.Name = "trckBarOpacity";
-            trckBarOpacity.Size = new Size(480, 55);
+            trckBarOpacity.Size = new Size(485, 38);
             trckBarOpacity.SmallChange = 5;
             trckBarOpacity.TabIndex = 0;
             trckBarOpacity.TickFrequency = 5;
@@ -101,7 +91,7 @@
             groupBox1.Controls.Add(chkDay);
             groupBox1.Controls.Add(chkGMT);
             groupBox1.FlatStyle = FlatStyle.System;
-            groupBox1.Location = new Point(5, 89);
+            groupBox1.Location = new Point(5, 78);
             groupBox1.Margin = new Padding(4, 5, 4, 5);
             groupBox1.Name = "groupBox1";
             groupBox1.Padding = new Padding(4, 5, 4, 5);
@@ -109,6 +99,17 @@
             groupBox1.TabIndex = 15;
             groupBox1.TabStop = false;
             groupBox1.Text = "Dial";
+            // 
+            // chkSmooth
+            // 
+            chkSmooth.FlatStyle = FlatStyle.System;
+            chkSmooth.Location = new Point(85, 80);
+            chkSmooth.Margin = new Padding(4, 5, 4, 5);
+            chkSmooth.Name = "chkSmooth";
+            chkSmooth.Size = new Size(111, 31);
+            chkSmooth.TabIndex = 13;
+            chkSmooth.Text = "Smooth";
+            chkSmooth.UseVisualStyleBackColor = true;
             // 
             // groupBox3
             // 
@@ -124,7 +125,7 @@
             // chkBorder
             // 
             chkBorder.FlatStyle = FlatStyle.System;
-            chkBorder.Location = new Point(197, 55);
+            chkBorder.Location = new Point(197, 50);
             chkBorder.Margin = new Padding(4, 5, 4, 5);
             chkBorder.Name = "chkBorder";
             chkBorder.Size = new Size(80, 28);
@@ -135,7 +136,7 @@
             // chkAlwaysOnTop
             // 
             chkAlwaysOnTop.FlatStyle = FlatStyle.System;
-            chkAlwaysOnTop.Location = new Point(197, 25);
+            chkAlwaysOnTop.Location = new Point(197, 20);
             chkAlwaysOnTop.Margin = new Padding(4, 5, 4, 5);
             chkAlwaysOnTop.Name = "chkAlwaysOnTop";
             chkAlwaysOnTop.Size = new Size(117, 28);
@@ -146,7 +147,7 @@
             // chkTransparent
             // 
             chkTransparent.FlatStyle = FlatStyle.System;
-            chkTransparent.Location = new Point(85, 55);
+            chkTransparent.Location = new Point(85, 50);
             chkTransparent.Margin = new Padding(4, 5, 4, 5);
             chkTransparent.Name = "chkTransparent";
             chkTransparent.Size = new Size(111, 31);
@@ -158,7 +159,7 @@
             // 
             chkMoving.AutoSize = true;
             chkMoving.FlatStyle = FlatStyle.System;
-            chkMoving.Location = new Point(86, 27);
+            chkMoving.Location = new Point(86, 22);
             chkMoving.Margin = new Padding(4, 5, 4, 5);
             chkMoving.Name = "chkMoving";
             chkMoving.Size = new Size(90, 25);
@@ -170,7 +171,7 @@
             // 
             chkDate.AutoSize = true;
             chkDate.FlatStyle = FlatStyle.System;
-            chkDate.Location = new Point(12, 88);
+            chkDate.Location = new Point(12, 83);
             chkDate.Margin = new Padding(4, 5, 4, 5);
             chkDate.Name = "chkDate";
             chkDate.Size = new Size(72, 25);
@@ -182,7 +183,7 @@
             // 
             chkDay.AutoSize = true;
             chkDay.FlatStyle = FlatStyle.System;
-            chkDay.Location = new Point(12, 57);
+            chkDay.Location = new Point(12, 52);
             chkDay.Margin = new Padding(4, 5, 4, 5);
             chkDay.Name = "chkDay";
             chkDay.Size = new Size(66, 25);
@@ -194,7 +195,7 @@
             // 
             chkGMT.AutoSize = true;
             chkGMT.FlatStyle = FlatStyle.System;
-            chkGMT.Location = new Point(12, 27);
+            chkGMT.Location = new Point(12, 22);
             chkGMT.Margin = new Padding(4, 5, 4, 5);
             chkGMT.Name = "chkGMT";
             chkGMT.Size = new Size(71, 25);
@@ -205,33 +206,57 @@
             // btnOk
             // 
             btnOk.FlatStyle = FlatStyle.System;
-            btnOk.Location = new Point(400, 169);
+            btnOk.Location = new Point(401, 161);
             btnOk.Margin = new Padding(4, 5, 4, 5);
             btnOk.Name = "btnOk";
-            btnOk.Size = new Size(100, 35);
+            btnOk.Size = new Size(99, 35);
             btnOk.TabIndex = 14;
             btnOk.Text = "Ok";
             btnOk.UseVisualStyleBackColor = true;
             btnOk.Click += btnOk_Click;
             // 
-            // chkSmooth
+            // chkTickTack
             // 
-            chkSmooth.FlatStyle = FlatStyle.System;
-            chkSmooth.Location = new Point(85, 85);
-            chkSmooth.Margin = new Padding(4, 5, 4, 5);
-            chkSmooth.Name = "chkSmooth";
-            chkSmooth.Size = new Size(111, 31);
-            chkSmooth.TabIndex = 13;
-            chkSmooth.Text = "Smooth";
-            chkSmooth.UseVisualStyleBackColor = true;
+            chkTickTack.FlatStyle = FlatStyle.System;
+            chkTickTack.Location = new Point(333, 106);
+            chkTickTack.Margin = new Padding(4, 5, 4, 5);
+            chkTickTack.Name = "chkTickTack";
+            chkTickTack.Size = new Size(82, 25);
+            chkTickTack.TabIndex = 18;
+            chkTickTack.Text = "Tick-Tack";
+            chkTickTack.UseVisualStyleBackColor = true;
+            // 
+            // chkHours
+            // 
+            chkHours.FlatStyle = FlatStyle.System;
+            chkHours.Location = new Point(333, 166);
+            chkHours.Margin = new Padding(4, 5, 4, 5);
+            chkHours.Name = "chkHours";
+            chkHours.Size = new Size(63, 25);
+            chkHours.TabIndex = 19;
+            chkHours.Text = "Hours";
+            chkHours.UseVisualStyleBackColor = true;
+            // 
+            // chk1530
+            // 
+            chk1530.FlatStyle = FlatStyle.System;
+            chk1530.Location = new Point(333, 135);
+            chk1530.Margin = new Padding(4, 5, 4, 5);
+            chk1530.Name = "chk1530";
+            chk1530.Size = new Size(61, 25);
+            chk1530.TabIndex = 20;
+            chk1530.Text = "15-30";
+            chk1530.UseVisualStyleBackColor = true;
             // 
             // FSetup
             // 
             AcceptButton = btnOk;
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(508, 212);
-            Controls.Add(chkSound);
+            ClientSize = new Size(507, 205);
+            Controls.Add(chk1530);
+            Controls.Add(chkHours);
+            Controls.Add(chkTickTack);
             Controls.Add(groupBox2);
             Controls.Add(groupBox1);
             Controls.Add(btnOk);
@@ -248,12 +273,10 @@
             groupBox1.ResumeLayout(false);
             groupBox1.PerformLayout();
             ResumeLayout(false);
-            PerformLayout();
         }
 
         #endregion
 
-        private CheckBox chkSound;
         private GroupBox groupBox2;
         private TrackBar trckBarOpacity;
         private GroupBox groupBox1;
@@ -268,5 +291,8 @@
         private Button btnOk;
         private ToolTip toolTip1;
         private CheckBox chkSmooth;
+        private CheckBox chkTickTack;
+        private CheckBox chkHours;
+        private CheckBox chk1530;
     }
 }

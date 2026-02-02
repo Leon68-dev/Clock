@@ -19,10 +19,12 @@ namespace Clock_csc_v2
         public bool mChkAlwaysOnTop = false;
         public bool mChkTransparent = false;
         public bool mChkBorder = true;
-        public int mValOpacity = 100;
-        public int mClose = -1;
-        public bool mChkSound = false;
+        public int  mValOpacity = 100;
+        public int  mClose = -1;
         public bool mChkSmooth = false;
+        public bool mChkTickTak = false;
+        public bool mChk1530 = false;
+        public bool mChkHours = false;
 
         public FSetup()
         {
@@ -37,9 +39,11 @@ namespace Clock_csc_v2
             bool ChkAlwaysOnTop,
             bool ChkTransparent,
             bool ChkBorder,
-            bool ChkSound,
-            int ValOpacity,
-            bool ChkSmooth)
+            int  ValOpacity,
+            bool ChkSmooth,
+            bool ChkSoundTickTak,
+            bool ChkSound1530,
+            bool ChkSoundHours)
         {
             this.mChkGMT = ChkGMT;
             this.mChkDate = ChkDate;
@@ -48,8 +52,10 @@ namespace Clock_csc_v2
             this.mChkAlwaysOnTop = ChkAlwaysOnTop;
             this.mChkTransparent = ChkTransparent;
             this.mChkBorder = ChkBorder;
-            this.mChkSound = ChkSound;
             this.mChkSmooth = ChkSmooth;
+            this.mChkTickTak = ChkSoundTickTak;
+            this.mChk1530 = ChkSound1530;
+            this.mChkHours = ChkSoundHours;
 
             this.chkGMT.Checked = this.mChkGMT;
             this.chkDate.Checked = this.mChkDate;
@@ -58,8 +64,10 @@ namespace Clock_csc_v2
             this.chkAlwaysOnTop.Checked = this.mChkAlwaysOnTop;
             this.chkTransparent.Checked = this.mChkTransparent;
             this.chkBorder.Checked = this.mChkBorder;
-            this.chkSound.Checked = this.mChkSound;
             this.chkSmooth.Checked = this.mChkSmooth;
+            this.chkTickTack.Checked = this.mChkTickTak;
+            this.chk1530.Checked = this.mChk1530;
+            this.chkHours.Checked = this.mChkHours;
 
             setOpacity(ValOpacity);
         }
@@ -77,8 +85,10 @@ namespace Clock_csc_v2
             this.mChkTransparent = this.chkTransparent.Checked;
             this.mChkBorder = this.chkBorder.Checked;
             this.mValOpacity = this.trckBarOpacity.Value;
-            this.mChkSound = this.chkSound.Checked;
             this.mChkSmooth = this.chkSmooth.Checked;
+            this.mChkTickTak = this.chkTickTack.Checked;
+            this.mChk1530 = this.chk1530.Checked;
+            this.mChkHours = this.chkHours.Checked;
 
             this.Close();
         }
@@ -99,7 +109,7 @@ namespace Clock_csc_v2
         {
             //mValOpacity = this.trckBarOpacity.Value;
             this.toolTip1.SetToolTip(this.trckBarOpacity, this.trckBarOpacity.Value.ToString());
-
         }
+
     }
 }

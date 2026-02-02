@@ -36,11 +36,16 @@ namespace Clock_csc_v2
         private bool mChkAlwaysOnTop = false;
         private bool mChkTransparent = false;
         private bool mChkBorder = true;
-        private bool mChkSound = false;
         private int mFrmOpacity = 80;
         private bool mChkSmooth = true;
+        private bool mChkTickTack = false;
+        private bool mChk1530 = false;
+        private bool mChkHours = false;
 
-        private CancellationTokenSource cts = new CancellationTokenSource();
+        private CancellationTokenSource ctsHours = new CancellationTokenSource();
+        private CancellationTokenSource cts1530 = new CancellationTokenSource();
+        private CancellationTokenSource ctsTickTack = new CancellationTokenSource();
+
         private bool _isRuning = false;
 
         public FMain()
@@ -107,29 +112,38 @@ namespace Clock_csc_v2
                 if (mCurDateTime.Minute == 8 && mCurDateTime.Second == 48) 
                     GC.Collect();
 
-                if (mChkSound)
+                if (mChkHours && mCurDateTime.Minute == 0 && mCurDateTime.Second == 0)
                 {
-                    if (mCurDateTime.Minute == 0 && mCurDateTime.Second == 0)
-                    {
-                        int hours = mCurDateTime.Hour;
-                        if (hours > 12) 
-                            hours -= 12;
+                    int hours = mCurDateTime.Hour;
+                    if (hours > 12) 
+                        hours -= 12;
                         
-                        if (hours == 0) 
-                            hours = 12;
+                    if (hours == 0) 
+                        hours = 12;
                         
-                        for (int i = 0; i < hours; i++) 
-                            playSound(cPubFunc.getFileNameWav("_Boom.wav"));
-                    }
-                    else if ((mCurDateTime.Minute == 15 || mCurDateTime.Minute == 45) && mCurDateTime.Second == 0)
-                        playSound(cPubFunc.getFileNameWav("_15.wav"));
-                    else if (mCurDateTime.Minute == 30 && mCurDateTime.Second == 0)
-                        playSound(cPubFunc.getFileNameWav("_30.wav"));
-                    else if (mCurDateTime.Second % 2 == 0)
-                        playSoundTickTack(cPubFunc.getFileNameWav("_TickTack.wav"));
+                    for (int i = 0; i < hours; i++) 
+                        playSoundHours(cPubFunc.getFileNameWav("_Boom.wav"));
                 }
-                else 
-                    stopSound();
+                else
+                {
+                    stopSoundHours();
+                }
+
+                if (mChk1530 && (mCurDateTime.Minute == 15 || mCurDateTime.Minute == 45) && mCurDateTime.Second == 0)
+                    playSound1530(cPubFunc.getFileNameWav("_15.wav"));
+                else
+                    stopSound1530();
+
+                if (mChk1530 && mCurDateTime.Minute == 30 && mCurDateTime.Second == 0)
+                    playSound1530(cPubFunc.getFileNameWav("_30.wav"));
+                else
+                    stopSound1530();
+
+                if (mChkTickTack && mCurDateTime.Second % 2 == 0)
+                    playSoundTickTack(cPubFunc.getFileNameWav("_TickTack.wav"));
+                else
+                    stopSoundTickTack();
+                    
             }
         }
 
@@ -236,7 +250,7 @@ namespace Clock_csc_v2
             using (SolidBrush bCS = new SolidBrush(Color.Gray))
             using (SolidBrush bDate = new SolidBrush(Color.Gray))
             using (SolidBrush bDayNormal = new SolidBrush(Color.Gray))
-            using (SolidBrush bDayRed = new SolidBrush(Color.FromArgb(255, 240, 128, 128)))
+            using (SolidBrush bDayRed = new SolidBrush(Color.RosyBrown))
             using (SolidBrush bUTC = new SolidBrush(Color.Gray))
             {
                 StringFormat sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
@@ -363,9 +377,6 @@ namespace Clock_csc_v2
                     if (dr.Table.Columns.Contains("chkBorder")) 
                         mChkBorder = Convert.ToBoolean(dr["chkBorder"]);
                     
-                    if (dr.Table.Columns.Contains("chkSound")) 
-                        mChkSound = Convert.ToBoolean(dr["chkSound"]);
-                    
                     if (dr.Table.Columns.Contains("frmOpacity")) 
                         mFrmOpacity = Convert.ToInt32(dr["frmOpacity"]);
                     
@@ -377,6 +388,16 @@ namespace Clock_csc_v2
 
                     if (dr.Table.Columns.Contains("chkSmooth")) 
                         mChkSmooth = Convert.ToBoolean(dr["chkSmooth"]);
+
+                    if (dr.Table.Columns.Contains("chkHours"))
+                        mChkHours = Convert.ToBoolean(dr["chkHours"]);
+
+                    if (dr.Table.Columns.Contains("chk1530"))
+                        mChk1530 = Convert.ToBoolean(dr["chk1530"]);
+
+                    if (dr.Table.Columns.Contains("chkTickTack"))
+                        mChkTickTack = Convert.ToBoolean(dr["chkTickTack"]);
+
                 }
                 else
                 {
@@ -391,11 +412,13 @@ namespace Clock_csc_v2
                     table.Columns.Add("chkTransparent", typeof(bool)); // Додано
                     table.Columns.Add("chkAlwaysOnTop", typeof(bool));
                     table.Columns.Add("chkBorder", typeof(bool));
-                    table.Columns.Add("chkSound", typeof(bool));
                     table.Columns.Add("frmOpacity", typeof(int));
                     table.Columns.Add("deskX", typeof(int));
                     table.Columns.Add("deskY", typeof(int));
                     table.Columns.Add("chkSmooth", typeof(bool));
+                    table.Columns.Add("chkHours", typeof(bool));
+                    table.Columns.Add("chk1530", typeof(bool));
+                    table.Columns.Add("chkTickTack", typeof(bool));
 
                     ds.Tables.Add(table);
                     DataRow dr = ds.Tables[TBL_NAME].NewRow();
@@ -408,11 +431,13 @@ namespace Clock_csc_v2
                     dr["chkTransparent"] = false; // Дефолт
                     dr["chkAlwaysOnTop"] = false;
                     dr["chkBorder"] = true;
-                    dr["chkSound"] = false;
                     dr["frmOpacity"] = 80;
                     dr["deskX"] = 0;
                     dr["deskY"] = 0;
                     dr["chkSmooth"] = mChkSmooth;
+                    dr["chkHours"] = false;
+                    dr["chk1530"] = false;
+                    dr["chkTickTack"] = false;
                     ds.Tables[TBL_NAME].Rows.Add(dr);
                     ds.WriteXml(filename);
                 }
@@ -434,11 +459,13 @@ namespace Clock_csc_v2
                 dr["chkAlwaysOnTop"] = mChkAlwaysOnTop;
                 dr["chkTransparent"] = mChkTransparent; 
                 dr["chkBorder"] = mChkBorder;
-                dr["chkSound"] = mChkSound; 
                 dr["frmOpacity"] = mFrmOpacity;
                 dr["deskX"] = this.Left; 
                 dr["deskY"] = this.Top;
                 dr["chkSmooth"] = this.mChkSmooth;
+                dr["chkHours"] = mChkHours;
+                dr["chk1530"] = mChk1530;
+                dr["chkTickTack"] = mChkTickTack;
                 ds.WriteXml(cPubFunc.fileNameSet());
             }
             catch { }
@@ -471,29 +498,40 @@ namespace Clock_csc_v2
 
         private void playSoundTickTack(string f) 
         { 
-            if (!_isRuning && mChkSound) 
+            if (!_isRuning && mChkTickTack) 
             { 
-                _isRuning = true; 
-                cts = new CancellationTokenSource(); 
+                //_isRuning = true; 
+                ctsTickTack = new CancellationTokenSource(); 
                 Task.Run(() => 
                 { 
                     cPubFunc.playSound(f); 
                     _isRuning = false; 
-                }, cts.Token); 
+                }, ctsTickTack.Token); 
             } 
         }
         
-        private void playSound(string f) 
-        { 
-            cts = new CancellationTokenSource(); 
+        private void playSoundHours(string f) 
+        {
+            ctsHours = new CancellationTokenSource(); 
             Task.Run(() => 
             { 
                 cPubFunc.playSound(f); 
-            }, cts.Token); 
+            }, ctsHours.Token); 
         }
-        
-        private void stopSound() => cts.Cancel();
-        
+
+        private void playSound1530(string f)
+        {
+            cts1530 = new CancellationTokenSource();
+            Task.Run(() =>
+            {
+                cPubFunc.playSound(f);
+            }, cts1530.Token);
+        }
+
+        private void stopSoundTickTack() => ctsTickTack.Cancel();
+        private void stopSound1530() => cts1530.Cancel();
+        private void stopSoundHours() => ctsHours.Cancel();
+
         private void closeForm() 
         { 
             this.Visible = true; 
@@ -503,7 +541,8 @@ namespace Clock_csc_v2
         private void cm_SetupClick()
         {
             FSetup fs = new FSetup();
-            fs.initialization(mChkGMT, mChkDate, mChkDay, mChkMoving, mChkAlwaysOnTop, mChkTransparent, mChkBorder, mChkSound, mFrmOpacity, mChkSmooth);
+            fs.initialization(mChkGMT, mChkDate, mChkDay, mChkMoving, mChkAlwaysOnTop, mChkTransparent, 
+                mChkBorder, mFrmOpacity, mChkSmooth, mChkTickTack, mChk1530, mChkHours);
             fs.ShowDialog();
 
             if (fs.mClose <= 0) 
@@ -516,10 +555,12 @@ namespace Clock_csc_v2
             mChkAlwaysOnTop = fs.mChkAlwaysOnTop; 
             mChkTransparent = fs.mChkTransparent; 
             mChkBorder = fs.mChkBorder;
-            mChkSound = fs.mChkSound; 
             mFrmOpacity = fs.mValOpacity;
             this.TopMost = mChkAlwaysOnTop;
             mChkSmooth = fs.mChkSmooth;
+            mChkTickTack = fs.mChkTickTak;  
+            mChk1530 = fs.mChk1530;
+            mChkHours = fs.mChkHours;
 
             timer1.Interval = mChkSmooth ? 200 : 1000;
 
