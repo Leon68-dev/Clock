@@ -329,6 +329,10 @@ namespace Clock_csc_v2
             return r;
         }
 
+        public static void stopAllSounds()
+        {
+            PlaySound(null, IntPtr.Zero, SND_PURGE);
+        }
 
         #endregion Sound
 
