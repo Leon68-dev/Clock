@@ -100,11 +100,6 @@ namespace Clock_csc_v2
             this.toolTip1.SetToolTip(this.trckBarOpacity, this.trckBarOpacity.Value.ToString());
         }
 
-        //private double getOpacity()
-        //{
-        //    return this.trckBarOpacity.Value;
-        //}
-
         private void trckBarOpacity_ValueChanged(object sender, EventArgs e)
         {
             //mValOpacity = this.trckBarOpacity.Value;

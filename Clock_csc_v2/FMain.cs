@@ -42,12 +42,6 @@ namespace Clock_csc_v2
         private bool mChk1530 = false;
         private bool mChkHours = false;
 
-        private CancellationTokenSource ctsHours = new CancellationTokenSource();
-        private CancellationTokenSource cts1530 = new CancellationTokenSource();
-        private CancellationTokenSource ctsTickTack = new CancellationTokenSource();
-
-        private bool _isRuning = false;
-
         public FMain()
         {
             InitializeComponent();
@@ -112,42 +106,46 @@ namespace Clock_csc_v2
                 if (mCurDateTime.Minute == 8 && mCurDateTime.Second == 48)
                     GC.Collect();
 
-                if (mChkHours)
-                {
-                    if (mCurDateTime.Minute == 0 && mCurDateTime.Second == 0)
-                    {
-                        int count = mCurDateTime.Hour % 12;
-                        if (count == 0)
-                            count = 12;
+                bool isLongSoundPlaying = cPubFunc.isPlayingMCI("hours") || cPubFunc.isPlayingMCI("chime");
 
+                if (mChkHours && mCurDateTime.Minute == 0 && mCurDateTime.Second == 0)
+                {
+                    int count = mCurDateTime.Hour % 12;
+                    if (count == 0) 
+                        count = 12;
+
+                    Task.Run(() => 
+                    {
+                        string file = cPubFunc.getFileNameWav("_Boom.wav");
                         for (int i = 0; i < count; i++)
-                            playSoundHours(cPubFunc.getFileNameWav("_Boom.wav"));
-                    }
+                        {
+                            cPubFunc.playMCI(file, "hours");
+                            while (cPubFunc.isPlayingMCI("hours")) 
+                                Thread.Sleep(50);
+                            Thread.Sleep(200);
+                        }
+                    });
                 }
-                else
-                    stopSoundHours();
 
-                if (mChk1530)
+                if (mChk1530 && mCurDateTime.Second == 0)
                 {
-                    if (mCurDateTime.Second == 0)
-                    {
-                        int min = mCurDateTime.Minute;
-                        if (min == 15 || min == 45)
-                            playSound1530(cPubFunc.getFileNameWav("_15.wav"));
-                        else if (min == 30)
-                            playSound1530(cPubFunc.getFileNameWav("_30.wav"));
-                    }
+                    int min = mCurDateTime.Minute;
+                    if (min == 15 || min == 45)
+                        cPubFunc.playMCI(cPubFunc.getFileNameWav("_15.wav"), "chime");
+                    else if (min == 30)
+                        cPubFunc.playMCI(cPubFunc.getFileNameWav("_30.wav"), "chime");
                 }
-                else
-                    stopSound1530();
 
                 if (mChkTickTack)
                 {
-                    if (mCurDateTime.Second % 2 == 0)
-                        playSoundTickTack(cPubFunc.getFileNameWav("_TickTack.wav"));
+                    if (!isLongSoundPlaying && mCurDateTime.Second % 2 == 0)
+                        cPubFunc.playMCI(cPubFunc.getFileNameWav("_TickTack.wav"), "tick");
                 }
                 else
-                    stopSoundTickTack(); 
+                {
+                    cPubFunc.stopMCI("tick");
+                }
+
             }
         }
 
@@ -507,62 +505,6 @@ namespace Clock_csc_v2
                     cPubFunc.DoExitWindows(cPubFunc.Poweroff);
             }
         }
-
-        private void playSoundTickTack(string f) 
-        { 
-            if (!mChkTickTack) 
-                return;
-
-            try
-            {
-                // 1. Скасовуємо попередній запуск, якщо він ще не завершився
-                ctsTickTack.Cancel();
-                ctsTickTack = new CancellationTokenSource();
-
-                var token = ctsTickTack.Token;
-
-                Task.Run(() =>
-                {
-                    // 2. Перевіряємо, чи не скасували нас поки задача запускалася
-                    if (token.IsCancellationRequested) return;
-
-                    cPubFunc.playSound(f);
-                }, token);
-            }
-            catch { }
-        }
-        
-        private void playSoundHours(string f) 
-        {
-            if (!mChkHours)
-                return;
-
-            ctsHours.Cancel();
-            ctsHours = new CancellationTokenSource(); 
-
-            Task.Run(() => 
-            { 
-                cPubFunc.playSound(f); 
-            }, ctsHours.Token); 
-        }
-
-        private void playSound1530(string f)
-        {
-            if (!mChk1530)
-                return;
-            
-            cts1530.Cancel();
-            cts1530 = new CancellationTokenSource();
-
-            Task.Run(() =>
-            {
-                cPubFunc.playSound(f);
-            }, cts1530.Token);
-        }
-
-        private void stopSoundTickTack() => ctsTickTack.Cancel();
-        private void stopSound1530() => cts1530.Cancel();
-        private void stopSoundHours() => ctsHours.Cancel();
 
         private void closeForm() 
         { 

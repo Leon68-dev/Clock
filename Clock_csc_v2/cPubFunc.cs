@@ -1,8 +1,9 @@
 using System;
 using System.Collections;
-using System.IO;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 
 
 namespace Clock_csc_v2
@@ -12,14 +13,9 @@ namespace Clock_csc_v2
 	/// </summary>
 	public class cPubFunc
 	{
-        public cPubFunc()
-		{
-			//
-			// TODO: Add constructor logic here
-			//
-		}
-
-		public static DateTime chkTime()
+        public cPubFunc() { }
+		        
+        public static DateTime chkTime()
 		{
 			return (new DateTime(1900, 1, 1, 0, 0, 0));
 		}
@@ -282,58 +278,6 @@ namespace Clock_csc_v2
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////
         #region Sound
 
-        //public const int SND_SYNC = 0x0000;             // грати синхронно (блокує)
-        //public const int SND_ASYNC = 0x0001;            // грати асинхронно (не блокує)
-        //public const int SND_NODEFAULT = 0x0002;        // не грати звук помилки, якщо файл не знайдено
-        //public const int SND_FILENAME = 0x00020000;     // перший параметр - це ім'я файлу
-        //public const int SND_PURGE = 0x0040;            // зупинити всі звуки
-
-        ///// <summary>
-        ///// Play sound file (winapi32)
-        ///// </summary>
-        ///// <param name="pszSound"></param>
-        ///// <param name="hmod"></param>
-        ///// <param name="fdwSound"></param>
-        ///// <returns></returns>
-        //[System.Runtime.InteropServices.DllImport("Winmm")]
-        //public static extern bool PlaySound(
-        //    string pszSound,
-        //    IntPtr hmod,
-        //    int fdwSound);
-
-        ///// <summary>
-        ///// Play sound file
-        ///// </summary>
-        ///// <param name="soundFileName"></param>
-        ///// <returns></returns>
-        //public static bool playSound(string soundFileName, bool async = true)
-        //{
-        //    bool r = false;
-        //    try
-        //    {
-        //        if (!File.Exists(soundFileName)) 
-        //            return r;
-
-        //        int flags = SND_FILENAME | SND_NODEFAULT;
-        //        if (async) 
-        //            flags |= SND_ASYNC;
-
-        //        r = PlaySound(soundFileName, IntPtr.Zero, flags);
-        //    }
-        //    catch (Exception ex) 
-        //    {
-        //        Debug.WriteLine(ex.Message);
-        //        Debug.WriteLine(ex.StackTrace);
-        //    }
-
-        //    return r;
-        //}
-
-        //public static void stopAllSounds()
-        //{
-        //    PlaySound(null, IntPtr.Zero, SND_PURGE);
-        //}
-
         private static System.Media.SoundPlayer _soundPlayer = new System.Media.SoundPlayer();
 
         public static bool playSound(string soundFileName)
@@ -358,9 +302,31 @@ namespace Clock_csc_v2
             return r;
         }
 
-        public static void stopAllSounds()
+        public static void stopSoundTickTack()
         {
             _soundPlayer.Stop();
+        }
+        
+        [DllImport("winmm.dll")]
+        private static extern long mciSendString(string command, StringBuilder returnValue, int returnLength, IntPtr winHandle);
+
+        public static void playMCI(string file, string alias)
+        {
+            mciSendString($"close {alias}", null, 0, IntPtr.Zero);
+            mciSendString($"open \"{file}\" alias {alias}", null, 0, IntPtr.Zero);
+            mciSendString($"play {alias}", null, 0, IntPtr.Zero);
+        }
+
+        public static void stopMCI(string alias)
+        {
+            mciSendString($"stop {alias}", null, 0, IntPtr.Zero);
+        }
+
+        public static bool isPlayingMCI(string alias)
+        {
+            StringBuilder sb = new StringBuilder(128);
+            mciSendString($"status {alias} mode", sb, 128, IntPtr.Zero);
+            return sb.ToString().ToLower().Contains("playing");
         }
 
         #endregion Sound
