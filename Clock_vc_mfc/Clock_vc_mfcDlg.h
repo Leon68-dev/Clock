@@ -65,6 +65,10 @@ protected:
 	void PlaySoundFile(CString fileName);
 	void PlayHourlyChime(int hours);
 
+	void PlayMCI(CString fileName, CString alias);
+	void StopMCI(CString alias);
+	BOOL IsPlayingMCI(CString alias);
+
 	void UpdateTransparency();
 	void UpdateLayeredClock();
 

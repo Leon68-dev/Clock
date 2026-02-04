@@ -311,60 +311,37 @@ void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 	if (nIDEvent == 1)
 	{
 		SYSTEMTIME st;
-		if (m_bGMT) ::GetSystemTime(&st);
-		else ::GetLocalTime(&st);
+		if (m_bGMT) ::GetSystemTime(&st); else ::GetLocalTime(&st);
 
-		// Завжди оновлюємо графіку (для плавності)
 		UpdateLayeredClock();
 
-		// Логіка, що спрацьовує раз на секунду
 		if (st.wSecond != m_lastSecond)
 		{
 			m_lastSecond = st.wSecond;
-			COleDateTime now(st);
 
-			// Оновлення трею
-			CString strTip = now.Format(_T("%A - %H:%M"));
-			if (m_bGMT) strTip += _T(" GMT");
-			_tcscpy_s(m_nid.szTip, strTip.Left(63));
-			Shell_NotifyIcon(NIM_MODIFY, &m_nid);
-
-			// Перевірка автоматичного вимкнення
-			if (m_isShutDown || m_isSleep)
-			{
-				if (now.GetHour() == m_timeShutDown.GetHour() &&
-					now.GetMinute() == m_timeShutDown.GetMinute())
-				{
-					if (!m_bAlreadyExecuted)
-					{
-						m_bAlreadyExecuted = TRUE;
-						ExecuteShutdown();
-					}
-				}
-				else m_bAlreadyExecuted = FALSE;
-			}
-
-			// --- ЛОГІКА ЗВУКУ (як у C#) ---
-
-			// 1. Щогодинний бій (_Boom.wav)
+			// 1. Щогодинний бій
 			if (m_bHours && st.wMinute == 0 && st.wSecond == 0)
 			{
 				PlayHourlyChime(st.wHour);
 			}
 
-			// 2. Чверті години (_15.wav, _30.wav)
+			// 2. Чверті
 			if (m_b1530 && st.wSecond == 0)
 			{
 				if (st.wMinute == 15 || st.wMinute == 45)
-					PlaySoundFile(_T("_15.wav"));
+					PlayMCI(GetSoundPath(_T("_15.wav")), _T("chime"));
 				else if (st.wMinute == 30)
-					PlaySoundFile(_T("_30.wav"));
+					PlayMCI(GetSoundPath(_T("_30.wav")), _T("chime"));
 			}
 
-			// 3. Тікання кожні 2 секунди (_TickTack.wav)
+			// 3. Тік-Так (грає паралельно з іншими!)
 			if (m_bTickTack && st.wSecond % 2 == 0)
 			{
-				PlaySoundFile(_T("_TickTack.wav"));
+				// Перевіряємо, чи не грає зараз довгий звук (опціонально)
+				if (!IsPlayingMCI(_T("hours")) && !IsPlayingMCI(_T("chime")))
+				{
+					PlayMCI(GetSoundPath(_T("_TickTack.wav")), _T("tick"));
+				}
 			}
 		}
 	}
@@ -657,21 +634,22 @@ void CClockvcmfcDlg::PlaySoundFile(CString fileName)
 
 void CClockvcmfcDlg::PlayHourlyChime(int hours)
 {
-	if (hours > 12) 
-		hours -= 12;
-	
-	if (hours == 0) 
-		hours = 12;
+	int count = hours % 12;
+	if (count == 0) count = 12;
 
 	CString fullPath = GetSoundPath(_T("_Boom.wav"));
 
-	// Передаємо шлях у потік за значенням (копію), щоб він не зник
-	std::thread([fullPath, hours]()
+	std::thread([this, fullPath, count]()
 		{
-			for (int i = 0; i < hours; i++)
+			for (int i = 0; i < count; i++)
 			{
-				// Тут SND_SYNC, щоб звуки йшли один за одним
-				::PlaySound(fullPath, NULL, SND_FILENAME | SND_SYNC | SND_NODEFAULT);
+				PlayMCI(fullPath, _T("hours"));
+
+				// Чекаємо, поки удар дограє
+				while (IsPlayingMCI(_T("hours"))) {
+					Sleep(50);
+				}
+				Sleep(200); // Пауза між ударами
 			}
 		}).detach();
 }
@@ -762,4 +740,32 @@ void CClockvcmfcDlg::OnMenuWorldmap()
 			m_pMapDlg->ShowWindow(SW_SHOW);
 		}
 	}
+}
+
+void CClockvcmfcDlg::PlayMCI(CString fileName, CString alias)
+{
+	// Закриваємо попередній сеанс для цього аліасу
+	mciSendString(_T("close ") + alias, NULL, 0, NULL);
+
+	// Відкриваємо файл (беремо шлях у лапки для безпеки)
+	CString cmd;
+	cmd.Format(_T("open \"%s\" alias %s"), (LPCTSTR)fileName, (LPCTSTR)alias);
+	mciSendString(cmd, NULL, 0, NULL);
+
+	// Граємо
+	mciSendString(_T("play ") + alias, NULL, 0, NULL);
+}
+
+void CClockvcmfcDlg::StopMCI(CString alias)
+{
+	mciSendString(_T("stop ") + alias, NULL, 0, NULL);
+	mciSendString(_T("close ") + alias, NULL, 0, NULL);
+}
+
+BOOL CClockvcmfcDlg::IsPlayingMCI(CString alias)
+{
+	TCHAR res[128];
+	CString cmd = _T("status ") + alias + _T(" mode");
+	mciSendString(cmd, res, 128, NULL);
+	return (_tcsicmp(res, _T("playing")) == 0);
 }
