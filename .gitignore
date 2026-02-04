@@ -10,6 +10,7 @@
 /Clock_csc/obj
 
 /Clock_vc/Debug
+/Clock_vc/Release
 /Clock_vc/_Clock.vcxproj.user
 
 /ClockAndToolbar/.vs
