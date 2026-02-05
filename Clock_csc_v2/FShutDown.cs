@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.ComponentModel;
 
 namespace Clock_csc_v2
 {
@@ -18,6 +19,7 @@ namespace Clock_csc_v2
         public bool isSleep = false;
         public bool isSleepTmp = false;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public DateTime tm
         {
             set { mTm = value; }
