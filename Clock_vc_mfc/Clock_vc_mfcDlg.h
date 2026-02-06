@@ -72,6 +72,31 @@ protected:
 	void UpdateTransparency();
 	void UpdateLayeredClock();
 
+	/*****************************************************************************************************************************/
+	void DrawPanelBackground(Gdiplus::Graphics& g, float w, float h);
+	void DrawAnalogClock(Gdiplus::Graphics& g, float x, float y, float radius);
+	void DrawHandHelper(Gdiplus::Graphics& g, float xCenter, float yCenter, float val, float len, float width, bool hasWhiteLine);
+	void DrawDigitalClock(Gdiplus::Graphics& g, float x, float y);
+	void DrawCalendar(Gdiplus::Graphics& g, float x, float y);
+	void DrawSystemMonitor(Gdiplus::Graphics& g, float x, float y); // Заготовка
+	/*****************************************************************************************************************************/
+
+	Gdiplus::PrivateFontCollection m_fontCollection; // Для завантаження твого шрифту
+	BOOL m_bShowDigital = TRUE;   // Прапорець для цифрового годинника
+	int m_nPanelWidth = 150;      // Нова ширина панелі
+	int m_nPanelHeight = 150;     // Висота (буде рахуватися динамічно)
+
+	BOOL m_bShowCalendar = TRUE;
+
+	BOOL m_bShowSysMon = TRUE;
+	float m_cpuUsage = 0.0f;
+	float m_ramUsage = 0.0f;
+	int m_sysMonTickCount = 0;
+	FILETIME m_prevIdleTime;
+	FILETIME m_prevKernelTime;
+	FILETIME m_prevUserTime;
+	void UpdateSystemMetrics();
+
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
 	afx_msg void OnPaint();
