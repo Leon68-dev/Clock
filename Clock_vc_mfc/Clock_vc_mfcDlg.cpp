@@ -411,6 +411,7 @@ void CClockvcmfcDlg::OnMenuCalendar()
 void CClockvcmfcDlg::OnMenuExit()
 {
 	SaveSettings();
+	mciSendString(_T("close all"), NULL, 0, NULL);
 	Shell_NotifyIcon(NIM_DELETE, &m_nid);
 	PostQuitMessage(0);
 }
@@ -635,23 +636,41 @@ void CClockvcmfcDlg::PlaySoundFile(CString fileName)
 void CClockvcmfcDlg::PlayHourlyChime(int hours)
 {
 	int count = hours % 12;
-	if (count == 0) count = 12;
+	if (count == 0) 
+		count = 12;
 
 	CString fullPath = GetSoundPath(_T("_Boom.wav"));
 
+	// Передаємо копію шляху, щоб уникнути проблем із доступом
 	std::thread([this, fullPath, count]()
-		{
-			for (int i = 0; i < count; i++)
-			{
-				PlayMCI(fullPath, _T("hours"));
+	{
+		// 1. Відкриваємо файл ОДИН РАЗ для всієї серії
+		mciSendString(_T("close hours"), NULL, 0, NULL);
+		CString openCmd;
+		openCmd.Format(_T("open \"%s\" alias hours"), (LPCTSTR)fullPath);
+		mciSendString(openCmd, NULL, 0, NULL);
 
-				// Чекаємо, поки удар дограє
-				while (IsPlayingMCI(_T("hours"))) {
-					Sleep(50);
-				}
-				Sleep(200); // Пауза між ударами
+		for (int i = 0; i < count; i++)
+		{
+			// 2. Граємо з початку (from 0)
+			mciSendString(_T("play hours from 0"), NULL, 0, NULL);
+
+			Sleep(200); // Даємо час почати
+
+			int timeout = 0;
+			while (IsPlayingMCI(_T("hours")) && timeout < 60) 
+			{
+				Sleep(100);
+				timeout++;
 			}
-		}).detach();
+			Sleep(300); // Пауза між ударами
+		}
+
+		// 3. ВАЖЛИВО: Закриваємо файл після завершення всіх ударів
+		// Це звільнить той самий буфер у 2.2 МБ
+		mciSendString(_T("close hours"), NULL, 0, NULL);
+
+	}).detach();
 }
 
 void CClockvcmfcDlg::UpdateTransparency()
@@ -744,16 +763,37 @@ void CClockvcmfcDlg::OnMenuWorldmap()
 
 void CClockvcmfcDlg::PlayMCI(CString fileName, CString alias)
 {
-	// Закриваємо попередній сеанс для цього аліасу
+	// 1. На випадок, якщо цей аліас ще відкритий — закриваємо
 	mciSendString(_T("close ") + alias, NULL, 0, NULL);
 
-	// Відкриваємо файл (беремо шлях у лапки для безпеки)
+	// 2. Відкриваємо та запускаємо
 	CString cmd;
 	cmd.Format(_T("open \"%s\" alias %s"), (LPCTSTR)fileName, (LPCTSTR)alias);
-	mciSendString(cmd, NULL, 0, NULL);
 
-	// Граємо
-	mciSendString(_T("play ") + alias, NULL, 0, NULL);
+	if (mciSendString(cmd, NULL, 0, NULL) == 0)
+	{
+		mciSendString(_T("play ") + alias, NULL, 0, NULL);
+
+		// 3. Запускаємо фоновий потік для очищення пам'яті
+		std::thread([alias]() 
+		{
+			Sleep(1000); // Даємо звуку почати грати
+
+			TCHAR res[128];
+			CString statusCmd = _T("status ") + alias + _T(" mode");
+
+			// Чекаємо, поки статус зміниться з "playing" на щось інше
+			while (true) 
+			{
+				mciSendString(statusCmd, res, 128, NULL);
+				if (_tcsicmp(res, _T("playing")) != 0) break;
+				Sleep(500); // Перевіряємо двічі на секунду
+			}
+
+			// 4. ЗВІЛЬНЯЄМО ПАМ'ЯТЬ
+			mciSendString(_T("close ") + alias, NULL, 0, NULL);
+		}).detach();
+	}
 }
 
 void CClockvcmfcDlg::StopMCI(CString alias)
