@@ -97,6 +97,24 @@ protected:
 	FILETIME m_prevUserTime;
 	void UpdateSystemMetrics();
 
+	BOOL    m_bShowPing = TRUE;
+	CString m_strPingAddress = _T("www.ukr.net");	// Дефолтний IP (Google)
+	int     m_nPingValue = -1;						// -1 означає "немає відповіді"
+	BOOL    m_bPingInProgress = FALSE;				// Щоб не запускати кілька потоків одночасно
+	void UpdatePing();
+	void DrawPing(Gdiplus::Graphics& g, float w, float yStart);
+
+	BOOL    m_bShowWeather = TRUE;
+	CString m_strWeatherCity = _T("Kyiv");
+	CString m_strWeatherApiKey = _T("ВАШ_API_KEY_ТУТ");
+	CString m_strTemp = _T("?°C");
+	CString m_strWeatherDesc = _T("Loading...");
+	Gdiplus::Image* m_pWeatherIcon = nullptr;
+	int m_weatherTickCount = 0; // Для оновлення раз на 15-30 хв
+	void UpdateWeather();
+	void DrawWeather(Gdiplus::Graphics& g, float w, float yStart);
+	Gdiplus::Image* DownloadImage(CString url); // Допоміжний метод
+
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
 	afx_msg void OnPaint();

@@ -80,6 +80,13 @@ BOOL CClockvcmfcDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
+	// --- ІНІЦІАЛІЗАЦІЯ МЕРЕЖІ ---
+	WSADATA wsaData;
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) 
+	{
+		OutputDebugString(_T("WinSock ініціалізація провалена!\n"));
+	}
+
 	// Завантажуємо шрифт для цифрового годинника
 	m_fontCollection.AddFontFile(L"digital_7italic.ttf");
 
@@ -108,6 +115,9 @@ BOOL CClockvcmfcDlg::OnInitDialog()
 
 	InitTrayIcon();
 	SetTimer(1, m_bSmooth ? 200 : 1000, NULL);
+
+	if (m_bShowWeather)
+		UpdateWeather();
 
 	return TRUE;
 }
@@ -460,20 +470,35 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 	float currentY = 150.0f; // Початкова точка під аналоговим годинником
 
 	// 3. Цифровий годинник
-	if (m_bShowDigital) {
+	if (m_bShowDigital) 
+	{
 		DrawDigitalClock(g, w / 2.0f, currentY);
 		currentY += 50.0f;
 	}
 
 	// 4. Календар
-	if (m_bShowCalendar) {
+	if (m_bShowCalendar) 
+	{
 		DrawCalendar(g, w, currentY);
 		currentY += 140.0f;
 	}
 
-	if (m_bShowSysMon) {
+	if (m_bShowSysMon) 
+	{
 		DrawSystemMonitor(g, w, currentY);
 		currentY += 80.0f;
+	}
+
+	if (m_bShowPing) 
+	{
+		DrawPing(g, w, currentY);
+		currentY += 35.0f;
+	}
+
+	if (m_bShowWeather) 
+	{
+		DrawWeather(g, w, currentY);
+		currentY += 50.0f;
 	}
 }
 
@@ -806,7 +831,15 @@ void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 		if (m_sysMonTickCount >= 15) // Кожні 3 секунди
 		{
 			UpdateSystemMetrics();
+			UpdatePing();
 			m_sysMonTickCount = 0; // Скидаємо лічильник
+		}
+
+		m_weatherTickCount++;
+		if (m_weatherTickCount >= 6000) // 6000 * 200ms = 20 хвилин
+		{ 
+			UpdateWeather();
+			m_weatherTickCount = 0;
 		}
 
 		UpdateLayeredClock();
@@ -1195,6 +1228,12 @@ void CClockvcmfcDlg::UpdateLayeredClock()
 	if (m_bShowSysMon) 
 		newHeight += 80; // Додаємо 80px під монітор
 	
+	if (m_bShowPing) 
+		newHeight += 35;
+
+	if (m_bShowWeather) 
+		newHeight += 50;
+
 	m_nPanelHeight = newHeight;
 
 	// Оновлюємо розмір вікна
@@ -1338,4 +1377,223 @@ void CClockvcmfcDlg::UpdateSystemMetrics()
 	{
 		m_ramUsage = (float)memInfo.dwMemoryLoad;
 	}
+}
+
+void CClockvcmfcDlg::UpdatePing()
+{
+	if (m_bPingInProgress || !m_bShowPing || m_strPingAddress.IsEmpty()) return;
+
+	m_bPingInProgress = TRUE;
+
+	std::thread([this]() {
+		HANDLE hIcmpFile = IcmpCreateFile();
+		if (hIcmpFile == INVALID_HANDLE_VALUE) {
+			m_bPingInProgress = FALSE;
+			return;
+		}
+
+		unsigned long ipaddr = INADDR_NONE;
+
+		// Використовуємо ADDRINFOW для повної підтримки Unicode (CString)
+		ADDRINFOW hints = { 0 };
+		hints.ai_family = AF_INET;
+		ADDRINFOW* result = NULL;
+
+		// GetAddrInfoW — це Unicode версія GetAddrInfo
+		if (GetAddrInfoW(m_strPingAddress, NULL, &hints, &result) == 0) {
+			struct sockaddr_in* sockaddr_ipv4 = (struct sockaddr_in*)result->ai_addr;
+			ipaddr = sockaddr_ipv4->sin_addr.s_addr;
+			FreeAddrInfoW(result);
+		}
+
+		if (ipaddr != INADDR_NONE) {
+			char sendData[] = "PingData";
+			// Буфер має бути достатньо великим для відповіді + даних
+			DWORD replySize = sizeof(ICMP_ECHO_REPLY) + sizeof(sendData) + 32;
+			LPVOID replyBuffer = malloc(replySize);
+
+			if (replyBuffer) {
+				DWORD dwRetVal = IcmpSendEcho(hIcmpFile, ipaddr, sendData, sizeof(sendData),
+					NULL, replyBuffer, replySize, 1000); // Таймаут 1 сек
+
+				if (dwRetVal != 0) {
+					PICMP_ECHO_REPLY pEchoReply = (PICMP_ECHO_REPLY)replyBuffer;
+					m_nPingValue = (int)pEchoReply->RoundTripTime;
+				}
+				else {
+					m_nPingValue = -1; // Timeout або помилка мережі
+				}
+				free(replyBuffer);
+			}
+		}
+		else {
+			m_nPingValue = -1; // Не вдалося розпізнати ім'я/IP
+		}
+
+		IcmpCloseHandle(hIcmpFile);
+		m_bPingInProgress = FALSE;
+		}).detach();
+}
+
+void CClockvcmfcDlg::DrawPing(Gdiplus::Graphics& g, float w, float yStart)
+{
+	float pingY = yStart + 5.0f;
+	float margin = 15.0f;
+	float valueAreaW = 50.0f; // Зарезервоване місце під "999 ms" справа
+
+	// 1. Розділювальні лінії
+	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, 0, 0, 0), 1.0f), 15.0f, pingY, w - 15.0f, pingY);
+	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(30, 255, 255, 255), 1.0f), 15.0f, pingY + 1.0f, w - 15.0f, pingY + 1.0f);
+
+	Gdiplus::FontFamily arial(L"Arial");
+	Gdiplus::Font fontLabel(&arial, 10, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
+	Gdiplus::Font fontValue(&arial, 10, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
+	Gdiplus::SolidBrush bWhite(Gdiplus::Color(200, 255, 255, 255));
+
+	// 2. Підготовка значення пінгу (справа)
+	CString strVal;
+	Gdiplus::Color valColor;
+	if (m_nPingValue == -1) 
+	{
+		strVal = _T("Error");
+		valColor = Gdiplus::Color(255, 255, 80, 80);
+	}
+	else 
+	{
+		strVal.Format(_T("%d ms"), m_nPingValue);
+		valColor = (m_nPingValue < 100) ? Gdiplus::Color(255, 100, 255, 100) :
+			(m_nPingValue < 250) ? Gdiplus::Color(255, 255, 200, 50) :
+			Gdiplus::Color(255, 255, 80, 80);
+	}
+
+	// Малюємо значення пінгу (притиснуте до правого краю)
+	Gdiplus::StringFormat sfRight;
+	sfRight.SetAlignment(Gdiplus::StringAlignmentFar);
+	g.DrawString(strVal, -1, &fontValue, Gdiplus::PointF(w - margin, pingY + 10.0f), &sfRight, &Gdiplus::SolidBrush(valColor));
+
+	// 3. Малюємо назву (зліва) з автоматичним обрізанням
+	CString strLabel;
+	strLabel.Format(_T("Ping: %s"), (LPCTSTR)m_strPingAddress);
+
+	// Створюємо прямокутник для тексту: від лівого маргіна до початку зони цифр
+	float labelWidth = w - margin - valueAreaW - 5.0f; // 5.0f - додатковий зазор
+	Gdiplus::RectF rectLabel(margin, pingY + 10.0f, labelWidth, 15.0f);
+
+	Gdiplus::StringFormat sfLeft;
+	sfLeft.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);  // Додає "..." в кінці
+	sfLeft.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap);       // Забороняє перенос на новий рядок
+
+	g.DrawString(strLabel, -1, &fontLabel, rectLabel, &sfLeft, &bWhite);
+}
+
+void CClockvcmfcDlg::UpdateWeather()
+{
+	if (!m_bShowWeather || m_strWeatherApiKey.IsEmpty()) return;
+
+	std::thread([this]() {
+		// 1. Формуємо URL (замініть на ваше місто або додайте в налаштування)
+		CString url;
+		url.Format(_T("http://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s&units=metric"),
+			(LPCTSTR)m_strWeatherCity, (LPCTSTR)m_strWeatherApiKey);
+
+		// 2. Виконуємо HTTP запит (спрощено через WinHttp)
+		CString jsonResponse;
+		HINTERNET hSession = WinHttpOpen(L"MFC-Clock/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+		if (hSession) {
+			URL_COMPONENTS urlComp = { sizeof(urlComp) };
+			urlComp.dwHostNameLength = (DWORD)-1;
+			urlComp.dwUrlPathLength = (DWORD)-1;
+			if (WinHttpCrackUrl(url, (DWORD)url.GetLength(), 0, &urlComp)) {
+				CString host(urlComp.lpszHostName, urlComp.dwHostNameLength);
+				HINTERNET hConnect = WinHttpConnect(hSession, host, INTERNET_DEFAULT_HTTP_PORT, 0);
+				if (hConnect) {
+					HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", urlComp.lpszUrlPath, NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
+					if (hRequest && WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0) && WinHttpReceiveResponse(hRequest, NULL)) {
+						DWORD dwSize = 0;
+						do {
+							if (WinHttpQueryDataAvailable(hRequest, &dwSize) && dwSize > 0) {
+								char* buffer = new char[dwSize + 1];
+								DWORD dwDownloaded = 0;
+								if (WinHttpReadData(hRequest, buffer, dwSize, &dwDownloaded)) {
+									buffer[dwDownloaded] = 0;
+									jsonResponse += CA2W(buffer, CP_UTF8);
+								}
+								delete[] buffer;
+							}
+						} while (dwSize > 0);
+					}
+					WinHttpCloseHandle(hRequest);
+				}
+				WinHttpCloseHandle(hConnect);
+			}
+			WinHttpCloseHandle(hSession);
+		}
+
+		// 3. "Парсинг" JSON (шукаємо температуру та іконку)
+		if (!jsonResponse.IsEmpty()) {
+			// Температура
+			int posTemp = jsonResponse.Find(_T("\"temp\":"));
+			if (posTemp != -1) {
+				int posEnd = jsonResponse.Find(_T(","), posTemp);
+				CString t = jsonResponse.Mid(posTemp + 7, posEnd - (posTemp + 7));
+				m_strTemp.Format(_T("%.1f°C"), _ttof(t));
+			}
+
+			// Опис
+			int posDesc = jsonResponse.Find(_T("\"main\":\""));
+			if (posDesc != -1) {
+				int posEnd = jsonResponse.Find(_T("\""), posDesc + 8);
+				m_strWeatherDesc = jsonResponse.Mid(posDesc + 8, posEnd - (posDesc + 8));
+			}
+
+			// Іконка
+			int posIcon = jsonResponse.Find(_T("\"icon\":\""));
+			if (posIcon != -1) {
+				CString iconId = jsonResponse.Mid(posIcon + 8, 3);
+				CString iconUrl;
+				iconUrl.Format(_T("http://openweathermap.org/img/wn/%s@2x.png"), (LPCTSTR)iconId);
+
+				if (m_pWeatherIcon) delete m_pWeatherIcon;
+				m_pWeatherIcon = DownloadImage(iconUrl);
+			}
+		}
+		}).detach();
+}
+
+Gdiplus::Image* CClockvcmfcDlg::DownloadImage(CString url)
+{
+	IStream* pStream = nullptr;
+	if (SUCCEEDED(URLOpenBlockingStream(NULL, url, &pStream, 0, NULL))) {
+		Gdiplus::Image* img = Gdiplus::Image::FromStream(pStream);
+		pStream->Release();
+		return img;
+	}
+	return nullptr;
+}
+
+void CClockvcmfcDlg::DrawWeather(Gdiplus::Graphics& g, float w, float yStart)
+{
+	float weaY = yStart + 5.0f;
+	float margin = 15.0f;
+
+	// Розділювач
+	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, 0, 0, 0), 1.0f), 15.0f, weaY, w - 15.0f, weaY);
+	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(30, 255, 255, 255), 1.0f), 15.0f, weaY + 1.0f, w - 15.0f, weaY + 1.0f);
+
+	// Іконка
+	if (m_pWeatherIcon) {
+		g.DrawImage(m_pWeatherIcon, margin - 5.0f, weaY + 5.0f, 40.0f, 40.0f);
+	}
+
+	Gdiplus::FontFamily arial(L"Arial");
+	Gdiplus::Font fontTemp(&arial, 16, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
+	Gdiplus::Font fontDesc(&arial, 10, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
+	Gdiplus::SolidBrush bWhite(Gdiplus::Color(220, 255, 255, 255));
+
+	// Температура
+	g.DrawString(m_strTemp, -1, &fontTemp, Gdiplus::PointF(margin + 40.0f, weaY + 10.0f), NULL, &bWhite);
+
+	// Опис та місто
+	CString strInfo = m_strWeatherCity + _T(": ") + m_strWeatherDesc;
+	g.DrawString(strInfo, -1, &fontDesc, Gdiplus::PointF(margin + 40.0f, weaY + 28.0f), NULL, &bWhite);
 }
