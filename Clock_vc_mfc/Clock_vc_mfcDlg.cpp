@@ -116,6 +116,12 @@ BOOL CClockvcmfcDlg::OnInitDialog()
 	InitTrayIcon();
 	SetTimer(1, m_bSmooth ? 200 : 1000, NULL);
 
+	if (m_bShowSysMon)
+		UpdateSystemMetrics();
+
+	if (m_bShowPing)
+		UpdatePing();
+
 	if (m_bShowWeather)
 		UpdateWeather();
 

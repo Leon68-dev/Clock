@@ -98,7 +98,7 @@ protected:
 	void UpdateSystemMetrics();
 
 	BOOL    m_bShowPing = TRUE;
-	CString m_strPingAddress = _T("www.ukr.net");	// Дефолтний IP (Google)
+	CString m_strPingAddress = _T("8.8.8.8");		// Дефолтний IP (Google)
 	int     m_nPingValue = -1;						// -1 означає "немає відповіді"
 	BOOL    m_bPingInProgress = FALSE;				// Щоб не запускати кілька потоків одночасно
 	void UpdatePing();
