@@ -104,9 +104,9 @@ protected:
 	void UpdatePing();
 	void DrawPing(Gdiplus::Graphics& g, float w, float yStart);
 
-	BOOL    m_bShowWeather = TRUE;
+	BOOL    m_bShowWeather = FALSE;
 	CString m_strWeatherCity = _T("Kyiv");
-	CString m_strWeatherApiKey = _T("¬¿ÿ_API_KEY_“”“");
+	CString m_strWeatherApiKey = _T("b6edfbab96459a29db1b3dab05857103");
 	CString m_strTemp = _T("?∞C");
 	CString m_strWeatherDesc = _T("Loading...");
 	Gdiplus::Image* m_pWeatherIcon = nullptr;

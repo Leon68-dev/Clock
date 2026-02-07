@@ -37,6 +37,15 @@
 #define IDC_CHK_SOUND_TICK_TACK         1021
 #define IDC_CHK_SOUND_TICKTACK          1021
 #define IDC_CHK_SOUND_1530              1023
+#define IDC_CHK_ANALOG                  1024
+#define IDC_CHK_DIGITAL                 1025
+#define IDC_CHKSYSMON                   1026
+#define IDC_CHKCALENDAR                 1027
+#define IDC_CHK_PING                    1028
+#define IDC_EDT_IP_DNS                  1029
+#define IDC_CHK_WEATHER                 1030
+#define IDC_EDIT2                       1031
+#define IDC_EDT_PLASE                   1031
 #define ID_MENU_SETUP                   32771
 #define ID_MENU_ABOUT                   32772
 #define ID_MENU_CALENDAR                32773
@@ -60,7 +69,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        144
 #define _APS_NEXT_COMMAND_VALUE         32787
-#define _APS_NEXT_CONTROL_VALUE         1024
+#define _APS_NEXT_CONTROL_VALUE         1032
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

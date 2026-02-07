@@ -1359,9 +1359,10 @@ void CClockvcmfcDlg::UpdateSystemMetrics()
 	FILETIME idleTime, kernelTime, userTime;
 	if (GetSystemTimes(&idleTime, &kernelTime, &userTime))
 	{
-		auto FileTimeToQuad = [](FILETIME ft) {
+		auto FileTimeToQuad = [](FILETIME ft) 
+		{
 			return ((((ULONGLONG)ft.dwHighDateTime) << 32) | ft.dwLowDateTime);
-			};
+		};
 
 		ULONGLONG idle = FileTimeToQuad(idleTime) - FileTimeToQuad(m_prevIdleTime);
 		ULONGLONG kernel = FileTimeToQuad(kernelTime) - FileTimeToQuad(m_prevKernelTime);
@@ -1387,13 +1388,16 @@ void CClockvcmfcDlg::UpdateSystemMetrics()
 
 void CClockvcmfcDlg::UpdatePing()
 {
-	if (m_bPingInProgress || !m_bShowPing || m_strPingAddress.IsEmpty()) return;
+	if (m_bPingInProgress || !m_bShowPing || m_strPingAddress.IsEmpty()) 
+		return;
 
 	m_bPingInProgress = TRUE;
 
-	std::thread([this]() {
+	std::thread([this]() 
+	{
 		HANDLE hIcmpFile = IcmpCreateFile();
-		if (hIcmpFile == INVALID_HANDLE_VALUE) {
+		if (hIcmpFile == INVALID_HANDLE_VALUE) 
+		{
 			m_bPingInProgress = FALSE;
 			return;
 		}
@@ -1406,23 +1410,27 @@ void CClockvcmfcDlg::UpdatePing()
 		ADDRINFOW* result = NULL;
 
 		// GetAddrInfoW — це Unicode версія GetAddrInfo
-		if (GetAddrInfoW(m_strPingAddress, NULL, &hints, &result) == 0) {
+		if (GetAddrInfoW(m_strPingAddress, NULL, &hints, &result) == 0) 
+		{
 			struct sockaddr_in* sockaddr_ipv4 = (struct sockaddr_in*)result->ai_addr;
 			ipaddr = sockaddr_ipv4->sin_addr.s_addr;
 			FreeAddrInfoW(result);
 		}
 
-		if (ipaddr != INADDR_NONE) {
+		if (ipaddr != INADDR_NONE) 
+		{
 			char sendData[] = "PingData";
 			// Буфер має бути достатньо великим для відповіді + даних
 			DWORD replySize = sizeof(ICMP_ECHO_REPLY) + sizeof(sendData) + 32;
 			LPVOID replyBuffer = malloc(replySize);
 
-			if (replyBuffer) {
+			if (replyBuffer) 
+			{
 				DWORD dwRetVal = IcmpSendEcho(hIcmpFile, ipaddr, sendData, sizeof(sendData),
 					NULL, replyBuffer, replySize, 1000); // Таймаут 1 сек
 
-				if (dwRetVal != 0) {
+				if (dwRetVal != 0) 
+				{
 					PICMP_ECHO_REPLY pEchoReply = (PICMP_ECHO_REPLY)replyBuffer;
 					m_nPingValue = (int)pEchoReply->RoundTripTime;
 				}
@@ -1432,13 +1440,14 @@ void CClockvcmfcDlg::UpdatePing()
 				free(replyBuffer);
 			}
 		}
-		else {
+		else 
+		{
 			m_nPingValue = -1; // Не вдалося розпізнати ім'я/IP
 		}
 
 		IcmpCloseHandle(hIcmpFile);
 		m_bPingInProgress = FALSE;
-		}).detach();
+	}).detach();
 }
 
 void CClockvcmfcDlg::DrawPing(Gdiplus::Graphics& g, float w, float yStart)
@@ -1494,9 +1503,11 @@ void CClockvcmfcDlg::DrawPing(Gdiplus::Graphics& g, float w, float yStart)
 
 void CClockvcmfcDlg::UpdateWeather()
 {
-	if (!m_bShowWeather || m_strWeatherApiKey.IsEmpty()) return;
+	if (!m_bShowWeather || m_strWeatherApiKey.IsEmpty()) 
+		return;
 
-	std::thread([this]() {
+	std::thread([this]() 
+	{
 		// 1. Формуємо URL (замініть на ваше місто або додайте в налаштування)
 		CString url;
 		url.Format(_T("http://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s&units=metric"),
@@ -1505,22 +1516,27 @@ void CClockvcmfcDlg::UpdateWeather()
 		// 2. Виконуємо HTTP запит (спрощено через WinHttp)
 		CString jsonResponse;
 		HINTERNET hSession = WinHttpOpen(L"MFC-Clock/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
-		if (hSession) {
+		if (hSession) 
+		{
 			URL_COMPONENTS urlComp = { sizeof(urlComp) };
 			urlComp.dwHostNameLength = (DWORD)-1;
 			urlComp.dwUrlPathLength = (DWORD)-1;
-			if (WinHttpCrackUrl(url, (DWORD)url.GetLength(), 0, &urlComp)) {
+			if (WinHttpCrackUrl(url, (DWORD)url.GetLength(), 0, &urlComp)) 
+			{
 				CString host(urlComp.lpszHostName, urlComp.dwHostNameLength);
 				HINTERNET hConnect = WinHttpConnect(hSession, host, INTERNET_DEFAULT_HTTP_PORT, 0);
-				if (hConnect) {
+				if (hConnect) 
+				{
 					HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", urlComp.lpszUrlPath, NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
 					if (hRequest && WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0) && WinHttpReceiveResponse(hRequest, NULL)) {
 						DWORD dwSize = 0;
 						do {
-							if (WinHttpQueryDataAvailable(hRequest, &dwSize) && dwSize > 0) {
+							if (WinHttpQueryDataAvailable(hRequest, &dwSize) && dwSize > 0) 
+							{
 								char* buffer = new char[dwSize + 1];
 								DWORD dwDownloaded = 0;
-								if (WinHttpReadData(hRequest, buffer, dwSize, &dwDownloaded)) {
+								if (WinHttpReadData(hRequest, buffer, dwSize, &dwDownloaded)) 
+								{
 									buffer[dwDownloaded] = 0;
 									jsonResponse += CA2W(buffer, CP_UTF8);
 								}
@@ -1536,10 +1552,12 @@ void CClockvcmfcDlg::UpdateWeather()
 		}
 
 		// 3. "Парсинг" JSON (шукаємо температуру та іконку)
-		if (!jsonResponse.IsEmpty()) {
+		if (!jsonResponse.IsEmpty()) 
+		{
 			// Температура
 			int posTemp = jsonResponse.Find(_T("\"temp\":"));
-			if (posTemp != -1) {
+			if (posTemp != -1) 
+			{
 				int posEnd = jsonResponse.Find(_T(","), posTemp);
 				CString t = jsonResponse.Mid(posTemp + 7, posEnd - (posTemp + 7));
 				m_strTemp.Format(_T("%.1f°C"), _ttof(t));
@@ -1547,14 +1565,16 @@ void CClockvcmfcDlg::UpdateWeather()
 
 			// Опис
 			int posDesc = jsonResponse.Find(_T("\"main\":\""));
-			if (posDesc != -1) {
+			if (posDesc != -1) 
+			{
 				int posEnd = jsonResponse.Find(_T("\""), posDesc + 8);
 				m_strWeatherDesc = jsonResponse.Mid(posDesc + 8, posEnd - (posDesc + 8));
 			}
 
 			// Іконка
 			int posIcon = jsonResponse.Find(_T("\"icon\":\""));
-			if (posIcon != -1) {
+			if (posIcon != -1) 
+			{
 				CString iconId = jsonResponse.Mid(posIcon + 8, 3);
 				CString iconUrl;
 				iconUrl.Format(_T("http://openweathermap.org/img/wn/%s@2x.png"), (LPCTSTR)iconId);
@@ -1563,13 +1583,14 @@ void CClockvcmfcDlg::UpdateWeather()
 				m_pWeatherIcon = DownloadImage(iconUrl);
 			}
 		}
-		}).detach();
+	}).detach();
 }
 
 Gdiplus::Image* CClockvcmfcDlg::DownloadImage(CString url)
 {
 	IStream* pStream = nullptr;
-	if (SUCCEEDED(URLOpenBlockingStream(NULL, url, &pStream, 0, NULL))) {
+	if (SUCCEEDED(URLOpenBlockingStream(NULL, url, &pStream, 0, NULL))) 
+	{
 		Gdiplus::Image* img = Gdiplus::Image::FromStream(pStream);
 		pStream->Release();
 		return img;
@@ -1587,7 +1608,8 @@ void CClockvcmfcDlg::DrawWeather(Gdiplus::Graphics& g, float w, float yStart)
 	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(30, 255, 255, 255), 1.0f), 15.0f, weaY + 1.0f, w - 15.0f, weaY + 1.0f);
 
 	// Іконка
-	if (m_pWeatherIcon) {
+	if (m_pWeatherIcon) 
+	{
 		g.DrawImage(m_pWeatherIcon, margin - 5.0f, weaY + 5.0f, 40.0f, 40.0f);
 	}
 
