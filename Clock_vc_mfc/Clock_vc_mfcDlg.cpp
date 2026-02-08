@@ -682,8 +682,8 @@ void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float
 		float p_M1 = xCenter;
 		float p_M2 = xCenter + 13.0f;
 		float p_C2 = xCenter + 12.5f;
-		float p_S1 = xCenter + 32.0f;
-		float p_S2 = xCenter + 46.0f;
+		float p_S1 = xCenter + 31.0f;
+		float p_S2 = xCenter + 45.0f;
 
 		Gdiplus::SolidBrush shadowBrush(Gdiplus::Color(25, 0, 0, 0));
 		Gdiplus::SolidBrush digBrush(Gdiplus::Color(255, 0, 0, 0));
