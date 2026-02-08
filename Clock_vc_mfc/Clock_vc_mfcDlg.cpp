@@ -650,8 +650,11 @@ void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float
 	m_fontCollection.GetFamilies(1, &digFamily, &numFound);
 
 	if (numFound > 0) {
-		float lcdW = 110.0f, lcdH = 36.0f;
-		float lcdX = xCenter - (lcdW / 2.0f), lcdY = yStart + 4.0f;
+		// 1. ПАРАМЕТРИ LCD ПАНЕЛІ
+		float lcdW = 130.0f; // Трохи розширили для вільного дихання цифр
+		float lcdH = 36.0f;
+		float lcdX = xCenter - (lcdW / 2.0f);
+		float lcdY = yStart + 4.0f;
 
 		Gdiplus::SolidBrush lcdBackBrush(Gdiplus::Color(255, 170, 185, 165));
 		Gdiplus::GraphicsPath lcdPath;
@@ -662,34 +665,76 @@ void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float
 		lcdPath.AddArc(lcdX, lcdY + lcdH - r, r, r, 90, 90);
 		lcdPath.CloseFigure();
 		g.FillPath(&lcdBackBrush, &lcdPath);
-		g.DrawPath(&Gdiplus::Pen(Gdiplus::Color(100, 0, 0, 0), 1.0f), &lcdPath);
+		g.DrawPath(&Gdiplus::Pen(Gdiplus::Color(120, 0, 0, 0), 1.0f), &lcdPath);
 
+		// 2. НАЛАШТУВАННЯ ШРИФТУ
 		Gdiplus::Font digFont(&digFamily, 26, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
-		Gdiplus::StringFormat sfCenter, sfLeft, sfRight;
-		sfCenter.SetAlignment(Gdiplus::StringAlignmentCenter); sfCenter.SetLineAlignment(Gdiplus::StringAlignmentCenter);
-		sfLeft.SetAlignment(Gdiplus::StringAlignmentNear); sfLeft.SetLineAlignment(Gdiplus::StringAlignmentCenter);
-		sfRight.SetAlignment(Gdiplus::StringAlignmentFar); sfRight.SetLineAlignment(Gdiplus::StringAlignmentCenter);
+		Gdiplus::StringFormat sf;
+		sf.SetAlignment(Gdiplus::StringAlignmentCenter);
+		sf.SetLineAlignment(Gdiplus::StringAlignmentCenter);
 
 		float textY = lcdY + (lcdH / 2.0f) + 2.0f;
-		float baseMid = xCenter + 2.0f;
 
-		// Малюємо тіні "88:88:88" та активний час (використовуй свою логіку posX_...)
-		Gdiplus::SolidBrush shadowBrush(Gdiplus::Color(25, 0, 0, 0));
-		Gdiplus::SolidBrush digBrush(Gdiplus::Color(255, 0, 0, 0));
+		// --- ФІКСОВАНІ КООРДИНАТИ ДЛЯ КОЖНОГО СИМВОЛУ (Абсолютна сітка) ---
+		// Розраховано так, щоб цифри не рухалися (xCenter = 75)
+		float p_H1 = xCenter - 48.0f; // Десятки годин
+		float p_H2 = xCenter - 34.0f; // Одиниці годин
+		float p_C1 = xCenter - 22.0f; // Перша двокрапка
+		float p_M1 = xCenter - 10.0f; // Десятки хвилин
+		float p_M2 = xCenter + 4.0f;  // Одиниці хвилин
+		float p_C2 = xCenter + 16.0f; // Друга двокрапка
+		float p_S1 = xCenter + 28.0f; // Десятки секунд
+		float p_S2 = xCenter + 42.0f; // Одиниці секунд
 
-		float pM = baseMid, pC1 = baseMid - 13.0f, pC2 = baseMid + 13.0f, pH = baseMid - 16.0f, pS = baseMid + 16.0f;
+		Gdiplus::SolidBrush shadowBrush(Gdiplus::Color(25, 0, 0, 0)); // Тіні "8"
+		Gdiplus::SolidBrush digBrush(Gdiplus::Color(255, 0, 0, 0));    // Активні цифри
 
-		g.DrawString(L"88", -1, &digFont, Gdiplus::PointF(pH, textY), &sfRight, &shadowBrush);
-		g.DrawString(L":", -1, &digFont, Gdiplus::PointF(pC1, textY), &sfCenter, &shadowBrush);
-		// ... і так далі для всіх сегментів ...
+		// 3. МАЛЮЄМО ФОНОВУ СІТКУ (88:88:88)
+		// Малюємо "8" тільки там, де будуть цифри
+		if (st.wHour >= 10) g.DrawString(L"8", 1, &digFont, Gdiplus::PointF(p_H1, textY), &sf, &shadowBrush);
+		g.DrawString(L"8", 1, &digFont, Gdiplus::PointF(p_H2, textY), &sf, &shadowBrush);
+		g.DrawString(L":", 1, &digFont, Gdiplus::PointF(p_C1, textY), &sf, &shadowBrush);
+		g.DrawString(L"8", 1, &digFont, Gdiplus::PointF(p_M1, textY), &sf, &shadowBrush);
+		g.DrawString(L"8", 1, &digFont, Gdiplus::PointF(p_M2, textY), &sf, &shadowBrush);
+		g.DrawString(L":", 1, &digFont, Gdiplus::PointF(p_C2, textY), &sf, &shadowBrush);
+		g.DrawString(L"8", 1, &digFont, Gdiplus::PointF(p_S1, textY), &sf, &shadowBrush);
+		g.DrawString(L"8", 1, &digFont, Gdiplus::PointF(p_S2, textY), &sf, &shadowBrush);
 
-		CString sH, sM, sS;
-		sH.Format(_T("%d"), st.wHour); sM.Format(_T("%02d"), st.wMinute); sS.Format(_T("%02d"), st.wSecond);
-		g.DrawString(sH, -1, &digFont, Gdiplus::PointF(pH, textY), &sfRight, &digBrush);
-		g.DrawString(L":", -1, &digFont, Gdiplus::PointF(pC1, textY), &sfCenter, &digBrush);
-		g.DrawString(sM, -1, &digFont, Gdiplus::PointF(pM, textY), &sfCenter, &digBrush);
-		g.DrawString(L":", -1, &digFont, Gdiplus::PointF(pC2, textY), &sfCenter, &digBrush);
-		g.DrawString(sS, -1, &digFont, Gdiplus::PointF(pS, textY), &sfLeft, &digBrush);
+		// 4. РОЗБИВАЄМО ЧАС НА ОКРЕМІ ЦИФРИ
+		int h1 = st.wHour / 10;
+		int h2 = st.wHour % 10;
+		int m1 = st.wMinute / 10;
+		int m2 = st.wMinute % 10;
+		int s1 = st.wSecond / 10;
+		int s2 = st.wSecond % 10;
+
+		WCHAR buf[2] = { 0, 0 };
+
+		// Години (H1 малюємо тільки якщо >= 10)
+		if (st.wHour >= 10) {
+			buf[0] = (WCHAR)(L'0' + h1);
+			g.DrawString(buf, 1, &digFont, Gdiplus::PointF(p_H1, textY), &sf, &digBrush);
+		}
+		buf[0] = (WCHAR)(L'0' + h2);
+		g.DrawString(buf, 1, &digFont, Gdiplus::PointF(p_H2, textY), &sf, &digBrush);
+
+		// Двокрапка 1
+		g.DrawString(L":", 1, &digFont, Gdiplus::PointF(p_C1, textY), &sf, &digBrush);
+
+		// Хвилини
+		buf[0] = (WCHAR)(L'0' + m1);
+		g.DrawString(buf, 1, &digFont, Gdiplus::PointF(p_M1, textY), &sf, &digBrush);
+		buf[0] = (WCHAR)(L'0' + m2);
+		g.DrawString(buf, 1, &digFont, Gdiplus::PointF(p_M2, textY), &sf, &digBrush);
+
+		// Двокрапка 2
+		g.DrawString(L":", 1, &digFont, Gdiplus::PointF(p_C2, textY), &sf, &digBrush);
+
+		// Секунди
+		buf[0] = (WCHAR)(L'0' + s1);
+		g.DrawString(buf, 1, &digFont, Gdiplus::PointF(p_S1, textY), &sf, &digBrush);
+		buf[0] = (WCHAR)(L'0' + s2);
+		g.DrawString(buf, 1, &digFont, Gdiplus::PointF(p_S2, textY), &sf, &digBrush);
 	}
 }
 
