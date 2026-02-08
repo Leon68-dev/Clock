@@ -150,319 +150,6 @@ void CClockvcmfcDlg::OnPaint()
 	CPaintDC dc(this);
 }
 
-//void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
-//{
-//	const float PI = 3.1415926535f;
-//	float w = (float)m_nPanelWidth;  // 150.0f
-//	float h = (float)m_nPanelHeight; // Динамічна (150 або 200)
-//
-//	g.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
-//	// GridFit допомагає цифровим шрифтам не "сіпатися"
-//	g.SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAliasGridFit);
-//
-//	// --- 1. ТЕМНА ПІДЛОЖКА (Sidebar Style) ---
-//	Gdiplus::GraphicsPath path;
-//	float cornerR = 15.0f;
-//	path.AddArc(0.0f, 0.0f, cornerR, cornerR, 180.0f, 90.0f);
-//	path.AddArc(w - cornerR, 0.0f, cornerR, cornerR, 270.0f, 90.0f);
-//	path.AddArc(w - cornerR, h - cornerR, cornerR, cornerR, 0.0f, 90.0f);
-//	path.AddArc(0.0f, h - cornerR, cornerR, cornerR, 90.0f, 90.0f);
-//	path.CloseFigure();
-//
-//	Gdiplus::SolidBrush panelBrush(Gdiplus::Color(160, 20, 20, 20));
-//	g.FillPath(&panelBrush, &path);
-//
-//	Gdiplus::Pen glassPen(Gdiplus::Color(80, 255, 255, 255), 1.0f);
-//	g.DrawPath(&glassPen, &path);
-//
-//	// --- 2. ПАРАМЕТРИ АНАЛОГОВОГО ГОДИННИКА ---
-//	float xCenter = w / 2.0f; // 75.0f
-//	float yCenter = 75.0f;    // Центр у верхньому квадраті 150x150
-//	float radius = 67.0f;     // Радіус (діаметр 134)
-//	float borderThickness = 6.0f;
-//
-//	// Фон циферблата (ТІЛЬКИ КРУГ)
-//	if (!m_bTransparent)
-//	{
-//		Gdiplus::SolidBrush faceBrush(Gdiplus::Color(255, 242, 238, 225));
-//		g.FillEllipse(&faceBrush, xCenter - radius, yCenter - radius, radius * 2.0f, radius * 2.0f);
-//	}
-//
-//	// Бордєр (Кільце)
-//	if (m_bBorder)
-//	{
-//		Gdiplus::RectF penRect(xCenter - radius, yCenter - radius, radius * 2.0f, radius * 2.0f);
-//		float inset = borderThickness / 2.0f;
-//		penRect.Inflate(-inset, -inset);
-//		Gdiplus::Pen pBlack(Gdiplus::Color::Black, borderThickness);
-//		Gdiplus::Pen pGray(Gdiplus::Color::Gray, 2.0f);
-//		g.DrawEllipse(&pBlack, penRect);
-//		g.DrawEllipse(&pGray, penRect);
-//	}
-//
-//	float innerRadius = radius - borderThickness - 1.5f;
-//
-//	// 3. ПОДІЛКИ (Ticks)
-//	Gdiplus::Pen penHour(Gdiplus::Color::Black, 2.0f);
-//	Gdiplus::Pen penQuarter(Gdiplus::Color::Black, 4.0f);
-//	Gdiplus::SolidBrush brushBlack(Gdiplus::Color::Black);
-//	Gdiplus::SolidBrush brushFace(Gdiplus::Color(255, 242, 238, 225));
-//
-//	for (int i = 0; i < 60; i++)
-//	{
-//		float angle = i * PI / 30.0f - PI / 2.0f;
-//		float cosA = cosf(angle);
-//		float sinA = sinf(angle);
-//
-//		if (i % 5 == 0)
-//		{
-//			float len = (i % 15 == 0) ? innerRadius * 0.22f : innerRadius * 0.15f;
-//			Gdiplus::Pen* p = (i % 15 == 0) ? &penQuarter : &penHour;
-//			g.DrawLine(p,
-//				xCenter + cosA * (innerRadius - len), yCenter + sinA * (innerRadius - len),
-//				xCenter + cosA * (innerRadius + 3.0f), yCenter + sinA * (innerRadius + 3.0f));
-//
-//			float markDotR = 1.5f;
-//			g.FillEllipse(&brushFace,
-//				xCenter + cosA * (innerRadius - len) - markDotR,
-//				yCenter + sinA * (innerRadius - len) - markDotR,
-//				markDotR * 2.0f, markDotR * 2.0f);
-//		}
-//		else
-//		{
-//			float dotR = 1.3f;
-//			g.FillEllipse(&brushBlack,
-//				xCenter + cosA * (innerRadius + 1.5f) - dotR,
-//				yCenter + sinA * (innerRadius + 1.5f) - dotR,
-//				dotR * 2.0f, dotR * 2.0f);
-//		}
-//	}
-//
-//	// --- ОТРИМАННЯ ЧАСУ ---
-//	SYSTEMTIME st;
-//	if (m_bGMT) ::GetSystemTime(&st); else ::GetLocalTime(&st);
-//	COleDateTime now(st);
-//
-//	// 4. ТЕКСТ НА ЦИФЕРБЛАТІ (Arial)
-//	Gdiplus::FontFamily fontFamily(L"Arial");
-//	Gdiplus::StringFormat sf;
-//	sf.SetAlignment(Gdiplus::StringAlignmentCenter);
-//	sf.SetLineAlignment(Gdiplus::StringAlignmentCenter);
-//
-//	Gdiplus::Font fontLN(&fontFamily, innerRadius * 0.2f, Gdiplus::FontStyleItalic | Gdiplus::FontStyleUnderline);
-//	Gdiplus::SolidBrush bLN(Gdiplus::Color(255, 240, 128, 128));
-//	g.DrawString(L"LN", -1, &fontLN, Gdiplus::PointF(xCenter, yCenter - innerRadius * 0.52f), &sf, &bLN);
-//
-//	Gdiplus::Font fontText(&fontFamily, innerRadius * 0.11f, Gdiplus::FontStyleBold);
-//	Gdiplus::SolidBrush bGray(Gdiplus::Color::Gray);
-//	g.DrawString(L"C++", -1, &fontText, Gdiplus::PointF(xCenter, yCenter + 16.0f - innerRadius * 0.52f), &sf, &bGray);
-//
-//	float yDelta = 5.0f;
-//	if (m_bDay)
-//	{
-//		CString strDay = now.Format(_T("%a"));
-//		strDay.MakeUpper();
-//		bool isWeekend = (now.GetDayOfWeek() == 1 || now.GetDayOfWeek() == 7);
-//		Gdiplus::SolidBrush bDay(isWeekend ? Gdiplus::Color(255, 240, 128, 128) : Gdiplus::Color::Gray);
-//		g.DrawString(strDay, -1, &fontText, Gdiplus::PointF(xCenter, yCenter + yDelta + innerRadius * 0.12f), &sf, &bDay);
-//	}
-//	if (m_bDate)
-//	{
-//		CString strDate = now.Format(_T("%d-%m-%y"));
-//		g.DrawString(strDate, -1, &fontText, Gdiplus::PointF(xCenter, yCenter + yDelta + innerRadius * 0.35f), &sf, &bGray);
-//	}
-//	if (m_bGMT)
-//	{
-//		g.DrawString(L"GMT", -1, &fontText, Gdiplus::PointF(xCenter, yCenter + yDelta + innerRadius * 0.58f), &sf, &bGray);
-//	}
-//
-//	// 5. СТРІЛКИ
-//	float fSeconds = m_bSmooth ? (st.wSecond + st.wMilliseconds / 1000.0f) : (float)st.wSecond;
-//	float fMinutes = st.wMinute + fSeconds / 60.0f;
-//	float fHours = (st.wHour % 12 + fMinutes / 60.0f) * 5.0f;
-//
-//	auto DrawHandMFC = [&](float val, float len, float width, bool hasWhiteLine)
-//	{
-//		float a = val * PI / 30.0f - PI / 2.0f;
-//		float x = xCenter + cosf(a) * len;
-//		float y = yCenter + sinf(a) * len;
-//		Gdiplus::Pen pBlack(Gdiplus::Color::Black, width);
-//		pBlack.SetStartCap(Gdiplus::LineCapRound);
-//		pBlack.SetEndCap(Gdiplus::LineCapRound);
-//		g.DrawLine(&pBlack, xCenter, yCenter, x, y);
-//		if (hasWhiteLine) {
-//			Gdiplus::Pen pWhite(Gdiplus::Color::White, width / 2.2f);
-//			pWhite.SetStartCap(Gdiplus::LineCapRound);
-//			pWhite.SetEndCap(Gdiplus::LineCapRound);
-//			g.DrawLine(&pWhite, xCenter, yCenter, x, y);
-//		}
-//	};
-//
-//	DrawHandMFC(fHours, innerRadius * 0.58f, 6.5f, true);
-//	DrawHandMFC(fMinutes, innerRadius * 0.85f, 4.5f, true);
-//
-//	Gdiplus::Pen pSec(Gdiplus::Color::Red, 1.5f);
-//	float sAngle = fSeconds * PI / 30.0f - PI / 2.0f;
-//	g.DrawLine(&pSec,
-//		xCenter - cosf(sAngle) * (innerRadius * 0.15f), yCenter - sinf(sAngle) * (innerRadius * 0.15f),
-//		xCenter + cosf(sAngle) * (innerRadius * 0.95f), yCenter + sinf(sAngle) * (innerRadius * 0.95f));
-//
-//	g.FillEllipse(&brushBlack, xCenter - 4.0f, yCenter - 4.0f, 8.0f, 8.0f);
-//
-//	// --- 6. ЦИФРОВИЙ ГОДИННИК (LCD STYLE - ULTRA TIGHT) ---
-//	if (m_bDigitalClock)
-//	{
-//		SYSTEMTIME st;
-//		if (m_bGMT) ::GetSystemTime(&st); else ::GetLocalTime(&st);
-//
-//		Gdiplus::FontFamily digFamily;
-//		int numFound = 0;
-//		m_fontCollection.GetFamilies(1, &digFamily, &numFound);
-//
-//		if (numFound > 0)
-//		{
-//			// 1. ПАРАМЕТРИ LCD ПАНЕЛІ
-//			float lcdW = 110.0f; // Трохи звузили панель під компактні цифри
-//			float lcdH = 36.0f;
-//			float lcdX = xCenter - (lcdW / 2.0f);
-//			float lcdY = 154.0f;
-//
-//			Gdiplus::SolidBrush lcdBackBrush(Gdiplus::Color(255, 170, 185, 165));
-//			Gdiplus::GraphicsPath lcdPath;
-//			float r = 5.0f;
-//			lcdPath.AddArc(lcdX, lcdY, r, r, 180, 90);
-//			lcdPath.AddArc(lcdX + lcdW - r, lcdY, r, r, 270, 90);
-//			lcdPath.AddArc(lcdX + lcdW - r, lcdY + lcdH - r, r, r, 0, 90);
-//			lcdPath.AddArc(lcdX, lcdY + lcdH - r, r, r, 90, 90);
-//			lcdPath.CloseFigure();
-//			g.FillPath(&lcdBackBrush, &lcdPath);
-//
-//			Gdiplus::Pen lcdBorder(Gdiplus::Color(100, 0, 0, 0), 1.0f);
-//			g.DrawPath(&lcdBorder, &lcdPath);
-//
-//			// 2. НАЛАШТУВАННЯ ШРИФТУ
-//			Gdiplus::Font digFont(&digFamily, 26, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
-//
-//			Gdiplus::StringFormat sfCenter, sfLeft, sfRight;
-//			sfCenter.SetAlignment(Gdiplus::StringAlignmentCenter);
-//			sfCenter.SetLineAlignment(Gdiplus::StringAlignmentCenter);
-//			sfLeft.SetAlignment(Gdiplus::StringAlignmentNear);
-//			sfLeft.SetLineAlignment(Gdiplus::StringAlignmentCenter);
-//			sfRight.SetAlignment(Gdiplus::StringAlignmentFar);
-//			sfRight.SetLineAlignment(Gdiplus::StringAlignmentCenter);
-//
-//			float textY = lcdY + (lcdH / 2.0f) + 2.0f;
-//
-//			// --- НОВІ ТІСНІ КООРДИНАТИ ---
-//			// baseMid з корекцією нахилу (italic)
-//			float baseMid = xCenter + 2.0f;
-//
-//			float posX_Minutes = baseMid;           // Центр
-//			float posX_Colon1 = baseMid - 13.0f;   // Було -15 (зсунули ближче до центру на 2px)
-//			float posX_Colon2 = baseMid + 13.0f;   // Було +15 (зсунули ближче до центру на 2px)
-//			float posX_Hours = baseMid - 16.0f;   // Було -19 (притиснули години до двокрапки)
-//			float posX_Seconds = baseMid + 16.0f;   // Було +19 (притиснули секунди до двокрапки)
-//
-//			// 3. МАЛЮЄМО ФОНОВІ СЕГМЕНТИ
-//			Gdiplus::SolidBrush shadowBrush(Gdiplus::Color(25, 0, 0, 0));
-//			g.DrawString(L"88", -1, &digFont, Gdiplus::PointF(posX_Hours, textY), &sfRight, &shadowBrush);
-//			g.DrawString(L":", -1, &digFont, Gdiplus::PointF(posX_Colon1, textY), &sfCenter, &shadowBrush);
-//			g.DrawString(L"88", -1, &digFont, Gdiplus::PointF(posX_Minutes, textY), &sfCenter, &shadowBrush);
-//			g.DrawString(L":", -1, &digFont, Gdiplus::PointF(posX_Colon2, textY), &sfCenter, &shadowBrush);
-//			g.DrawString(L"88", -1, &digFont, Gdiplus::PointF(posX_Seconds, textY), &sfLeft, &shadowBrush);
-//
-//			// 4. МАЛЮЄМО АКТИВНИЙ ЧАС
-//			Gdiplus::SolidBrush digBrush(Gdiplus::Color(255, 0, 0, 0));
-//
-//			CString sH, sM, sS;
-//			sH.Format(_T("%d"), st.wHour);
-//			sM.Format(_T("%02d"), st.wMinute);
-//			sS.Format(_T("%02d"), st.wSecond);
-//
-//			g.DrawString(sH, -1, &digFont, Gdiplus::PointF(posX_Hours, textY), &sfRight, &digBrush);
-//			g.DrawString(L":", -1, &digFont, Gdiplus::PointF(posX_Colon1, textY), &sfCenter, &digBrush);
-//			g.DrawString(sM, -1, &digFont, Gdiplus::PointF(posX_Minutes, textY), &sfCenter, &digBrush);
-//			g.DrawString(L":", -1, &digFont, Gdiplus::PointF(posX_Colon2, textY), &sfCenter, &digBrush);
-//			g.DrawString(sS, -1, &digFont, Gdiplus::PointF(posX_Seconds, textY), &sfLeft, &digBrush);
-//		}
-//	}
-//
-//
-//	// --- 7. МОДУЛЬ КАЛЕНДАРЯ ---
-//	if (m_bCalendar)
-//	{
-//		// Визначаємо початкову Y-позицію (після цифрового годинника)
-//		float calY = 150.0f + (m_bDigitalClock ? 50.0f : 0.0f);
-//		float calX = 10.0f; // Відступ зліва
-//		float calW = w - 20.0f; // Ширина сітки
-//
-//		// 1. Розділювальна лінія (ефект вдавлювання)
-//		g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, 0, 0, 0), 1.0f), 15.0f, calY, w - 15.0f, calY);
-//		g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(30, 255, 255, 255), 1.0f), 15.0f, calY + 1.0f, w - 15.0f, calY + 1.0f);
-//
-//		// 2. Отримуємо дані про поточний місяць
-//		SYSTEMTIME st;
-//		GetLocalTime(&st);
-//		COleDateTime today(st);
-//		COleDateTime firstDay(st.wYear, st.wMonth, 1, 0, 0, 0);
-//
-//		// Визначаємо день тижня для 1-го числа (в MFC 1=Нд, 2=Пн...)
-//		// Переводимо в формат: 0=Пн, 6=Нд
-//		int startDay = firstDay.GetDayOfWeek();
-//		startDay = (startDay == 1) ? 6 : startDay - 2;
-//
-//		// Кількість днів у місяці
-//		int daysInMonth = 31;
-//		if (st.wMonth == 4 || st.wMonth == 6 || st.wMonth == 9 || st.wMonth == 11) daysInMonth = 30;
-//		else if (st.wMonth == 2) {
-//			bool leap = (st.wYear % 4 == 0 && st.wYear % 100 != 0) || (st.wYear % 400 == 0);
-//			daysInMonth = leap ? 29 : 28;
-//		}
-//
-//		// 3. Малюємо заголовок (Місяць та Рік)
-//		Gdiplus::FontFamily arial(L"Arial");
-//		Gdiplus::Font fontHeader(&arial, 12, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
-//		Gdiplus::SolidBrush bWhite(Gdiplus::Color(220, 255, 255, 255));
-//
-//		CString strHeader = today.Format(_T("%B %Y")); // Назва місяця та рік
-//		Gdiplus::StringFormat sf;
-//		sf.SetAlignment(Gdiplus::StringAlignmentCenter);
-//		g.DrawString(strHeader, -1, &fontHeader, Gdiplus::PointF(w / 2.0f, calY + 10), &sf, &bWhite);
-//
-//		// 4. Малюємо дні тижня (Пн...Нд)
-//		Gdiplus::Font fontDays(&arial, 10, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
-//		const TCHAR* dayNames[] = { _T("M"), _T("T"), _T("W"), _T("T"), _T("F"), _T("S"), _T("S") };
-//		float cellW = calW / 7.0f;
-//
-//		for (int i = 0; i < 7; i++) {
-//			Gdiplus::SolidBrush bDayName((i >= 5) ? Gdiplus::Color(200, 255, 100, 100) : Gdiplus::Color(150, 255, 255, 255));
-//			g.DrawString(dayNames[i], -1, &fontDays, Gdiplus::PointF(calX + i * cellW + cellW / 2, calY + 30), &sf, &bDayName);
-//		}
-//
-//		// 5. Малюємо сітку чисел
-//		int row = 0;
-//		for (int d = 1; d <= daysInMonth; d++) {
-//			int col = (startDay + d - 1) % 7;
-//			if (d > 1 && col == 0) row++;
-//
-//			float x = calX + col * cellW + cellW / 2;
-//			float y = calY + 50 + row * 15;
-//
-//			// Якщо це сьогодні — малюємо підсвітку
-//			if (d == st.wDay) {
-//				Gdiplus::SolidBrush bToday(Gdiplus::Color(100, 255, 255, 255));
-//				g.FillRectangle(&bToday, calX + col * cellW + 2.0f, y - 1.0f, cellW - 4.0f, 14.0f);
-//			}
-//
-//			Gdiplus::SolidBrush bNum((col >= 5) ? Gdiplus::Color(255, 255, 150, 150) : Gdiplus::Color(255, 255, 255, 255));
-//			if (d == st.wDay) bNum.SetColor(Gdiplus::Color(255, 0, 0, 0)); // Чорний текст для сьогодні
-//
-//			CString sD; sD.Format(_T("%d"), d);
-//			g.DrawString(sD, -1, &fontDays, Gdiplus::PointF(x, y), &sf, &bNum);
-//		}
-//	}
-//}
-
 void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 {
 	float w = (float)m_nPanelWidth;
@@ -483,7 +170,7 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 	if (m_bDigitalClock) 
 	{
 		DrawDigitalClock(g, w / 2.0f, currentY);
-		currentY += 50.0f;
+		currentY += 65.0f;
 	}
 
 	// 4. Календар
@@ -650,8 +337,9 @@ void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float
 	m_fontCollection.GetFamilies(1, &digFamily, &numFound);
 
 	if (numFound > 0) {
-		float lcdW = 120.0f;
-		float lcdH = 36.0f;
+		// 1. ПАРАМЕТРИ LCD ПАНЕЛІ (Трохи вища для стилю Casio)
+		float lcdW = 130.0f;
+		float lcdH = 52.0f; // Збільшена висота
 		float lcdX = xCenter - (lcdW / 2.0f);
 		float lcdY = yStart + 4.0f;
 
@@ -666,66 +354,86 @@ void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float
 		g.FillPath(&lcdBackBrush, &lcdPath);
 		g.DrawPath(&Gdiplus::Pen(Gdiplus::Color(120, 0, 0, 0), 1.0f), &lcdPath);
 
-		Gdiplus::Font digFont(&digFamily, 26, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
+		// 2. ШРИФТИ (Великий для часу, малий для дати/секунд)
+		Gdiplus::Font digFontLarge(&digFamily, 32, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
+		Gdiplus::Font digFontSmall(&digFamily, 18, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
+
 		Gdiplus::StringFormat sfRight, sfCenter;
 		sfRight.SetAlignment(Gdiplus::StringAlignmentFar);
 		sfRight.SetLineAlignment(Gdiplus::StringAlignmentCenter);
 		sfCenter.SetAlignment(Gdiplus::StringAlignmentCenter);
 		sfCenter.SetLineAlignment(Gdiplus::StringAlignmentCenter);
 
-		float textY = lcdY + (lcdH / 2.0f) + 2.0f;
-
-		// ФІКСОВАНІ КООРДИНАТИ
-		float p_H1 = xCenter - 33.0f;
-		float p_H2 = xCenter - 19.0f;
-		float p_C1 = xCenter - 19.0f;
-		float p_M1 = xCenter;
-		float p_M2 = xCenter + 13.0f;
-		float p_C2 = xCenter + 12.0f;
-		float p_S1 = xCenter + 31.0f;
-		float p_S2 = xCenter + 45.0f;
-
 		Gdiplus::SolidBrush shadowBrush(Gdiplus::Color(25, 0, 0, 0));
 		Gdiplus::SolidBrush digBrush(Gdiplus::Color(255, 0, 0, 0));
 
-		// 3. ФОНОВА СІТКА
-		if (st.wHour >= 10) g.DrawString(L"8", 1, &digFont, Gdiplus::PointF(p_H1, textY), &sfRight, &shadowBrush);
-		g.DrawString(L"8", 1, &digFont, Gdiplus::PointF(p_H2, textY), &sfRight, &shadowBrush);
-		g.DrawString(L":", 1, &digFont, Gdiplus::PointF(p_C1, textY), &sfCenter, &shadowBrush);
-		g.DrawString(L"8", 1, &digFont, Gdiplus::PointF(p_M1, textY), &sfRight, &shadowBrush);
-		g.DrawString(L"8", 1, &digFont, Gdiplus::PointF(p_M2, textY), &sfRight, &shadowBrush);
-		g.DrawString(L":", 1, &digFont, Gdiplus::PointF(p_C2, textY), &sfCenter, &shadowBrush);
-		g.DrawString(L"8", 1, &digFont, Gdiplus::PointF(p_S1, textY), &sfRight, &shadowBrush);
-		g.DrawString(L"8", 1, &digFont, Gdiplus::PointF(p_S2, textY), &sfRight, &shadowBrush);
+		// --- КООРДИНАТИ (Стиль Casio) ---
+		float topRowY = lcdY + 14.0f;    // Висота верхнього ряду
+		float bottomRowY = lcdY + 36.0f; // Висота основного ряду
 
-		// 4. АКТИВНИЙ ЧАС
-		int h1 = st.wHour / 10, h2 = st.wHour % 10;
-		int m1 = st.wMinute / 10, m2 = st.wMinute % 10;
-		int s1 = st.wSecond / 10, s2 = st.wSecond % 10;
-		WCHAR buf[2] = { 0, 0 };
+		// Верхній ряд (День тижня та Дата)
+		float p_Day = xCenter + 5.0f;  // Центр дня тижня
+		float p_Date = xCenter + 50.0f; // Правий край дати
 
+		// Нижній ряд (Години : Хвилини)
+		float p_H1 = xCenter - 36.0f;
+		float p_H2 = xCenter - 18.0f;
+		float p_Colon = xCenter - 17.5f;
+		float p_M1 = xCenter + 8.0f;
+		float p_M2 = xCenter + 26.0f;
+
+		// Секунди (Маленькі, праворуч)
+		float p_S1 = xCenter + 42.0f;
+		float p_S2 = xCenter + 56.0f;
+
+		// 3. МАЛЮЄМО ТІНІ (88)
+		// Верх
+		g.DrawString(L"88", 2, &digFontSmall, Gdiplus::PointF(p_Day + 8.0f, topRowY), &sfRight, &shadowBrush);
+		g.DrawString(L"88", 2, &digFontSmall, Gdiplus::PointF(p_Date, topRowY), &sfRight, &shadowBrush);
+		// Основний час
+		if (st.wHour >= 10) g.DrawString(L"8", 1, &digFontLarge, Gdiplus::PointF(p_H1, bottomRowY), &sfRight, &shadowBrush);
+		g.DrawString(L"8", 1, &digFontLarge, Gdiplus::PointF(p_H2, bottomRowY), &sfRight, &shadowBrush);
+		g.DrawString(L":", 1, &digFontLarge, Gdiplus::PointF(p_Colon, bottomRowY), &sfCenter, &shadowBrush);
+		g.DrawString(L"8", 1, &digFontLarge, Gdiplus::PointF(p_M1, bottomRowY), &sfRight, &shadowBrush);
+		g.DrawString(L"8", 1, &digFontLarge, Gdiplus::PointF(p_M2, bottomRowY), &sfRight, &shadowBrush);
+		// Секунди
+		g.DrawString(L"8", 1, &digFontSmall, Gdiplus::PointF(p_S1, bottomRowY + 4.0f), &sfRight, &shadowBrush);
+		g.DrawString(L"8", 1, &digFontSmall, Gdiplus::PointF(p_S2, bottomRowY + 4.0f), &sfRight, &shadowBrush);
+
+		// 4. МАЛЮЄМО ДАНІ
+		// День тижня (SU, MO, TU...)
+		const WCHAR* days[] = { L"SU", L"MO", L"TU", L"WE", L"TH", L"FR", L"SA" };
+		g.DrawString(days[st.wDayOfWeek], 2, &digFontSmall, Gdiplus::PointF(p_Day, topRowY), &sfCenter, &digBrush);
+
+		// Дата
+		CString sDate; sDate.Format(_T("%d"), st.wDay);
+		g.DrawString(sDate, -1, &digFontSmall, Gdiplus::PointF(p_Date, topRowY), &sfRight, &digBrush);
+
+		// Години та Хвилини
+		CString sH1, sH2, sM1, sM2, sS1, sS2;
 		if (st.wHour >= 10) {
-			buf[0] = (WCHAR)(L'0' + h1);
-			g.DrawString(buf, 1, &digFont, Gdiplus::PointF(p_H1, textY), &sfRight, &digBrush);
+			sH1.Format(_T("%d"), st.wHour / 10);
+			g.DrawString(sH1, 1, &digFontLarge, Gdiplus::PointF(p_H1, bottomRowY), &sfRight, &digBrush);
 		}
-		buf[0] = (WCHAR)(L'0' + h2);
-		g.DrawString(buf, 1, &digFont, Gdiplus::PointF(p_H2, textY), &sfRight, &digBrush);
+		sH2.Format(_T("%d"), st.wHour % 10);
+		g.DrawString(sH2, 1, &digFontLarge, Gdiplus::PointF(p_H2, bottomRowY), &sfRight, &digBrush);
 
-		g.DrawString(L":", 1, &digFont, Gdiplus::PointF(p_C1, textY), &sfCenter, &digBrush);
+		g.DrawString(L":", 1, &digFontLarge, Gdiplus::PointF(p_Colon, bottomRowY), &sfCenter, &digBrush);
 
-		buf[0] = (WCHAR)(L'0' + m1);
-		g.DrawString(buf, 1, &digFont, Gdiplus::PointF(p_M1, textY), &sfRight, &digBrush);
-		buf[0] = (WCHAR)(L'0' + m2);
-		g.DrawString(buf, 1, &digFont, Gdiplus::PointF(p_M2, textY), &sfRight, &digBrush);
+		sM1.Format(_T("%d"), st.wMinute / 10);
+		g.DrawString(sM1, 1, &digFontLarge, Gdiplus::PointF(p_M1, bottomRowY), &sfRight, &digBrush);
+		sM2.Format(_T("%d"), st.wMinute % 10);
+		g.DrawString(sM2, 1, &digFontLarge, Gdiplus::PointF(p_M2, bottomRowY), &sfRight, &digBrush);
 
-		g.DrawString(L":", 1, &digFont, Gdiplus::PointF(p_C2, textY), &sfCenter, &digBrush);
-
-		buf[0] = (WCHAR)(L'0' + s1);
-		g.DrawString(buf, 1, &digFont, Gdiplus::PointF(p_S1, textY), &sfRight, &digBrush);
-		buf[0] = (WCHAR)(L'0' + s2);
-		g.DrawString(buf, 1, &digFont, Gdiplus::PointF(p_S2, textY), &sfRight, &digBrush);
+		// Секунди (маленькі)
+		sS1.Format(_T("%d"), st.wSecond / 10);
+		g.DrawString(sS1, 1, &digFontSmall, Gdiplus::PointF(p_S1, bottomRowY + 4.0f), &sfRight, &digBrush);
+		sS2.Format(_T("%d"), st.wSecond % 10);
+		g.DrawString(sS2, 1, &digFontSmall, Gdiplus::PointF(p_S2, bottomRowY + 4.0f), &sfRight, &digBrush);
 	}
 }
+
+
 void CClockvcmfcDlg::DrawCalendar(Gdiplus::Graphics& g, float w, float yStart)
 {
 	float calY = yStart + 5.0f;
