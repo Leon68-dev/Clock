@@ -40,6 +40,11 @@ protected:
 	BOOL m_bTickTack;
 	BOOL m_b24Hours;
 
+	BOOL m_bMouseOver = FALSE; // Стан миші над вікном
+
+	// Метод для малювання сірої підкладки модулів
+	void DrawModulesBackground(Gdiplus::Graphics& g, float w, float yStart, float h);
+
 	// --- Налаштування вимкнення ПК ---
 	BOOL m_isShutDown;
 	BOOL m_isSleep;
@@ -134,6 +139,8 @@ protected:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg LRESULT OnTrayNotify(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+	afx_msg LRESULT OnMouseLeave(WPARAM wParam, LPARAM lParam);
 
 	// Обробники команд меню
 	afx_msg void OnMenuSetup();

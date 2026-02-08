@@ -74,6 +74,8 @@ BEGIN_MESSAGE_MAP(CClockvcmfcDlg, CDialogEx)
 	ON_COMMAND(ID_MENU_STARTPOSITION, &CClockvcmfcDlg::OnMenuStartPosition)
 	ON_COMMAND(ID_MENU_HIDE, &CClockvcmfcDlg::OnMenuHide)
 	ON_COMMAND(ID_MENU_WORLDMAP, &CClockvcmfcDlg::OnMenuWorldmap)
+	ON_WM_MOUSEMOVE()
+	ON_MESSAGE(WM_MOUSELEAVE, &CClockvcmfcDlg::OnMouseLeave)
 END_MESSAGE_MAP()
 
 BOOL CClockvcmfcDlg::OnEraseBkgnd(CDC* pDC)
@@ -159,41 +161,56 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 	g.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
 	g.SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAliasGridFit);
 
-	// 1. Фон панелі
+	// 1. Основний фон панелі (стає видимим при наведенні миші)
 	DrawPanelBackground(g, w, h);
 
-	// 2. Аналоговий годинник (завжди зверху, y=75)
+	// 2. Розраховуємо, де починається сіра підкладка (після цифрового годинника)
+	float modulesYStart = 150.0f;
+	if (m_bDigitalClock)
+		modulesYStart += HEIGHT_DIGITAL_CLOCK;
+
+	// 3. Малюємо сіру підкладку для нижніх модулів (видима завжди)
+	// Вона малюється від modulesYStart до самого низу h
+	if (m_bCalendar || m_bSysMon || m_bPing || m_bWeather)
+	{
+		DrawModulesBackground(g, w, modulesYStart, h);
+	}
+
+	// 4. Аналоговий годинник (завжди зверху)
 	DrawAnalogClock(g, w / 2.0f, 75.0f, 67.0f);
 
-	float currentY = 150.0f; // Початкова точка під аналоговим годинником
+	float currentY = 150.0f;
 
-	// 3. Цифровий годинник
-	if (m_bDigitalClock) 
+	// 5. Цифровий годинник
+	if (m_bDigitalClock)
 	{
 		DrawDigitalClock(g, w / 2.0f, currentY);
 		currentY += HEIGHT_DIGITAL_CLOCK;
 	}
 
-	// 4. Календар
-	if (m_bCalendar) 
+	// 6. Календар
+	if (m_bCalendar)
 	{
 		DrawCalendar(g, w, currentY);
 		currentY += HEIGHT_CALENDAR;
 	}
 
-	if (m_bSysMon) 
+	// 7. Системний монітор
+	if (m_bSysMon)
 	{
 		DrawSystemMonitor(g, w, currentY);
 		currentY += HEIGHT_SYSMON;
 	}
 
-	if (m_bPing) 
+	// 8. Пінг
+	if (m_bPing)
 	{
 		DrawPing(g, w, currentY);
 		currentY += HEIGHT_PING;
 	}
 
-	if (m_bWeather) 
+	// 9. Погода
+	if (m_bWeather)
 	{
 		DrawWeather(g, w, currentY);
 		currentY += HEIGHT_WEATHER;
@@ -203,17 +220,23 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 void CClockvcmfcDlg::DrawPanelBackground(Gdiplus::Graphics& g, float w, float h)
 {
 	Gdiplus::GraphicsPath path;
-	float cornerR = 15.0f;
-	path.AddArc(0.0f, 0.0f, cornerR, cornerR, 180.0f, 90.0f);
-	path.AddArc(w - cornerR, 0.0f, cornerR, cornerR, 270.0f, 90.0f);
-	path.AddArc(w - cornerR, h - cornerR, cornerR, cornerR, 0.0f, 90.0f);
-	path.AddArc(0.0f, h - cornerR, cornerR, cornerR, 90.0f, 90.0f);
+	float r = 15.0f;
+	path.AddArc(0.0f, 0.0f, r, r, 180.0f, 90.0f);
+	path.AddArc(w - r, 0.0f, r, r, 270.0f, 90.0f);
+	path.AddArc(w - r, h - r, r, r, 0.0f, 90.0f);
+	path.AddArc(0.0f, h - r, r, r, 90.0f, 90.0f);
 	path.CloseFigure();
 
-	Gdiplus::SolidBrush panelBrush(Gdiplus::Color(160, 20, 20, 20));
+	// Якщо миша НЕ над вікном, ставимо Alpha = 1 (майже невидимий, але клікабельний)
+	// Якщо миша НАД вікном, ставимо Alpha = 160 (ефект скла)
+	int alpha = m_bMouseOver ? 160 : 1;
+
+	Gdiplus::SolidBrush panelBrush(Gdiplus::Color(alpha, 20, 20, 20));
 	g.FillPath(&panelBrush, &path);
 
-	Gdiplus::Pen glassPen(Gdiplus::Color(80, 255, 255, 255), 1.0f);
+	// Рамка також стає яскравішою при наведенні
+	int borderAlpha = m_bMouseOver ? 80 : 20;
+	Gdiplus::Pen glassPen(Gdiplus::Color(borderAlpha, 255, 255, 255), 1.0f);
 	g.DrawPath(&glassPen, &path);
 }
 
@@ -1426,4 +1449,48 @@ void CClockvcmfcDlg::DrawWeather(Gdiplus::Graphics& g, float w, float yStart)
 	// Опис та місто
 	CString strInfo = m_strWeatherCity + _T(": ") + m_strWeatherDesc;
 	g.DrawString(strInfo, -1, &fontDesc, Gdiplus::PointF(margin + 40.0f, weaY + 28.0f), NULL, &bWhite);
+}
+
+void CClockvcmfcDlg::OnMouseMove(UINT nFlags, CPoint point)
+{
+	if (!m_bMouseOver)
+	{
+		m_bMouseOver = TRUE;
+		// Запитуємо Windows надіслати WM_MOUSELEAVE, коли миша піде геть
+		TRACKMOUSEEVENT tme = { sizeof(tme), TME_LEAVE, m_hWnd, 0 };
+		TrackMouseEvent(&tme);
+
+		UpdateLayeredClock(); // Перемальовуємо, щоб показати фон
+	}
+	CDialogEx::OnMouseMove(nFlags, point);
+}
+
+LRESULT CClockvcmfcDlg::OnMouseLeave(WPARAM wParam, LPARAM lParam)
+{
+	m_bMouseOver = FALSE;
+	UpdateLayeredClock(); // Перемальовуємо, щоб сховати фон
+	return 0;
+}
+
+void CClockvcmfcDlg::DrawModulesBackground(Gdiplus::Graphics& g, float w, float yStart, float h)
+{
+	if (yStart >= h) 
+		return;
+
+	Gdiplus::GraphicsPath path;
+	float r = 15.0f; // Радіус закруглення (має збігатися з основним фоном)
+
+	// Малюємо шлях: пряма лінія зверху, закруглені кути знизу
+	path.AddLine(0.0f, yStart, w, yStart); // Верхня межа (пряма)
+	path.AddArc(w - r, h - r, r, r, 0, 90);   // Нижній правий кут
+	path.AddArc(0.0f, h - r, r, r, 90, 90);   // Нижній лівий кут
+	path.CloseFigure();
+
+	// Напівпрозорий сірий колір (видимий завжди)
+	Gdiplus::SolidBrush grayBrush(Gdiplus::Color(100, 60, 60, 60));
+	g.FillPath(&grayBrush, &path);
+
+	// Тонка лінія розділювача зверху підкладки
+	Gdiplus::Pen sep(Gdiplus::Color(50, 255, 255, 255), 1.0f);
+	g.DrawLine(&sep, 0.0f, yStart, w, yStart);
 }
