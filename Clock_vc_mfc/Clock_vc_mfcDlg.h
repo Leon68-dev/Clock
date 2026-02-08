@@ -82,13 +82,13 @@ protected:
 	/*****************************************************************************************************************************/
 
 	Gdiplus::PrivateFontCollection m_fontCollection; // Для завантаження твого шрифту
-	BOOL m_bShowDigital = TRUE;   // Прапорець для цифрового годинника
+	BOOL m_bDigitalClock = TRUE;   // Прапорець для цифрового годинника
 	int m_nPanelWidth = 150;      // Нова ширина панелі
 	int m_nPanelHeight = 150;     // Висота (буде рахуватися динамічно)
 
-	BOOL m_bShowCalendar = TRUE;
+	BOOL m_bCalendar = TRUE;
 
-	BOOL m_bShowSysMon = TRUE;
+	BOOL m_bSysMon = TRUE;
 	float m_cpuUsage = 0.0f;
 	float m_ramUsage = 0.0f;
 	int m_sysMonTickCount = 0;
@@ -97,15 +97,15 @@ protected:
 	FILETIME m_prevUserTime;
 	void UpdateSystemMetrics();
 
-	BOOL    m_bShowPing = TRUE;
+	BOOL    m_bPing = TRUE;
 	CString m_strPingAddress = _T("8.8.8.8");		// Дефолтний IP (Google)
 	int     m_nPingValue = -1;						// -1 означає "немає відповіді"
 	BOOL    m_bPingInProgress = FALSE;				// Щоб не запускати кілька потоків одночасно
 	void UpdatePing();
 	void DrawPing(Gdiplus::Graphics& g, float w, float yStart);
 
-	BOOL    m_bShowWeather = FALSE;
-	CString m_strWeatherCity = _T("Kyiv");
+	BOOL    m_bWeather = FALSE;
+	CString m_strWeatherCity = _T("Odesa,ua");
 	CString m_strWeatherApiKey = _T("b6edfbab96459a29db1b3dab05857103");
 	CString m_strTemp = _T("?°C");
 	CString m_strWeatherDesc = _T("Loading...");

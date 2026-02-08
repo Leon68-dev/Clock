@@ -5,14 +5,16 @@
 CSetupDlg::CSetupDlg(BOOL gmt, BOOL date, BOOL day, BOOL moving, BOOL top, 
     BOOL trans, BOOL border, int opacity, BOOL smooth,
     BOOL soundTickTack, BOOL sound1530, BOOL soundHours,
-    CWnd* pParent)
-    : CDialogEx(IDD_SETUP_DLG, pParent)
+    BOOL digitalClock, BOOL calendar, BOOL sysMon, BOOL ping, BOOL weather,
+    CString pingAddr, CString weatherCity, CString weatherKey,
+    CWnd* pParent) : CDialogEx(IDD_SETUP_DLG, pParent)
     , m_bGMT(gmt), m_bDate(date), m_bDay(day), m_bMoving(moving)
     , m_bTopMost(top), m_bTransparent(trans), m_bBorder(border)
     , m_nOpacity(opacity), m_bSmooth(smooth)
     , m_bTickTack(soundTickTack), m_b1530(sound1530), m_bHours(soundHours)
-{
-}
+    , m_bDigitalClock(digitalClock), m_bCalendar(calendar)
+    , m_bSysMon(sysMon), m_bPing(ping), m_bWeather(weather) 
+    , m_strPingAddress(pingAddr), m_strWeatherCity(weatherCity), m_strWeatherApiKey(weatherKey) { }
 
 void CSetupDlg::DoDataExchange(CDataExchange* pDX)
 {
@@ -31,6 +33,14 @@ void CSetupDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Check(pDX, IDC_CHK_SMOOTH, m_bSmooth);
     DDX_Check(pDX, IDC_CHK_SOUND_TICKTACK, m_bTickTack);
     DDX_Check(pDX, IDC_CHK_SOUND_1530, m_b1530);
+    DDX_Check(pDX, IDC_CHK_DIGITAL, m_bDigitalClock);
+    DDX_Check(pDX, IDC_CHK_CALENDAR, m_bCalendar);
+    DDX_Check(pDX, IDC_CHK_SYSMON, m_bSysMon);
+    DDX_Check(pDX, IDC_CHK_PING, m_bPing);
+    DDX_Check(pDX, IDC_CHK_WEATHER, m_bWeather);
+    DDX_Text(pDX, IDC_EDT_PING_ADR, m_strPingAddress);
+    DDX_Text(pDX, IDC_EDT_WEATHER_CITY, m_strWeatherCity);
+    DDX_Text(pDX, IDC_EDT_WEATHER_KEY, m_strWeatherApiKey);
 }
 
 BEGIN_MESSAGE_MAP(CSetupDlg, CDialogEx)

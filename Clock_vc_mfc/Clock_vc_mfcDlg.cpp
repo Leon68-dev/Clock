@@ -29,7 +29,6 @@ CClockvcmfcDlg::CClockvcmfcDlg(CWnd* pParent /*=nullptr*/)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
-	// Ініціалізація налаштувань (аналог C# initialization)
 	m_bGMT = FALSE;
 	m_bDate = TRUE;
 	m_bDay = TRUE;
@@ -45,6 +44,11 @@ CClockvcmfcDlg::CClockvcmfcDlg(CWnd* pParent /*=nullptr*/)
 	m_bTickTack = FALSE;
 	m_b1530 = FALSE;
 	m_bHours = FALSE;
+	m_bDigitalClock = TRUE;
+	m_bCalendar = TRUE;
+	m_bSysMon = TRUE;
+	m_bPing = TRUE;
+	m_bWeather = FALSE;
 	m_timeShutDown = COleDateTime::GetCurrentTime();
 }
 
@@ -116,13 +120,13 @@ BOOL CClockvcmfcDlg::OnInitDialog()
 	InitTrayIcon();
 	SetTimer(1, m_bSmooth ? 200 : 1000, NULL);
 
-	if (m_bShowSysMon)
+	if (m_bSysMon)
 		UpdateSystemMetrics();
 
-	if (m_bShowPing)
+	if (m_bPing)
 		UpdatePing();
 
-	if (m_bShowWeather)
+	if (m_bWeather)
 		UpdateWeather();
 
 	return TRUE;
@@ -306,7 +310,7 @@ void CClockvcmfcDlg::OnPaint()
 //	g.FillEllipse(&brushBlack, xCenter - 4.0f, yCenter - 4.0f, 8.0f, 8.0f);
 //
 //	// --- 6. ЦИФРОВИЙ ГОДИННИК (LCD STYLE - ULTRA TIGHT) ---
-//	if (m_bShowDigital)
+//	if (m_bDigitalClock)
 //	{
 //		SYSTEMTIME st;
 //		if (m_bGMT) ::GetSystemTime(&st); else ::GetLocalTime(&st);
@@ -385,10 +389,10 @@ void CClockvcmfcDlg::OnPaint()
 //
 //
 //	// --- 7. МОДУЛЬ КАЛЕНДАРЯ ---
-//	if (m_bShowCalendar)
+//	if (m_bCalendar)
 //	{
 //		// Визначаємо початкову Y-позицію (після цифрового годинника)
-//		float calY = 150.0f + (m_bShowDigital ? 50.0f : 0.0f);
+//		float calY = 150.0f + (m_bDigitalClock ? 50.0f : 0.0f);
 //		float calX = 10.0f; // Відступ зліва
 //		float calW = w - 20.0f; // Ширина сітки
 //
@@ -476,32 +480,32 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 	float currentY = 150.0f; // Початкова точка під аналоговим годинником
 
 	// 3. Цифровий годинник
-	if (m_bShowDigital) 
+	if (m_bDigitalClock) 
 	{
 		DrawDigitalClock(g, w / 2.0f, currentY);
 		currentY += 50.0f;
 	}
 
 	// 4. Календар
-	if (m_bShowCalendar) 
+	if (m_bCalendar) 
 	{
 		DrawCalendar(g, w, currentY);
 		currentY += 140.0f;
 	}
 
-	if (m_bShowSysMon) 
+	if (m_bSysMon) 
 	{
 		DrawSystemMonitor(g, w, currentY);
 		currentY += 80.0f;
 	}
 
-	if (m_bShowPing) 
+	if (m_bPing) 
 	{
 		DrawPing(g, w, currentY);
 		currentY += 35.0f;
 	}
 
-	if (m_bShowWeather) 
+	if (m_bWeather) 
 	{
 		DrawWeather(g, w, currentY);
 		currentY += 50.0f;
@@ -841,11 +845,16 @@ void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 			m_sysMonTickCount = 0; // Скидаємо лічильник
 		}
 
-		m_weatherTickCount++;
-		if (m_weatherTickCount >= 6000) // 6000 * 200ms = 20 хвилин
-		{ 
+		//m_weatherTickCount++;
+		//if (m_weatherTickCount >= 6000) // 6000 * 200ms = 20 хвилин
+		//{ 
+		//	UpdateWeather();
+		//	m_weatherTickCount = 0;
+		//}
+
+		if (st.wMinute == 5 && st.wSecond == 0)
+		{
 			UpdateWeather();
-			m_weatherTickCount = 0;
 		}
 
 		UpdateLayeredClock();
@@ -968,7 +977,9 @@ void CClockvcmfcDlg::OnMenuShutdown()
 void CClockvcmfcDlg::OnMenuSetup()
 {
 	CSetupDlg dlg(m_bGMT, m_bDate, m_bDay, m_bMoving, m_bTopMost, m_bTransparent,
-		m_bBorder, m_nOpacity, m_bSmooth, m_bTickTack, m_b1530, m_bHours);
+		m_bBorder, m_nOpacity, m_bSmooth, m_bTickTack, m_b1530, m_bHours,
+		m_bDigitalClock, m_bCalendar, m_bSysMon, m_bPing, m_bWeather,
+		m_strPingAddress, m_strWeatherCity, m_strWeatherApiKey);
 
 	if (dlg.DoModal() == IDOK)
 	{
@@ -984,6 +995,17 @@ void CClockvcmfcDlg::OnMenuSetup()
 		m_bTickTack = dlg.m_bTickTack;
 		m_b1530 = dlg.m_b1530;
 		m_bHours = dlg.m_bHours;
+		m_bDigitalClock = dlg.m_bDigitalClock;
+		m_bCalendar = dlg.m_bCalendar;
+		m_bSysMon = dlg.m_bSysMon;
+		m_bPing = dlg.m_bPing;
+		m_bWeather = dlg.m_bWeather;
+		m_strPingAddress = dlg.m_strPingAddress;
+		m_strWeatherCity = dlg.m_strWeatherCity;
+		m_strWeatherApiKey = dlg.m_strWeatherApiKey;
+
+		UpdatePing();
+		UpdateWeather();
 
 		// Оновлюємо інтервал таймера
 		KillTimer(1);
@@ -1061,7 +1083,7 @@ void CClockvcmfcDlg::SaveSettings()
 	WriteBool(_T("chk1530"), m_b1530);
 	WriteBool(_T("chkHours"), m_bHours);
 	
-	WritePrivateProfileString(_T("Settings"), _T("chkCalendar"), m_bShowCalendar ? _T("1") : _T("0"), strPath);
+	WritePrivateProfileString(_T("Settings"), _T("chkCalendar"), m_bCalendar ? _T("1") : _T("0"), strPath);
 
 	strVal.Format(_T("%d"), m_nOpacity);
 	WritePrivateProfileString(_T("Settings"), _T("frmOpacity"), strVal, strPath);
@@ -1072,15 +1094,28 @@ void CClockvcmfcDlg::SaveSettings()
 
 	WriteBool(_T("chkOff"), m_isShutDown);
 	WriteBool(_T("chkSleep"), m_isSleep);
+
+	WriteBool(_T("chkDigitalClock"), m_bDigitalClock);
+	WriteBool(_T("chkCalendar"), m_bCalendar);
+	WriteBool(_T("chkSysMon"), m_bSysMon);
+	WriteBool(_T("chkPing"), m_bPing);
+	WriteBool(_T("chkWeather"), m_bWeather);
+	WritePrivateProfileString(_T("Settings"), _T("pingAddr"), m_strPingAddress, strPath);
+	WritePrivateProfileString(_T("Settings"), _T("weatherCity"), m_strWeatherCity, strPath);
+	WritePrivateProfileString(_T("Settings"), _T("weatherKey"), m_strWeatherApiKey, strPath);
+
 	WritePrivateProfileString(_T("Settings"), _T("timeOff"), m_timeShutDown.Format(_T("%H:%M")), strPath);
 }
 
 void CClockvcmfcDlg::LoadSettings()
 {
 	CString strPath = GetIniPath();
-	auto GetBool = [&](LPCTSTR key, int def) {
+	TCHAR szBuf[256];
+
+	auto GetBool = [&](LPCTSTR key, int def) 
+	{
 		return GetPrivateProfileInt(_T("Settings"), key, def, strPath);
-		};
+	};
 
 	m_bGMT = GetBool(_T("chkGMT"), 0);
 	m_bDate = GetBool(_T("chkDate"), 1);
@@ -1094,15 +1129,27 @@ void CClockvcmfcDlg::LoadSettings()
 	m_b1530 = GetBool(_T("chk1530"), 0);
 	m_bHours = GetBool(_T("chkHours"), 0);
 	m_nOpacity = GetPrivateProfileInt(_T("Settings"), _T("frmOpacity"), 80, strPath);
-	m_bShowCalendar = GetPrivateProfileInt(_T("Settings"), _T("chkCalendar"), 1, strPath);
-
 
 	int x = GetPrivateProfileInt(_T("Settings"), _T("deskX"), -1, strPath);
 	int y = GetPrivateProfileInt(_T("Settings"), _T("deskY"), -1, strPath);
-	if (x != -1 && y != -1) SetWindowPos(NULL, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+	if (x != -1 && y != -1) 
+		SetWindowPos(NULL, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
 
 	m_isShutDown = GetBool(_T("chkOff"), 0);
 	m_isSleep = GetBool(_T("chkSleep"), 0);
+
+	m_bDigitalClock = GetBool(_T("chkDigitalClock"), 0);
+	m_bCalendar = GetBool(_T("chkCalendar"), 0);
+	m_bSysMon = GetBool(_T("chkSysMon"), 0);
+	m_bPing = GetBool(_T("chkPing"), 0);
+	m_bWeather = GetBool(_T("chkWeather"), 0);
+	GetPrivateProfileString(_T("Settings"), _T("pingAddr"), _T("8.8.8.8"), szBuf, 256, strPath);
+	m_strPingAddress = szBuf;
+	GetPrivateProfileString(_T("Settings"), _T("weatherCity"), _T("Kyiv"), szBuf, 256, strPath);
+	m_strWeatherCity = szBuf;
+	GetPrivateProfileString(_T("Settings"), _T("weatherKey"), _T(""), szBuf, 256, strPath);
+	m_strWeatherApiKey = szBuf;
+
 	TCHAR szTime[10];
 	GetPrivateProfileString(_T("Settings"), _T("timeOff"), _T("00:00"), szTime, 10, strPath);
 	m_timeShutDown.ParseDateTime(szTime);
@@ -1225,19 +1272,19 @@ void CClockvcmfcDlg::UpdateLayeredClock()
 	// 150px - зона аналогового годинника
 	// 50px - зона цифрового годинника
 	int newHeight = 150;
-	if (m_bShowDigital) 
+	if (m_bDigitalClock) 
 		newHeight += 50;
 	
-	if (m_bShowCalendar) 
+	if (m_bCalendar) 
 		newHeight += 140; // Додаємо 140px під календар
 
-	if (m_bShowSysMon) 
+	if (m_bSysMon) 
 		newHeight += 80; // Додаємо 80px під монітор
 	
-	if (m_bShowPing) 
+	if (m_bPing) 
 		newHeight += 35;
 
-	if (m_bShowWeather) 
+	if (m_bWeather) 
 		newHeight += 50;
 
 	m_nPanelHeight = newHeight;
@@ -1388,7 +1435,7 @@ void CClockvcmfcDlg::UpdateSystemMetrics()
 
 void CClockvcmfcDlg::UpdatePing()
 {
-	if (m_bPingInProgress || !m_bShowPing || m_strPingAddress.IsEmpty()) 
+	if (m_bPingInProgress || !m_bPing || m_strPingAddress.IsEmpty()) 
 		return;
 
 	m_bPingInProgress = TRUE;
@@ -1503,7 +1550,7 @@ void CClockvcmfcDlg::DrawPing(Gdiplus::Graphics& g, float w, float yStart)
 
 void CClockvcmfcDlg::UpdateWeather()
 {
-	if (!m_bShowWeather || m_strWeatherApiKey.IsEmpty()) 
+	if (!m_bWeather || m_strWeatherApiKey.IsEmpty()) 
 		return;
 
 	std::thread([this]() 
