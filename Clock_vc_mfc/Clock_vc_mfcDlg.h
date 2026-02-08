@@ -38,7 +38,7 @@ protected:
 	BOOL m_bHours;
 	BOOL m_b1530;
 	BOOL m_bTickTack;
-	BOOL m_b24Hour;
+	BOOL m_b24Hours;
 
 	// --- Налаштування вимкнення ПК ---
 	BOOL m_isShutDown;
@@ -79,7 +79,18 @@ protected:
 	void DrawHandHelper(Gdiplus::Graphics& g, float xCenter, float yCenter, float val, float len, float width, bool hasWhiteLine);
 	void DrawDigitalClock(Gdiplus::Graphics& g, float x, float y);
 	void DrawCalendar(Gdiplus::Graphics& g, float x, float y);
-	void DrawSystemMonitor(Gdiplus::Graphics& g, float x, float y); // Заготовка
+	void DrawSystemMonitor(Gdiplus::Graphics& g, float x, float y); 
+	void DrawPing(Gdiplus::Graphics& g, float w, float yStart);
+	void DrawWeather(Gdiplus::Graphics& g, float w, float yStart);
+	/*****************************************************************************************************************************/
+
+	/*****************************************************************************************************************************/
+	const int HEIGHT_DIGITAL_CLOCK = 65;
+	const int HEIGHT_CALENDAR = 140; 
+	const int HEIGHT_SYSMON = 80; 
+	const int HEIGHT_PING = 35;
+	const int HEIGHT_WEATHER = 55;
+
 	/*****************************************************************************************************************************/
 
 	Gdiplus::PrivateFontCollection m_fontCollection; // Для завантаження твого шрифту
@@ -102,8 +113,7 @@ protected:
 	CString m_strPingAddress = _T("8.8.8.8");		// Дефолтний IP (Google)
 	int     m_nPingValue = -1;						// -1 означає "немає відповіді"
 	BOOL    m_bPingInProgress = FALSE;				// Щоб не запускати кілька потоків одночасно
-	void UpdatePing();
-	void DrawPing(Gdiplus::Graphics& g, float w, float yStart);
+	void UpdatePing();	
 
 	BOOL    m_bWeather = FALSE;
 	CString m_strWeatherCity = _T("Odesa,ua");
@@ -113,7 +123,6 @@ protected:
 	Gdiplus::Image* m_pWeatherIcon = nullptr;
 	int m_weatherTickCount = 0; // Для оновлення раз на 15-30 хв
 	void UpdateWeather();
-	void DrawWeather(Gdiplus::Graphics& g, float w, float yStart);
 	Gdiplus::Image* DownloadImage(CString url); // Допоміжний метод
 
 	// Generated message map functions

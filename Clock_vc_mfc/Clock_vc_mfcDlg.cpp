@@ -49,7 +49,7 @@ CClockvcmfcDlg::CClockvcmfcDlg(CWnd* pParent /*=nullptr*/)
 	m_bSysMon = TRUE;
 	m_bPing = TRUE;
 	m_bWeather = FALSE;
-	m_b24Hour = TRUE;
+	m_b24Hours = TRUE;
 	m_timeShutDown = COleDateTime::GetCurrentTime();
 }
 
@@ -171,32 +171,32 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 	if (m_bDigitalClock) 
 	{
 		DrawDigitalClock(g, w / 2.0f, currentY);
-		currentY += 65.0f;
+		currentY += HEIGHT_DIGITAL_CLOCK;
 	}
 
 	// 4. Календар
 	if (m_bCalendar) 
 	{
 		DrawCalendar(g, w, currentY);
-		currentY += 140.0f;
+		currentY += HEIGHT_CALENDAR;
 	}
 
 	if (m_bSysMon) 
 	{
 		DrawSystemMonitor(g, w, currentY);
-		currentY += 80.0f;
+		currentY += HEIGHT_SYSMON;
 	}
 
 	if (m_bPing) 
 	{
 		DrawPing(g, w, currentY);
-		currentY += 35.0f;
+		currentY += HEIGHT_PING;
 	}
 
 	if (m_bWeather) 
 	{
 		DrawWeather(g, w, currentY);
-		currentY += 50.0f;
+		currentY += HEIGHT_WEATHER;
 	}
 }
 
@@ -337,7 +337,8 @@ void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float
 	int numFound = 0;
 	m_fontCollection.GetFamilies(1, &digFamily, &numFound);
 
-	if (numFound > 0) {
+	if (numFound > 0) 
+	{
 		float lcdW = 130.0f;
 		float lcdH = 52.0f;
 		float lcdX = xCenter - (lcdW / 2.0f);
@@ -390,7 +391,7 @@ void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float
 		int displayHour = st.wHour;
 		CString strAMPM = _T("");
 
-		if (!m_b24Hour) 
+		if (!m_b24Hours) 
 		{
 			strAMPM = (st.wHour >= 12) ? _T("PM") : _T("AM");
 			displayHour = st.wHour % 12;
@@ -404,7 +405,8 @@ void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float
 		// 4. МАЛЮЄМО ТІНІ (88)
 		g.DrawString(L"88", 2, &digFontSmall, Gdiplus::PointF(p_Day + 8.0f, topRowY), &sfRight, &shadowBrush);
 		g.DrawString(L"88", 2, &digFontSmall, Gdiplus::PointF(p_Date, topRowY), &sfRight, &shadowBrush);
-		if (displayHour >= 10) g.DrawString(L"8", 1, &digFontLarge, Gdiplus::PointF(p_H1, bottomRowY), &sfRight, &shadowBrush);
+		if (displayHour >= 10) 
+			g.DrawString(L"8", 1, &digFontLarge, Gdiplus::PointF(p_H1, bottomRowY), &sfRight, &shadowBrush);
 		g.DrawString(L"8", 1, &digFontLarge, Gdiplus::PointF(p_H2, bottomRowY), &sfRight, &shadowBrush);
 		g.DrawString(L":", 1, &digFontLarge, Gdiplus::PointF(p_Colon, bottomRowY), &sfCenter, &shadowBrush);
 		g.DrawString(L"8", 1, &digFontLarge, Gdiplus::PointF(p_M1, bottomRowY), &sfRight, &shadowBrush);
@@ -419,7 +421,8 @@ void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float
 		CString sDate; sDate.Format(_T("%d"), st.wDay);
 		g.DrawString(sDate, -1, &digFontSmall, Gdiplus::PointF(p_Date, topRowY), &sfRight, &digBrush);
 
-		if (displayHour >= 10) {
+		if (displayHour >= 10) 
+		{
 			CString sH1; sH1.Format(_T("%d"), displayHour / 10);
 			g.DrawString(sH1, 1, &digFontLarge, Gdiplus::PointF(p_H1, bottomRowY), &sfRight, &digBrush);
 		}
@@ -728,7 +731,7 @@ void CClockvcmfcDlg::OnMenuSetup()
 	CSetupDlg dlg(m_bGMT, m_bDate, m_bDay, m_bMoving, m_bTopMost, m_bTransparent,
 		m_bBorder, m_nOpacity, m_bSmooth, m_bTickTack, m_b1530, m_bHours,
 		m_bDigitalClock, m_bCalendar, m_bSysMon, m_bPing, m_bWeather,
-		m_strPingAddress, m_strWeatherCity, m_strWeatherApiKey);
+		m_strPingAddress, m_strWeatherCity, m_strWeatherApiKey, m_b24Hours);
 
 	if (dlg.DoModal() == IDOK)
 	{
@@ -752,6 +755,7 @@ void CClockvcmfcDlg::OnMenuSetup()
 		m_strPingAddress = dlg.m_strPingAddress;
 		m_strWeatherCity = dlg.m_strWeatherCity;
 		m_strWeatherApiKey = dlg.m_strWeatherApiKey;
+		m_b24Hours = dlg.m_b24Hours;
 
 		UpdatePing();
 		UpdateWeather();
@@ -845,7 +849,7 @@ void CClockvcmfcDlg::SaveSettings()
 	WriteBool(_T("chkSleep"), m_isSleep);
 
 	WriteBool(_T("chkDigitalClock"), m_bDigitalClock);
-	WritePrivateProfileString(_T("Settings"), _T("chk24Hour"), m_b24Hour ? _T("1") : _T("0"), strPath);
+	WritePrivateProfileString(_T("Settings"), _T("chk24Hours"), m_b24Hours ? _T("1") : _T("0"), strPath);
 	WriteBool(_T("chkCalendar"), m_bCalendar);
 	WriteBool(_T("chkSysMon"), m_bSysMon);
 	WriteBool(_T("chkPing"), m_bPing);
@@ -889,7 +893,7 @@ void CClockvcmfcDlg::LoadSettings()
 	m_isSleep = GetBool(_T("chkSleep"), 0);
 
 	m_bDigitalClock = GetBool(_T("chkDigitalClock"), 0);
-	m_b24Hour = GetPrivateProfileInt(_T("Settings"), _T("chk24Hour"), 1, strPath);
+	m_b24Hours = GetPrivateProfileInt(_T("Settings"), _T("chk24Hours"), 1, strPath);
 	m_bCalendar = GetBool(_T("chkCalendar"), 0);
 	m_bSysMon = GetBool(_T("chkSysMon"), 0);
 	m_bPing = GetBool(_T("chkPing"), 0);
@@ -899,8 +903,7 @@ void CClockvcmfcDlg::LoadSettings()
 	GetPrivateProfileString(_T("Settings"), _T("weatherCity"), _T("Kyiv"), szBuf, 256, strPath);
 	m_strWeatherCity = szBuf;
 	GetPrivateProfileString(_T("Settings"), _T("weatherKey"), _T(""), szBuf, 256, strPath);
-	m_strWeatherApiKey = szBuf;
-	
+	m_strWeatherApiKey = szBuf;	
 
 	TCHAR szTime[10];
 	GetPrivateProfileString(_T("Settings"), _T("timeOff"), _T("00:00"), szTime, 10, strPath);
@@ -1025,19 +1028,19 @@ void CClockvcmfcDlg::UpdateLayeredClock()
 	// 50px - зона цифрового годинника
 	int newHeight = 150;
 	if (m_bDigitalClock) 
-		newHeight += 50;
+		newHeight += HEIGHT_DIGITAL_CLOCK;
 	
 	if (m_bCalendar) 
-		newHeight += 140; // Додаємо 140px під календар
+		newHeight += HEIGHT_CALENDAR;
 
 	if (m_bSysMon) 
-		newHeight += 80; // Додаємо 80px під монітор
+		newHeight += HEIGHT_SYSMON;
 	
 	if (m_bPing) 
-		newHeight += 35;
+		newHeight += HEIGHT_PING;
 
 	if (m_bWeather) 
-		newHeight += 50;
+		newHeight += HEIGHT_WEATHER;
 
 	m_nPanelHeight = newHeight;
 
