@@ -1478,19 +1478,20 @@ void CClockvcmfcDlg::DrawModulesBackground(Gdiplus::Graphics& g, float w, float 
 		return;
 
 	Gdiplus::GraphicsPath path;
-	float r = 15.0f; // Радіус закруглення (має збігатися з основним фоном)
+	float r = 15.0f; // Радіус закруглення
 
-	// Малюємо шлях: пряма лінія зверху, закруглені кути знизу
-	path.AddLine(0.0f, yStart, w, yStart); // Верхня межа (пряма)
-	path.AddArc(w - r, h - r, r, r, 0, 90);   // Нижній правий кут
-	path.AddArc(0.0f, h - r, r, r, 90, 90);   // Нижній лівий кут
+	// Малюємо шлях із закругленими кутами з усіх боків
+	path.AddArc(0.0f, yStart, r, r, 180.0f, 90.0f);     // Верхній лівий кут
+	path.AddArc(w - r, yStart, r, r, 270.0f, 90.0f);    // Верхній правий кут
+	path.AddArc(w - r, h - r, r, r, 0.0f, 90.0f);       // Нижній правий кут
+	path.AddArc(0.0f, h - r, r, r, 90.0f, 90.0f);       // Нижній лівий кут
 	path.CloseFigure();
 
-	// Напівпрозорий сірий колір (видимий завжди)
+	// Малюємо напівпрозору сіру підкладку
 	Gdiplus::SolidBrush grayBrush(Gdiplus::Color(100, 60, 60, 60));
 	g.FillPath(&grayBrush, &path);
 
-	// Тонка лінія розділювача зверху підкладки
-	Gdiplus::Pen sep(Gdiplus::Color(50, 255, 255, 255), 1.0f);
-	g.DrawLine(&sep, 0.0f, yStart, w, yStart);
+	// Малюємо тонку світлу рамку навколо всієї підкладки (ефект картки)
+	Gdiplus::Pen borderPen(Gdiplus::Color(50, 255, 255, 255), 1.0f);
+	g.DrawPath(&borderPen, &path);
 }
