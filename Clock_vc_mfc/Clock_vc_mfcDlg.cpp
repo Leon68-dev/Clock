@@ -678,10 +678,10 @@ void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float
 		// Ô²ÊÑÎÂÀÍ² ÊÎÎĞÄÈÍÀÒÈ
 		float p_H1 = xCenter - 33.0f;
 		float p_H2 = xCenter - 19.0f;
-		float p_C1 = xCenter - 18.5f;
+		float p_C1 = xCenter - 19.0f;
 		float p_M1 = xCenter;
 		float p_M2 = xCenter + 13.0f;
-		float p_C2 = xCenter + 12.5f;
+		float p_C2 = xCenter + 12.0f;
 		float p_S1 = xCenter + 31.0f;
 		float p_S2 = xCenter + 45.0f;
 
