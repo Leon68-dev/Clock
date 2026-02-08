@@ -23,12 +23,12 @@ BOOL CAboutDlg::OnInitDialog()
 	SetLayeredWindowAttributes(0, 216, LWA_ALPHA);
 
 	// 1. Версія
-	SetDlgItemText(IDC_STATIC_VER, _T("Clock Version 1.0.0"));
+	SetDlgItemText(IDC_STATIC_VER, _T("Clock Version 2.0.0"));
 
 	// 2. Copyright
 	COleDateTime now = COleDateTime::GetCurrentTime();
 	CString strCopy;
-	strCopy.Format(_T("Copyright (C) 2004-%d"), now.GetYear());
+	strCopy.Format(_T("Copyright (C) 1998-%d"), now.GetYear());
 	SetDlgItemText(IDC_STATIC_COPY, strCopy);
 
 	// 3. ОС
