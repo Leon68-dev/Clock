@@ -49,6 +49,7 @@ CClockvcmfcDlg::CClockvcmfcDlg(CWnd* pParent /*=nullptr*/)
 	m_bSysMon = TRUE;
 	m_bPing = TRUE;
 	m_bWeather = FALSE;
+	m_b24Hour = TRUE;
 	m_timeShutDown = COleDateTime::GetCurrentTime();
 }
 
@@ -337,12 +338,12 @@ void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float
 	m_fontCollection.GetFamilies(1, &digFamily, &numFound);
 
 	if (numFound > 0) {
-		// 1. ПАРАМЕТРИ LCD ПАНЕЛІ (Трохи вища для стилю Casio)
 		float lcdW = 130.0f;
-		float lcdH = 52.0f; // Збільшена висота
+		float lcdH = 52.0f;
 		float lcdX = xCenter - (lcdW / 2.0f);
 		float lcdY = yStart + 4.0f;
 
+		// 1. Фон та рамка LCD
 		Gdiplus::SolidBrush lcdBackBrush(Gdiplus::Color(255, 170, 185, 165));
 		Gdiplus::GraphicsPath lcdPath;
 		float r = 5.0f;
@@ -354,85 +355,92 @@ void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float
 		g.FillPath(&lcdBackBrush, &lcdPath);
 		g.DrawPath(&Gdiplus::Pen(Gdiplus::Color(120, 0, 0, 0), 1.0f), &lcdPath);
 
-		// 2. ШРИФТИ (Великий для часу, малий для дати/секунд)
+		// 2. Шрифти
 		Gdiplus::Font digFontLarge(&digFamily, 32, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
 		Gdiplus::Font digFontSmall(&digFamily, 18, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
+		Gdiplus::Font fontIndicator(L"Arial", 8, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
 
-		Gdiplus::StringFormat sfRight, sfCenter;
+		Gdiplus::StringFormat sfRight, sfCenter, sfLeft;
 		sfRight.SetAlignment(Gdiplus::StringAlignmentFar);
 		sfRight.SetLineAlignment(Gdiplus::StringAlignmentCenter);
 		sfCenter.SetAlignment(Gdiplus::StringAlignmentCenter);
 		sfCenter.SetLineAlignment(Gdiplus::StringAlignmentCenter);
+		sfLeft.SetAlignment(Gdiplus::StringAlignmentNear);
+		sfLeft.SetLineAlignment(Gdiplus::StringAlignmentCenter);
 
 		Gdiplus::SolidBrush shadowBrush(Gdiplus::Color(25, 0, 0, 0));
 		Gdiplus::SolidBrush digBrush(Gdiplus::Color(255, 0, 0, 0));
 
-		// --- КООРДИНАТИ (Стиль Casio) ---
-		float topRowY = lcdY + 14.0f;    // Висота верхнього ряду
-		float bottomRowY = lcdY + 36.0f; // Висота основного ряду
+		float topRowY = lcdY + 14.0f;
+		float bottomRowY = lcdY + 36.0f;
 
-		// Верхній ряд (День тижня та Дата)
-		float p_Day = xCenter + 5.0f;  // Центр дня тижня
-		float p_Date = xCenter + 50.0f; // Правий край дати
-
-		// Нижній ряд (Години : Хвилини)
+		// --- ВАШІ КООРДИНАТИ ---
 		float p_H1 = xCenter - 36.0f;
 		float p_H2 = xCenter - 18.0f;
 		float p_Colon = xCenter - 17.5f;
 		float p_M1 = xCenter + 8.0f;
 		float p_M2 = xCenter + 26.0f;
 
-		// Секунди (Маленькі, праворуч)
+		float p_Day = xCenter + 5.0f;
+		float p_Date = xCenter + 50.0f;
 		float p_S1 = xCenter + 42.0f;
 		float p_S2 = xCenter + 56.0f;
 
-		// 3. МАЛЮЄМО ТІНІ (88)
-		// Верх
+		// 3. ЛОГІКА 12/24 ТА AM/PM
+		int displayHour = st.wHour;
+		CString strAMPM = _T("");
+
+		if (!m_b24Hour) 
+		{
+			strAMPM = (st.wHour >= 12) ? _T("PM") : _T("AM");
+			displayHour = st.wHour % 12;
+			if (displayHour == 0) 
+				displayHour = 12;
+
+			// Малюємо індикатор AM або PM
+			g.DrawString(strAMPM, -1, &fontIndicator, Gdiplus::PointF(lcdX + 5.0f, bottomRowY - 26.0f), &sfLeft, &digBrush);
+		}
+
+		// 4. МАЛЮЄМО ТІНІ (88)
 		g.DrawString(L"88", 2, &digFontSmall, Gdiplus::PointF(p_Day + 8.0f, topRowY), &sfRight, &shadowBrush);
 		g.DrawString(L"88", 2, &digFontSmall, Gdiplus::PointF(p_Date, topRowY), &sfRight, &shadowBrush);
-		// Основний час
-		if (st.wHour >= 10) g.DrawString(L"8", 1, &digFontLarge, Gdiplus::PointF(p_H1, bottomRowY), &sfRight, &shadowBrush);
+		if (displayHour >= 10) g.DrawString(L"8", 1, &digFontLarge, Gdiplus::PointF(p_H1, bottomRowY), &sfRight, &shadowBrush);
 		g.DrawString(L"8", 1, &digFontLarge, Gdiplus::PointF(p_H2, bottomRowY), &sfRight, &shadowBrush);
 		g.DrawString(L":", 1, &digFontLarge, Gdiplus::PointF(p_Colon, bottomRowY), &sfCenter, &shadowBrush);
 		g.DrawString(L"8", 1, &digFontLarge, Gdiplus::PointF(p_M1, bottomRowY), &sfRight, &shadowBrush);
 		g.DrawString(L"8", 1, &digFontLarge, Gdiplus::PointF(p_M2, bottomRowY), &sfRight, &shadowBrush);
-		// Секунди
 		g.DrawString(L"8", 1, &digFontSmall, Gdiplus::PointF(p_S1, bottomRowY + 4.0f), &sfRight, &shadowBrush);
 		g.DrawString(L"8", 1, &digFontSmall, Gdiplus::PointF(p_S2, bottomRowY + 4.0f), &sfRight, &shadowBrush);
 
-		// 4. МАЛЮЄМО ДАНІ
-		// День тижня (SU, MO, TU...)
+		// 5. МАЛЮЄМО ДАНІ
 		const WCHAR* days[] = { L"SU", L"MO", L"TU", L"WE", L"TH", L"FR", L"SA" };
 		g.DrawString(days[st.wDayOfWeek], 2, &digFontSmall, Gdiplus::PointF(p_Day, topRowY), &sfCenter, &digBrush);
 
-		// Дата
 		CString sDate; sDate.Format(_T("%d"), st.wDay);
 		g.DrawString(sDate, -1, &digFontSmall, Gdiplus::PointF(p_Date, topRowY), &sfRight, &digBrush);
 
-		// Години та Хвилини
-		CString sH1, sH2, sM1, sM2, sS1, sS2;
-		if (st.wHour >= 10) {
-			sH1.Format(_T("%d"), st.wHour / 10);
+		if (displayHour >= 10) {
+			CString sH1; sH1.Format(_T("%d"), displayHour / 10);
 			g.DrawString(sH1, 1, &digFontLarge, Gdiplus::PointF(p_H1, bottomRowY), &sfRight, &digBrush);
 		}
-		sH2.Format(_T("%d"), st.wHour % 10);
+		CString sH2; sH2.Format(_T("%d"), displayHour % 10);
 		g.DrawString(sH2, 1, &digFontLarge, Gdiplus::PointF(p_H2, bottomRowY), &sfRight, &digBrush);
 
 		g.DrawString(L":", 1, &digFontLarge, Gdiplus::PointF(p_Colon, bottomRowY), &sfCenter, &digBrush);
 
+		CString sM1, sM2;
 		sM1.Format(_T("%d"), st.wMinute / 10);
 		g.DrawString(sM1, 1, &digFontLarge, Gdiplus::PointF(p_M1, bottomRowY), &sfRight, &digBrush);
 		sM2.Format(_T("%d"), st.wMinute % 10);
 		g.DrawString(sM2, 1, &digFontLarge, Gdiplus::PointF(p_M2, bottomRowY), &sfRight, &digBrush);
 
-		// Секунди (маленькі)
+		CString sS1, sS2;
 		sS1.Format(_T("%d"), st.wSecond / 10);
 		g.DrawString(sS1, 1, &digFontSmall, Gdiplus::PointF(p_S1, bottomRowY + 4.0f), &sfRight, &digBrush);
 		sS2.Format(_T("%d"), st.wSecond % 10);
 		g.DrawString(sS2, 1, &digFontSmall, Gdiplus::PointF(p_S2, bottomRowY + 4.0f), &sfRight, &digBrush);
 	}
 }
-
 
 void CClockvcmfcDlg::DrawCalendar(Gdiplus::Graphics& g, float w, float yStart)
 {
@@ -837,6 +845,7 @@ void CClockvcmfcDlg::SaveSettings()
 	WriteBool(_T("chkSleep"), m_isSleep);
 
 	WriteBool(_T("chkDigitalClock"), m_bDigitalClock);
+	WritePrivateProfileString(_T("Settings"), _T("chk24Hour"), m_b24Hour ? _T("1") : _T("0"), strPath);
 	WriteBool(_T("chkCalendar"), m_bCalendar);
 	WriteBool(_T("chkSysMon"), m_bSysMon);
 	WriteBool(_T("chkPing"), m_bPing);
@@ -880,6 +889,7 @@ void CClockvcmfcDlg::LoadSettings()
 	m_isSleep = GetBool(_T("chkSleep"), 0);
 
 	m_bDigitalClock = GetBool(_T("chkDigitalClock"), 0);
+	m_b24Hour = GetPrivateProfileInt(_T("Settings"), _T("chk24Hour"), 1, strPath);
 	m_bCalendar = GetBool(_T("chkCalendar"), 0);
 	m_bSysMon = GetBool(_T("chkSysMon"), 0);
 	m_bPing = GetBool(_T("chkPing"), 0);
@@ -890,6 +900,7 @@ void CClockvcmfcDlg::LoadSettings()
 	m_strWeatherCity = szBuf;
 	GetPrivateProfileString(_T("Settings"), _T("weatherKey"), _T(""), szBuf, 256, strPath);
 	m_strWeatherApiKey = szBuf;
+	
 
 	TCHAR szTime[10];
 	GetPrivateProfileString(_T("Settings"), _T("timeOff"), _T("00:00"), szTime, 10, strPath);

@@ -38,6 +38,7 @@ protected:
 	BOOL m_bHours;
 	BOOL m_b1530;
 	BOOL m_bTickTack;
+	BOOL m_b24Hour;
 
 	// --- Налаштування вимкнення ПК ---
 	BOOL m_isShutDown;
