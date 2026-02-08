@@ -675,7 +675,7 @@ void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float
 
 		float textY = lcdY + (lcdH / 2.0f) + 2.0f;
 
-		// ФІКСОВАНІ КООРДИНАТИ
+		// ФІКСОВАНІ КООРДИНАТИ (Корекція на 1px вліво для двокрапок)
 		float p_H1 = xCenter - 33.0f;
 		float p_H2 = xCenter - 19.0f;
 		float p_C1 = xCenter - 18.5f;
