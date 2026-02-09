@@ -23,7 +23,7 @@ BOOL CAboutDlg::OnInitDialog()
 	SetLayeredWindowAttributes(0, 216, LWA_ALPHA);
 
 	// 1. Версія
-	SetDlgItemText(IDC_STATIC_VER, _T("Clock Version 2.0.0"));
+	SetDlgItemText(IDC_STATIC_VER, _T("Clock Version 2.1.0"));
 
 	// 2. Copyright
 	COleDateTime now = COleDateTime::GetCurrentTime();
