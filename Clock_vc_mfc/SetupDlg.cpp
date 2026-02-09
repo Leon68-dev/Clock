@@ -57,9 +57,12 @@ BOOL CSetupDlg::OnInitDialog()
     ModifyStyleEx(0, WS_EX_LAYERED);
     SetLayeredWindowAttributes(0, 216, LWA_ALPHA);
 
-    // Налаштування слайдера (0-100%)
-    m_sliderOpacity.SetRange(0, 100);
+    // Налаштування слайдера (20-100%)
+    m_sliderOpacity.SetRange(20, 100);
+    if (m_nOpacity < 20) 
+        m_nOpacity = 20;
     m_sliderOpacity.SetPos(m_nOpacity);
+    m_sliderOpacity.SetTicFreq(10);
 
     // Ініціалізація підказки (ToolTip)
     m_toolTip.Create(this);

@@ -847,13 +847,19 @@ void CClockvcmfcDlg::OnMenuSetup()
 
 void CClockvcmfcDlg::OnMenuStartPosition()
 {
-	int nSize = 140;
 	CRect rcWorkArea;
+	// ќтримуЇмо робочу область (без панел≥ завдань)
 	SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWorkArea, 0);
-	int x = rcWorkArea.right - static_cast<int>(nSize + nSize * 0.2);
-	int y = rcWorkArea.bottom - static_cast<int>(nSize + nSize * 0.2);
+
+	// –озрахунок дл€ ѕ–ј¬ќ√ќ ¬≈–’Ќ№ќ√ќ кута
+	// ¬≥дступаЇмо 20 п≥ксел≥в в≥д правого краю та 20 п≥ксел≥в зверху
+	int x = rcWorkArea.right - m_nPanelWidth - 20;
+	int y = rcWorkArea.top + 20;
 
 	SetWindowPos(NULL, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_SHOWWINDOW);
+
+	// ќдразу збер≥гаЇмо нову позиц≥ю в INI
+	SaveSettings();
 }
 
 void CClockvcmfcDlg::OnMenuHide()
@@ -956,7 +962,14 @@ void CClockvcmfcDlg::LoadSettings()
 	m_bTickTack = GetBool(_T("chkTickTack"), 0);
 	m_b1530 = GetBool(_T("chk1530"), 0);
 	m_bHours = GetBool(_T("chkHours"), 0);
+	
 	m_nOpacity = GetPrivateProfileInt(_T("Settings"), _T("frmOpacity"), 80, strPath);
+	
+	if (m_nOpacity < 20) 
+		m_nOpacity = 20;
+	
+	if (m_nOpacity > 100) 
+		m_nOpacity = 100;
 
 	int x = GetPrivateProfileInt(_T("Settings"), _T("deskX"), -1, strPath);
 	int y = GetPrivateProfileInt(_T("Settings"), _T("deskY"), -1, strPath);
