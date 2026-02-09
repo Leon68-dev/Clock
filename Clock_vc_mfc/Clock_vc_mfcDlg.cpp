@@ -489,25 +489,30 @@ void CClockvcmfcDlg::DrawCalendar(Gdiplus::Graphics& g, float w, float yStart)
 	Gdiplus::FontFamily arial(L"Arial");
 	Gdiplus::Font fontHeader(&arial, 12, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
 	Gdiplus::StringFormat sf; sf.SetAlignment(Gdiplus::StringAlignmentCenter);
-	g.DrawString(today.Format(_T("%B %Y")), -1, &fontHeader, Gdiplus::PointF(w / 2.0f, calY + 10), &sf, &Gdiplus::SolidBrush(Gdiplus::Color(220, 255, 255, 255)));
+	g.DrawString(today.Format(_T("%B %Y")), -1, &fontHeader, Gdiplus::PointF(w / 2.0f, calY + 10), &sf, &Gdiplus::SolidBrush(Gdiplus::Color(220, 0, 0, 0)));
 
 	Gdiplus::Font fontDays(&arial, 10, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
 	const TCHAR* dayNames[] = { _T("M"), _T("T"), _T("W"), _T("T"), _T("F"), _T("S"), _T("S") };
 	float cellW = calW / 7.0f;
 
-	for (int i = 0; i < 7; i++) {
-		Gdiplus::SolidBrush bDayName((i >= 5) ? Gdiplus::Color(200, 255, 100, 100) : Gdiplus::Color(150, 255, 255, 255));
+	for (int i = 0; i < 7; i++) 
+	{
+		Gdiplus::SolidBrush bDayName((i >= 5) ? Gdiplus::Color(200, 255, 0, 0) : Gdiplus::Color(150, 0, 0, 0));
 		g.DrawString(dayNames[i], -1, &fontDays, Gdiplus::PointF(calX + i * cellW + cellW / 2, calY + 30), &sf, &bDayName);
 	}
 
 	int row = 0;
-	for (int d = 1; d <= daysInMonth; d++) {
+	for (int d = 1; d <= daysInMonth; d++) 
+	{
 		int col = (startDay + d - 1) % 7;
-		if (d > 1 && col == 0) row++;
+		if (d > 1 && col == 0) 
+			row++;
 		float x = calX + col * cellW + cellW / 2, y = calY + 50 + row * 15;
-		if (d == st.wDay) g.FillRectangle(&Gdiplus::SolidBrush(Gdiplus::Color(100, 255, 255, 255)), calX + col * cellW + 2.0f, y - 1.0f, cellW - 4.0f, 14.0f);
-		Gdiplus::SolidBrush bNum((col >= 5) ? Gdiplus::Color(255, 255, 150, 150) : Gdiplus::Color(255, 255, 255, 255));
-		if (d == st.wDay) bNum.SetColor(Gdiplus::Color(255, 0, 0, 0));
+		if (d == st.wDay) 
+			g.FillRectangle(&Gdiplus::SolidBrush(Gdiplus::Color(100, 0, 0, 0)), calX + col * cellW + 2.0f, y - 1.0f, cellW - 4.0f, 14.0f);
+		Gdiplus::SolidBrush bNum((col >= 5) ? Gdiplus::Color(255, 255, 0, 0) : Gdiplus::Color(255, 0, 0, 0));
+		if (d == st.wDay) 
+			bNum.SetColor(Gdiplus::Color(255, 0, 0, 0));
 		CString sD; sD.Format(_T("%d"), d);
 		g.DrawString(sD, -1, &fontDays, Gdiplus::PointF(x, y), &sf, &bNum);
 	}
@@ -527,11 +532,12 @@ void CClockvcmfcDlg::DrawSystemMonitor(Gdiplus::Graphics& g, float w, float ySta
 	Gdiplus::FontFamily arial(L"Arial");
 	Gdiplus::Font fontLabel(&arial, 10, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
 	Gdiplus::Font fontValue(&arial, 9, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
-	Gdiplus::SolidBrush bWhite(Gdiplus::Color(200, 255, 255, 255));
+	Gdiplus::SolidBrush bWhite(Gdiplus::Color(200, 0, 0, 0));
 	Gdiplus::StringFormat sfLeft, sfRight;
 	sfRight.SetAlignment(Gdiplus::StringAlignmentFar);
 
-	auto DrawBar = [&](float y, const TCHAR* label, float percent, Gdiplus::Color color) {
+	auto DrawBar = [&](float y, const TCHAR* label, float percent, Gdiplus::Color color) 
+	{
 		// 1. Текст зліва (Назва модуля)
 		g.DrawString(label, -1, &fontLabel, Gdiplus::PointF(margin, y), &bWhite);
 
@@ -556,7 +562,8 @@ void CClockvcmfcDlg::DrawSystemMonitor(Gdiplus::Graphics& g, float w, float ySta
 		g.DrawRectangle(&borderPen, barRect);
 
 		// 4. Заповнення (Progress)
-		if (percent > 0.0f) {
+		if (percent > 0.0f) 
+		{
 			float fillW = (barW * percent) / 100.0f;
 			if (fillW > barW) fillW = barW; // Обмежувач
 			if (fillW < 2.0f) fillW = 2.0f; // Мінімальна видимість
@@ -617,6 +624,7 @@ void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 		{
 			UpdateSystemMetrics();
 			UpdatePing();
+			UpdateThemeColor();
 			m_sysMonTickCount = 0; // Скидаємо лічильник
 		}
 
@@ -1288,7 +1296,7 @@ void CClockvcmfcDlg::DrawPing(Gdiplus::Graphics& g, float w, float yStart)
 	Gdiplus::FontFamily arial(L"Arial");
 	Gdiplus::Font fontLabel(&arial, 10, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
 	Gdiplus::Font fontValue(&arial, 10, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
-	Gdiplus::SolidBrush bWhite(Gdiplus::Color(200, 255, 255, 255));
+	Gdiplus::SolidBrush bWhite(Gdiplus::Color(200, 0, 0, 0));
 
 	// 2. Підготовка значення пінгу (справа)
 	CString strVal;
@@ -1296,7 +1304,7 @@ void CClockvcmfcDlg::DrawPing(Gdiplus::Graphics& g, float w, float yStart)
 	if (m_nPingValue == -1) 
 	{
 		strVal = _T("Error");
-		valColor = Gdiplus::Color(255, 255, 80, 80);
+		valColor = Gdiplus::Color(255, 255, 0, 0);
 	}
 	else 
 	{
@@ -1494,4 +1502,49 @@ void CClockvcmfcDlg::DrawModulesBackground(Gdiplus::Graphics& g, float w, float 
 	// Малюємо тонку світлу рамку навколо всієї підкладки (ефект картки)
 	Gdiplus::Pen borderPen(Gdiplus::Color(50, 255, 255, 255), 1.0f);
 	g.DrawPath(&borderPen, &path);
+}
+
+void CClockvcmfcDlg::UpdateThemeColor()
+{
+	// Якщо миша над вікном, фон стає темним (Alpha 160), 
+	// тому текст завжди має бути БІЛИМ для контрасту.
+	if (m_bMouseOver)
+	{
+		m_dynamicColor = Gdiplus::Color(255, 255, 255, 255);
+		return;
+	}
+
+	// Якщо панель прозора, аналізуємо те, що ПІД нею (шпалери або інші вікна)
+	CRect rc;
+	GetWindowRect(&rc);
+
+	HDC hdcScreen = ::GetDC(NULL);
+
+	// Беремо 5 точок для аналізу (центр та кути)
+	COLORREF colors[5];
+	colors[0] = GetPixel(hdcScreen, rc.left + rc.Width() / 2, rc.top + rc.Height() / 2);
+	colors[1] = GetPixel(hdcScreen, rc.left + 10, rc.top + 10);
+	colors[2] = GetPixel(hdcScreen, rc.right - 10, rc.top + 10);
+	colors[3] = GetPixel(hdcScreen, rc.left + 10, rc.bottom - 10);
+	colors[4] = GetPixel(hdcScreen, rc.right - 10, rc.bottom - 10);
+
+	double totalLuminance = 0;
+	for (int i = 0; i < 5; i++)
+	{
+		int r = GetRValue(colors[i]);
+		int g = GetGValue(colors[i]);
+		int b = GetBValue(colors[i]);
+		// Формула яскравості (Luminance)
+		totalLuminance += (0.299 * r + 0.587 * g + 0.114 * b);
+	}
+	::ReleaseDC(NULL, hdcScreen);
+
+	double avgLuminance = totalLuminance / 5.0;
+
+	// Якщо середня яскравість > 128 (світлий фон) -> ставимо ЧОРНИЙ текст
+	// Якщо < 128 (темний фон) -> ставимо БІЛИЙ текст
+	if (avgLuminance > 128)
+		m_dynamicColor = Gdiplus::Color(255, 0, 0, 0); // Чорний
+	else
+		m_dynamicColor = Gdiplus::Color(255, 255, 255, 255); // Білий
 }

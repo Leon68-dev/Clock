@@ -130,6 +130,9 @@ protected:
 	void UpdateWeather();
 	Gdiplus::Image* DownloadImage(CString url); // Допоміжний метод
 
+	Gdiplus::Color m_dynamicColor;	// Поточний колір тексту (чорний або білий)
+	void UpdateThemeColor();		// Метод для аналізу яскравості фону
+
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
 	afx_msg void OnPaint();
