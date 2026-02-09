@@ -473,14 +473,22 @@ void CClockvcmfcDlg::DrawCalendar(Gdiplus::Graphics& g, float w, float yStart)
 	float calY = yStart + 5.0f;
 	float calX = 10.0f, calW = w - 20.0f;
 
-	// Розділювач
-	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, 0, 0, 0), 1.0f), 15.0f, calY, w - 15.0f, calY);
+	// Визначаємо базові кольори на основі динамічної теми
+	Gdiplus::Color mainColor = m_dynamicColor;
+	// Колір для вихідних (червоний, але адаптований: світліший для темної теми, насичений для світлої)
+	Gdiplus::Color weekendColor = (mainColor.GetR() > 128)
+		? Gdiplus::Color(255, 255, 120, 120)  // Світло-червоний для темного фону
+		: Gdiplus::Color(255, 200, 0, 0);    // Насичений червоний для світлого фону
+
+	// Розділювач (теж адаптуємо прозорість ліній)
+	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, mainColor.GetR(), mainColor.GetG(), mainColor.GetB()), 1.0f), 15.0f, calY, w - 15.0f, calY);
 	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(30, 255, 255, 255), 1.0f), 15.0f, calY + 1.0f, w - 15.0f, calY + 1.0f);
 
 	SYSTEMTIME st; GetLocalTime(&st);
 	COleDateTime today(st);
 	COleDateTime firstDay(st.wYear, st.wMonth, 1, 0, 0, 0);
-	int startDay = firstDay.GetDayOfWeek(); startDay = (startDay == 1) ? 6 : startDay - 2;
+	int startDay = firstDay.GetDayOfWeek();
+	startDay = (startDay == 1) ? 6 : startDay - 2;
 
 	int daysInMonth = 31;
 	if (st.wMonth == 4 || st.wMonth == 6 || st.wMonth == 9 || st.wMonth == 11) daysInMonth = 30;
@@ -489,30 +497,51 @@ void CClockvcmfcDlg::DrawCalendar(Gdiplus::Graphics& g, float w, float yStart)
 	Gdiplus::FontFamily arial(L"Arial");
 	Gdiplus::Font fontHeader(&arial, 12, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
 	Gdiplus::StringFormat sf; sf.SetAlignment(Gdiplus::StringAlignmentCenter);
-	g.DrawString(today.Format(_T("%B %Y")), -1, &fontHeader, Gdiplus::PointF(w / 2.0f, calY + 10), &sf, &Gdiplus::SolidBrush(Gdiplus::Color(220, 0, 0, 0)));
+
+	// Заголовок (Місяць Рік)
+	g.DrawString(today.Format(_T("%B %Y")), -1, &fontHeader, Gdiplus::PointF(w / 2.0f, calY + 10), &sf, &Gdiplus::SolidBrush(mainColor));
 
 	Gdiplus::Font fontDays(&arial, 10, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
 	const TCHAR* dayNames[] = { _T("M"), _T("T"), _T("W"), _T("T"), _T("F"), _T("S"), _T("S") };
 	float cellW = calW / 7.0f;
 
-	for (int i = 0; i < 7; i++) 
+	// Дні тижня (M T W...)
+	for (int i = 0; i < 7; i++)
 	{
-		Gdiplus::SolidBrush bDayName((i >= 5) ? Gdiplus::Color(200, 255, 0, 0) : Gdiplus::Color(150, 0, 0, 0));
+		Gdiplus::Color nameCol = (i >= 5) ? weekendColor : mainColor;
+		// Робимо назви днів трохи прозорішими (Alpha 180)
+		Gdiplus::SolidBrush bDayName(Gdiplus::Color(180, nameCol.GetR(), nameCol.GetG(), nameCol.GetB()));
 		g.DrawString(dayNames[i], -1, &fontDays, Gdiplus::PointF(calX + i * cellW + cellW / 2, calY + 30), &sf, &bDayName);
 	}
 
 	int row = 0;
-	for (int d = 1; d <= daysInMonth; d++) 
+	for (int d = 1; d <= daysInMonth; d++)
 	{
 		int col = (startDay + d - 1) % 7;
-		if (d > 1 && col == 0) 
-			row++;
-		float x = calX + col * cellW + cellW / 2, y = calY + 50 + row * 15;
-		if (d == st.wDay) 
-			g.FillRectangle(&Gdiplus::SolidBrush(Gdiplus::Color(100, 0, 0, 0)), calX + col * cellW + 2.0f, y - 1.0f, cellW - 4.0f, 14.0f);
-		Gdiplus::SolidBrush bNum((col >= 5) ? Gdiplus::Color(255, 255, 0, 0) : Gdiplus::Color(255, 0, 0, 0));
-		if (d == st.wDay) 
-			bNum.SetColor(Gdiplus::Color(255, 0, 0, 0));
+		if (d > 1 && col == 0) row++;
+
+		float x = calX + col * cellW + cellW / 2;
+		float y = calY + 50 + row * 15;
+
+		if (d == st.wDay)
+		{
+			// Прямокутник підсвітки сьогоднішнього дня
+			// Використовуємо інверсний колір або напівпрозорий основний
+			Gdiplus::Color highlightCol = (mainColor.GetR() > 128)
+				? Gdiplus::Color(100, 255, 255, 255) // Світла підсвітка для білого тексту
+				: Gdiplus::Color(100, 0, 0, 0);     // Темна підсвітка для чорного тексту
+
+			g.FillRectangle(&Gdiplus::SolidBrush(highlightCol), calX + col * cellW + 2.0f, y - 1.0f, cellW - 4.0f, 14.0f);
+		}
+
+		// Колір числа (червоний для вихідних, основний для буднів)
+		Gdiplus::Color numCol = (col >= 5) ? weekendColor : mainColor;
+		Gdiplus::SolidBrush bNum(numCol);
+
+		// Якщо сьогодні — робимо текст максимально чітким (без прозорості)
+		if (d == st.wDay)
+			bNum.SetColor(mainColor);
+
 		CString sD; sD.Format(_T("%d"), d);
 		g.DrawString(sD, -1, &fontDays, Gdiplus::PointF(x, y), &sf, &bNum);
 	}
@@ -525,78 +554,75 @@ void CClockvcmfcDlg::DrawSystemMonitor(Gdiplus::Graphics& g, float w, float ySta
 	float barW = w - (margin * 2.0f);
 	float barH = 12.0f;
 
-	// Розділювач
+	// 1. Розділювач (адаптуємо під тему)
 	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, 0, 0, 0), 1.0f), 15.0f, monY, w - 15.0f, monY);
-	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(30, 255, 255, 255), 1.0f), 15.0f, monY + 1.0f, w - 15.0f, monY + 1.0f);
+	// Світла лінія розділювача (highlight) стає майже невидимою на світлому фоні
+	int highlightAlpha = (m_dynamicColor.GetR() > 128) ? 40 : 10;
+	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(highlightAlpha, 255, 255, 255), 1.0f), 15.0f, monY + 1.0f, w - 15.0f, monY + 1.0f);
 
 	Gdiplus::FontFamily arial(L"Arial");
 	Gdiplus::Font fontLabel(&arial, 10, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
 	Gdiplus::Font fontValue(&arial, 9, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
-	Gdiplus::SolidBrush bWhite(Gdiplus::Color(200, 0, 0, 0));
+
+	// Використовуємо динамічний колір для тексту
+	Gdiplus::SolidBrush textBrush(m_dynamicColor);
+
 	Gdiplus::StringFormat sfLeft, sfRight;
 	sfRight.SetAlignment(Gdiplus::StringAlignmentFar);
 
-	auto DrawBar = [&](float y, const TCHAR* label, float percent, Gdiplus::Color color) 
-	{
-		// 1. Текст зліва (Назва модуля)
-		g.DrawString(label, -1, &fontLabel, Gdiplus::PointF(margin, y), &bWhite);
-
-		// 2. Текст справа (Відсотки)
-		CString sVal;
-		sVal.Format(_T("%.0f%%"), percent);
-		g.DrawString(sVal, -1, &fontValue, Gdiplus::PointF(w - margin, y + 1.0f), &sfRight, &bWhite);
-
-		// 3. Фон смужки (вдавлене ложе)
-		Gdiplus::RectF barRect(margin, y + 14.0f, barW, barH);
-
-		// Малюємо дуже темний фон підкладки
-		Gdiplus::SolidBrush bgBrush(Gdiplus::Color(100, 0, 0, 0));
-		g.FillRectangle(&bgBrush, barRect);
-
-		// Тінь зверху всередині (ефект вдавлювання)
-		Gdiplus::Pen innerShadow(Gdiplus::Color(80, 0, 0, 0), 1.0f);
-		g.DrawLine(&innerShadow, margin, y + 14.0f, margin + barW, y + 14.0f);
-
-		// Зовнішня світла рамка (ледь помітна)
-		Gdiplus::Pen borderPen(Gdiplus::Color(50, 255, 255, 255), 1.0f);
-		g.DrawRectangle(&borderPen, barRect);
-
-		// 4. Заповнення (Progress)
-		if (percent > 0.0f) 
+	auto DrawBar = [&](float y, const TCHAR* label, float percent, Gdiplus::Color color)
 		{
-			float fillW = (barW * percent) / 100.0f;
-			if (fillW > barW) fillW = barW; // Обмежувач
-			if (fillW < 2.0f) fillW = 2.0f; // Мінімальна видимість
+			// 1. Текст зліва (Назва модуля) - тепер динамічний колір
+			g.DrawString(label, -1, &fontLabel, Gdiplus::PointF(margin, y), &textBrush);
 
-			Gdiplus::RectF fillRect(margin + 1.0f, y + 15.0f, fillW - 2.0f, barH - 2.0f);
+			// 2. Текст справа (Відсотки) - тепер динамічний колір
+			CString sVal;
+			sVal.Format(_T("%.0f%%"), percent);
+			g.DrawString(sVal, -1, &fontValue, Gdiplus::PointF(w - margin, y + 1.0f), &sfRight, &textBrush);
 
-			// Створюємо градієнт: основний колір -> темніший відтінок
-			Gdiplus::LinearGradientBrush grad(fillRect, color, Gdiplus::Color(180, 0, 0, 0), Gdiplus::LinearGradientModeVertical);
+			// 3. Фон смужки (вдавлене ложе)
+			Gdiplus::RectF barRect(margin, y + 14.0f, barW, barH);
 
-			// Додаємо "глянцевий" ефект через налаштування блендингу градієнта
-			float factors[] = { 0.0f, 0.8f, 1.0f };
-			float positions[] = { 0.0f, 0.3f, 1.0f };
-			grad.SetBlend(factors, positions, 3);
+			// Малюємо темну підкладку смужки (завжди темна для контрасту з прогресом)
+			g.FillRectangle(&Gdiplus::SolidBrush(Gdiplus::Color(100, 0, 0, 0)), barRect);
 
-			g.FillRectangle(&grad, fillRect);
+			// Тінь зверху всередині
+			g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(80, 0, 0, 0), 1.0f), margin, y + 14.0f, margin + barW, y + 14.0f);
 
-			// Світлий відблиск зверху на самій смужці заповнення
-			Gdiplus::Pen highlight(Gdiplus::Color(120, 255, 255, 255), 1.0f);
-			g.DrawLine(&highlight, margin + 2.0f, y + 15.0f, margin + fillW - 2.0f, y + 15.0f);
-		}
-	};
+			// Зовнішня рамка смужки (адаптуємо яскравість)
+			int borderAlpha = (m_dynamicColor.GetR() > 128) ? 60 : 30;
+			g.DrawRectangle(&Gdiplus::Pen(Gdiplus::Color(borderAlpha, 255, 255, 255), 1.0f), barRect);
 
+			// 4. Заповнення (Progress)
+			if (percent > 0.0f)
+			{
+				float fillW = (barW * percent) / 100.0f;
+				if (fillW > barW) fillW = barW;
+				if (fillW < 2.0f) fillW = 2.0f;
+
+				Gdiplus::RectF fillRect(margin + 1.0f, y + 15.0f, fillW - 2.0f, barH - 2.0f);
+
+				Gdiplus::LinearGradientBrush grad(fillRect, color, Gdiplus::Color(180, 0, 0, 0), Gdiplus::LinearGradientModeVertical);
+				float factors[] = { 0.0f, 0.8f, 1.0f };
+				float positions[] = { 0.0f, 0.3f, 1.0f };
+				grad.SetBlend(factors, positions, 3);
+
+				g.FillRectangle(&grad, fillRect);
+
+				// Світлий відблиск зверху
+				g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(120, 255, 255, 255), 1.0f), margin + 2.0f, y + 15.0f, margin + fillW - 2.0f, y + 15.0f);
+			}
+		};
+
+	// Визначаємо колір CPU (залишаємо логіку світлофора, вона корисна)
 	Gdiplus::Color cpuColor = (m_cpuUsage > 80.0f) ? Gdiplus::Color(200, 255, 50, 50) :
-							  (m_cpuUsage > 50.0f) ? Gdiplus::Color(200, 255, 150, 0) :
-		                                             Gdiplus::Color(200, 100, 255, 100);
+		(m_cpuUsage > 50.0f) ? Gdiplus::Color(200, 255, 150, 0) :
+		Gdiplus::Color(200, 100, 255, 100);
 
-	// 2. Малюємо смужку CPU
+	// Малюємо смужки
 	DrawBar(monY + 10.0f, _T("CPU"), m_cpuUsage, cpuColor);
-
-	// 3. Малюємо смужку RAM (завжди блакитна)
 	DrawBar(monY + 40.0f, _T("RAM"), m_ramUsage, Gdiplus::Color(200, 100, 150, 255));
 }
-
 
 int CClockvcmfcDlg::ClcX(int sec, int size, int xCenter)
 {
@@ -1289,26 +1315,31 @@ void CClockvcmfcDlg::DrawPing(Gdiplus::Graphics& g, float w, float yStart)
 	float margin = 15.0f;
 	float valueAreaW = 50.0f; // Зарезервоване місце під "999 ms" справа
 
-	// 1. Розділювальні лінії
-	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, 0, 0, 0), 1.0f), 15.0f, pingY, w - 15.0f, pingY);
-	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(30, 255, 255, 255), 1.0f), 15.0f, pingY + 1.0f, w - 15.0f, pingY + 1.0f);
+	// 1. Розділювальні лінії (адаптуємо під тему)
+	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, m_dynamicColor.GetR(), m_dynamicColor.GetG(), m_dynamicColor.GetB()), 1.0f), 15.0f, pingY, w - 15.0f, pingY);
+	int highlightAlpha = (m_dynamicColor.GetR() > 128) ? 40 : 10;
+	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(highlightAlpha, 255, 255, 255), 1.0f), 15.0f, pingY + 1.0f, w - 15.0f, pingY + 1.0f);
 
 	Gdiplus::FontFamily arial(L"Arial");
 	Gdiplus::Font fontLabel(&arial, 10, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
 	Gdiplus::Font fontValue(&arial, 10, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
-	Gdiplus::SolidBrush bWhite(Gdiplus::Color(200, 0, 0, 0));
+
+	// Використовуємо динамічний колір для назви сервера
+	Gdiplus::SolidBrush textBrush(m_dynamicColor);
 
 	// 2. Підготовка значення пінгу (справа)
 	CString strVal;
 	Gdiplus::Color valColor;
-	if (m_nPingValue == -1) 
+	if (m_nPingValue == -1)
 	{
 		strVal = _T("Error");
-		valColor = Gdiplus::Color(255, 255, 0, 0);
+		// Адаптивний червоний для помилки (світліший на темному фоні)
+		valColor = (m_dynamicColor.GetR() > 128) ? Gdiplus::Color(255, 255, 100, 100) : Gdiplus::Color(255, 200, 0, 0);
 	}
-	else 
+	else
 	{
 		strVal.Format(_T("%d ms"), m_nPingValue);
+		// Кольори статусу (зелений/жовтий/червоний) залишаємо яскравими
 		valColor = (m_nPingValue < 100) ? Gdiplus::Color(255, 100, 255, 100) :
 			(m_nPingValue < 250) ? Gdiplus::Color(255, 255, 200, 50) :
 			Gdiplus::Color(255, 255, 80, 80);
@@ -1323,52 +1354,55 @@ void CClockvcmfcDlg::DrawPing(Gdiplus::Graphics& g, float w, float yStart)
 	CString strLabel;
 	strLabel.Format(_T("Ping: %s"), (LPCTSTR)m_strPingAddress);
 
-	// Створюємо прямокутник для тексту: від лівого маргіна до початку зони цифр
-	float labelWidth = w - margin - valueAreaW - 5.0f; // 5.0f - додатковий зазор
+	float labelWidth = w - margin - valueAreaW - 5.0f;
 	Gdiplus::RectF rectLabel(margin, pingY + 10.0f, labelWidth, 15.0f);
 
 	Gdiplus::StringFormat sfLeft;
-	sfLeft.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);  // Додає "..." в кінці
-	sfLeft.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap);       // Забороняє перенос на новий рядок
+	sfLeft.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
+	sfLeft.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap);
 
-	g.DrawString(strLabel, -1, &fontLabel, rectLabel, &sfLeft, &bWhite);
+	// Малюємо назву динамічним кольором
+	g.DrawString(strLabel, -1, &fontLabel, rectLabel, &sfLeft, &textBrush);
 }
 
 void CClockvcmfcDlg::UpdateWeather()
 {
-	if (!m_bWeather || m_strWeatherApiKey.IsEmpty()) 
+	if (!m_bWeather || m_strWeatherApiKey.IsEmpty())
 		return;
 
-	std::thread([this]() 
+	std::thread([this]()
 	{
-		// 1. Формуємо URL (замініть на ваше місто або додайте в налаштування)
+		// 1. Формуємо назву міста (замінюємо пробіли для URL)
+		CString city = m_strWeatherCity;
+		city.Replace(_T(" "), _T("%20"));
+
 		CString url;
 		url.Format(_T("http://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s&units=metric"),
-			(LPCTSTR)m_strWeatherCity, (LPCTSTR)m_strWeatherApiKey);
+			(LPCTSTR)city, (LPCTSTR)m_strWeatherApiKey);
 
-		// 2. Виконуємо HTTP запит (спрощено через WinHttp)
+		// 2. Виконуємо HTTP запит
 		CString jsonResponse;
 		HINTERNET hSession = WinHttpOpen(L"MFC-Clock/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
-		if (hSession) 
+		if (hSession)
 		{
 			URL_COMPONENTS urlComp = { sizeof(urlComp) };
 			urlComp.dwHostNameLength = (DWORD)-1;
 			urlComp.dwUrlPathLength = (DWORD)-1;
-			if (WinHttpCrackUrl(url, (DWORD)url.GetLength(), 0, &urlComp)) 
+			if (WinHttpCrackUrl(url, (DWORD)url.GetLength(), 0, &urlComp))
 			{
 				CString host(urlComp.lpszHostName, urlComp.dwHostNameLength);
 				HINTERNET hConnect = WinHttpConnect(hSession, host, INTERNET_DEFAULT_HTTP_PORT, 0);
-				if (hConnect) 
+				if (hConnect)
 				{
 					HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", urlComp.lpszUrlPath, NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
 					if (hRequest && WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0) && WinHttpReceiveResponse(hRequest, NULL)) {
 						DWORD dwSize = 0;
 						do {
-							if (WinHttpQueryDataAvailable(hRequest, &dwSize) && dwSize > 0) 
+							if (WinHttpQueryDataAvailable(hRequest, &dwSize) && dwSize > 0)
 							{
 								char* buffer = new char[dwSize + 1];
 								DWORD dwDownloaded = 0;
-								if (WinHttpReadData(hRequest, buffer, dwSize, &dwDownloaded)) 
+								if (WinHttpReadData(hRequest, buffer, dwSize, &dwDownloaded))
 								{
 									buffer[dwDownloaded] = 0;
 									jsonResponse += CA2W(buffer, CP_UTF8);
@@ -1384,12 +1418,12 @@ void CClockvcmfcDlg::UpdateWeather()
 			WinHttpCloseHandle(hSession);
 		}
 
-		// 3. "Парсинг" JSON (шукаємо температуру та іконку)
-		if (!jsonResponse.IsEmpty()) 
+		// 3. Парсинг результатів
+		if (!jsonResponse.IsEmpty())
 		{
 			// Температура
 			int posTemp = jsonResponse.Find(_T("\"temp\":"));
-			if (posTemp != -1) 
+			if (posTemp != -1)
 			{
 				int posEnd = jsonResponse.Find(_T(","), posTemp);
 				CString t = jsonResponse.Mid(posTemp + 7, posEnd - (posTemp + 7));
@@ -1398,7 +1432,7 @@ void CClockvcmfcDlg::UpdateWeather()
 
 			// Опис
 			int posDesc = jsonResponse.Find(_T("\"main\":\""));
-			if (posDesc != -1) 
+			if (posDesc != -1)
 			{
 				int posEnd = jsonResponse.Find(_T("\""), posDesc + 8);
 				m_strWeatherDesc = jsonResponse.Mid(posDesc + 8, posEnd - (posDesc + 8));
@@ -1406,14 +1440,18 @@ void CClockvcmfcDlg::UpdateWeather()
 
 			// Іконка
 			int posIcon = jsonResponse.Find(_T("\"icon\":\""));
-			if (posIcon != -1) 
+			if (posIcon != -1)
 			{
 				CString iconId = jsonResponse.Mid(posIcon + 8, 3);
 				CString iconUrl;
 				iconUrl.Format(_T("http://openweathermap.org/img/wn/%s@2x.png"), (LPCTSTR)iconId);
 
-				if (m_pWeatherIcon) delete m_pWeatherIcon;
-				m_pWeatherIcon = DownloadImage(iconUrl);
+				Gdiplus::Image* pNewIcon = DownloadImage(iconUrl);
+				if (pNewIcon) 
+				{
+					if (m_pWeatherIcon) delete m_pWeatherIcon;
+					m_pWeatherIcon = pNewIcon;
+				}
 			}
 		}
 	}).detach();
@@ -1436,12 +1474,13 @@ void CClockvcmfcDlg::DrawWeather(Gdiplus::Graphics& g, float w, float yStart)
 	float weaY = yStart + 5.0f;
 	float margin = 15.0f;
 
-	// Розділювач
-	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, 0, 0, 0), 1.0f), 15.0f, weaY, w - 15.0f, weaY);
-	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(30, 255, 255, 255), 1.0f), 15.0f, weaY + 1.0f, w - 15.0f, weaY + 1.0f);
+	// 1. Розділювач (адаптуємо під тему)
+	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, m_dynamicColor.GetR(), m_dynamicColor.GetG(), m_dynamicColor.GetB()), 1.0f), 15.0f, weaY, w - 15.0f, weaY);
+	int highlightAlpha = (m_dynamicColor.GetR() > 128) ? 40 : 10;
+	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(highlightAlpha, 255, 255, 255), 1.0f), 15.0f, weaY + 1.0f, w - 15.0f, weaY + 1.0f);
 
-	// Іконка
-	if (m_pWeatherIcon) 
+	// 2. Іконка (малюємо як є, вони зазвичай кольорові)
+	if (m_pWeatherIcon)
 	{
 		g.DrawImage(m_pWeatherIcon, margin - 5.0f, weaY + 5.0f, 40.0f, 40.0f);
 	}
@@ -1449,16 +1488,23 @@ void CClockvcmfcDlg::DrawWeather(Gdiplus::Graphics& g, float w, float yStart)
 	Gdiplus::FontFamily arial(L"Arial");
 	Gdiplus::Font fontTemp(&arial, 16, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
 	Gdiplus::Font fontDesc(&arial, 10, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
-	Gdiplus::SolidBrush bWhite(Gdiplus::Color(220, 255, 255, 255));
 
-	// Температура
-	g.DrawString(m_strTemp, -1, &fontTemp, Gdiplus::PointF(margin + 40.0f, weaY + 10.0f), NULL, &bWhite);
+	// Використовуємо динамічний колір для тексту
+	Gdiplus::SolidBrush textBrush(m_dynamicColor);
 
-	// Опис та місто
+	// 3. Температура
+	g.DrawString(m_strTemp, -1, &fontTemp, Gdiplus::PointF(margin + 40.0f, weaY + 10.0f), NULL, &textBrush);
+
+	// 4. Опис та місто (з автоматичним обрізанням, якщо назва міста довга)
 	CString strInfo = m_strWeatherCity + _T(": ") + m_strWeatherDesc;
-	g.DrawString(strInfo, -1, &fontDesc, Gdiplus::PointF(margin + 40.0f, weaY + 28.0f), NULL, &bWhite);
-}
 
+	Gdiplus::RectF rectInfo(margin + 40.0f, weaY + 28.0f, w - margin - 45.0f, 15.0f);
+	Gdiplus::StringFormat sf;
+	sf.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
+	sf.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap);
+
+	g.DrawString(strInfo, -1, &fontDesc, rectInfo, &sf, &textBrush);
+}
 void CClockvcmfcDlg::OnMouseMove(UINT nFlags, CPoint point)
 {
 	if (!m_bMouseOver)
