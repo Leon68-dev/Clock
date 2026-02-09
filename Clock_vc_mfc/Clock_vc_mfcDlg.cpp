@@ -974,7 +974,7 @@ void CClockvcmfcDlg::LoadSettings()
 	m_bWeather = GetBool(_T("chkWeather"), 0);
 	GetPrivateProfileString(_T("Settings"), _T("pingAddr"), _T("8.8.8.8"), szBuf, 256, strPath);
 	m_strPingAddress = szBuf;
-	GetPrivateProfileString(_T("Settings"), _T("weatherCity"), _T("Kyiv"), szBuf, 256, strPath);
+	GetPrivateProfileString(_T("Settings"), _T("weatherCity"), _T("Odesa,ua"), szBuf, 256, strPath);
 	m_strWeatherCity = szBuf;
 	GetPrivateProfileString(_T("Settings"), _T("weatherKey"), _T(""), szBuf, 256, strPath);
 	m_strWeatherApiKey = szBuf;	

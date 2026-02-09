@@ -122,7 +122,7 @@ protected:
 
 	BOOL    m_bWeather = FALSE;
 	CString m_strWeatherCity = _T("Odesa,ua");
-	CString m_strWeatherApiKey = _T("b6edfbab96459a29db1b3dab05857103");
+	CString m_strWeatherApiKey = _T("");
 	CString m_strTemp = _T("?°C");
 	CString m_strWeatherDesc = _T("Loading...");
 	Gdiplus::Image* m_pWeatherIcon = nullptr;
