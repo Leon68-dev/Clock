@@ -132,6 +132,7 @@ protected:
 
 	Gdiplus::Color m_dynamicColor;	// Поточний колір тексту (чорний або білий)
 	void UpdateThemeColor();		// Метод для аналізу яскравості фону
+	void DrawSeparator(Gdiplus::Graphics& g, float w, float y);
 
 	// Generated message map functions
 	virtual BOOL OnInitDialog();

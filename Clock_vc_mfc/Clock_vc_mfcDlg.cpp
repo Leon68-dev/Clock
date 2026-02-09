@@ -188,30 +188,44 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 		currentY += HEIGHT_DIGITAL_CLOCK;
 	}
 
+	bool isFirstInModules = true;
+
 	// 6. Календар
 	if (m_bCalendar)
 	{
 		DrawCalendar(g, w, currentY);
 		currentY += HEIGHT_CALENDAR;
+		isFirstInModules = false;
 	}
 
 	// 7. Системний монітор
 	if (m_bSysMon)
 	{
+		if (!isFirstInModules) 
+			DrawSeparator(g, w, currentY + 5.0f);
+
 		DrawSystemMonitor(g, w, currentY);
 		currentY += HEIGHT_SYSMON;
+		isFirstInModules = false;
 	}
 
 	// 8. Пінг
 	if (m_bPing)
 	{
+		if (!isFirstInModules) 
+			DrawSeparator(g, w, currentY + 5.0f);
+
 		DrawPing(g, w, currentY);
 		currentY += HEIGHT_PING;
+		isFirstInModules = false;
 	}
 
 	// 9. Погода
 	if (m_bWeather)
 	{
+		if (!isFirstInModules) 
+			DrawSeparator(g, w, currentY + 5.0f);
+
 		DrawWeather(g, w, currentY);
 		currentY += HEIGHT_WEATHER;
 	}
@@ -480,9 +494,12 @@ void CClockvcmfcDlg::DrawCalendar(Gdiplus::Graphics& g, float w, float yStart)
 		? Gdiplus::Color(255, 255, 120, 120)  // Світло-червоний для темного фону
 		: Gdiplus::Color(255, 200, 0, 0);    // Насичений червоний для світлого фону
 
-	// Розділювач (теж адаптуємо прозорість ліній)
-	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, mainColor.GetR(), mainColor.GetG(), mainColor.GetB()), 1.0f), 15.0f, calY, w - 15.0f, calY);
-	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(30, 255, 255, 255), 1.0f), 15.0f, calY + 1.0f, w - 15.0f, calY + 1.0f);
+	//// --- УНІФІКОВАНИЙ СЕПАРАТОР ---
+	//// Темна лінія (адаптується під колір тексту)
+	//g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, m_dynamicColor.GetR(), m_dynamicColor.GetG(), m_dynamicColor.GetB()), 1.0f), 15.0f, calY, w - 15.0f, calY);
+	//// Світла лінія (підсвітка) - адаптивна яскравість
+	//int highlightAlpha = (m_dynamicColor.GetR() > 128) ? 40 : 10;
+	//g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(highlightAlpha, 255, 255, 255), 1.0f), 15.0f, calY + 1.0f, w - 15.0f, calY + 1.0f);
 
 	SYSTEMTIME st; GetLocalTime(&st);
 	COleDateTime today(st);
@@ -554,12 +571,12 @@ void CClockvcmfcDlg::DrawSystemMonitor(Gdiplus::Graphics& g, float w, float ySta
 	float barW = w - (margin * 2.0f);
 	float barH = 12.0f;
 
-	// 1. Розділювач (адаптуємо під тему)
-	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, 0, 0, 0), 1.0f), 15.0f, monY, w - 15.0f, monY);
-	// Світла лінія розділювача (highlight) стає майже невидимою на світлому фоні
-	int highlightAlpha = (m_dynamicColor.GetR() > 128) ? 40 : 10;
-	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(highlightAlpha, 255, 255, 255), 1.0f), 15.0f, monY + 1.0f, w - 15.0f, monY + 1.0f);
-
+	//// 1. Розділювач (адаптуємо під тему)
+	//// --- УНІФІКОВАНИЙ СЕПАРАТОР ---
+	//g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, m_dynamicColor.GetR(), m_dynamicColor.GetG(), m_dynamicColor.GetB()), 1.0f), 15.0f, monY, w - 15.0f, monY);
+	//int highlightAlpha = (m_dynamicColor.GetR() > 128) ? 40 : 10;
+	//g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(highlightAlpha, 255, 255, 255), 1.0f), 15.0f, monY + 1.0f, w - 15.0f, monY + 1.0f);
+	
 	Gdiplus::FontFamily arial(L"Arial");
 	Gdiplus::Font fontLabel(&arial, 10, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
 	Gdiplus::Font fontValue(&arial, 9, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
@@ -1315,10 +1332,10 @@ void CClockvcmfcDlg::DrawPing(Gdiplus::Graphics& g, float w, float yStart)
 	float margin = 15.0f;
 	float valueAreaW = 50.0f; // Зарезервоване місце під "999 ms" справа
 
-	// 1. Розділювальні лінії (адаптуємо під тему)
-	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, m_dynamicColor.GetR(), m_dynamicColor.GetG(), m_dynamicColor.GetB()), 1.0f), 15.0f, pingY, w - 15.0f, pingY);
-	int highlightAlpha = (m_dynamicColor.GetR() > 128) ? 40 : 10;
-	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(highlightAlpha, 255, 255, 255), 1.0f), 15.0f, pingY + 1.0f, w - 15.0f, pingY + 1.0f);
+	//// 1. Розділювальні лінії (адаптуємо під тему)
+	//g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, m_dynamicColor.GetR(), m_dynamicColor.GetG(), m_dynamicColor.GetB()), 1.0f), 15.0f, pingY, w - 15.0f, pingY);
+	//int highlightAlpha = (m_dynamicColor.GetR() > 128) ? 40 : 10;
+	//g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(highlightAlpha, 255, 255, 255), 1.0f), 15.0f, pingY + 1.0f, w - 15.0f, pingY + 1.0f);
 
 	Gdiplus::FontFamily arial(L"Arial");
 	Gdiplus::Font fontLabel(&arial, 10, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
@@ -1474,10 +1491,10 @@ void CClockvcmfcDlg::DrawWeather(Gdiplus::Graphics& g, float w, float yStart)
 	float weaY = yStart + 5.0f;
 	float margin = 15.0f;
 
-	// 1. Розділювач (адаптуємо під тему)
-	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, m_dynamicColor.GetR(), m_dynamicColor.GetG(), m_dynamicColor.GetB()), 1.0f), 15.0f, weaY, w - 15.0f, weaY);
-	int highlightAlpha = (m_dynamicColor.GetR() > 128) ? 40 : 10;
-	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(highlightAlpha, 255, 255, 255), 1.0f), 15.0f, weaY + 1.0f, w - 15.0f, weaY + 1.0f);
+	//// 1. Розділювач (адаптуємо під тему)
+	//g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, m_dynamicColor.GetR(), m_dynamicColor.GetG(), m_dynamicColor.GetB()), 1.0f), 15.0f, weaY, w - 15.0f, weaY);
+	//int highlightAlpha = (m_dynamicColor.GetR() > 128) ? 40 : 10;
+	//g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(highlightAlpha, 255, 255, 255), 1.0f), 15.0f, weaY + 1.0f, w - 15.0f, weaY + 1.0f);
 
 	// 2. Іконка (малюємо як є, вони зазвичай кольорові)
 	if (m_pWeatherIcon)
@@ -1593,4 +1610,14 @@ void CClockvcmfcDlg::UpdateThemeColor()
 		m_dynamicColor = Gdiplus::Color(255, 0, 0, 0); // Чорний
 	else
 		m_dynamicColor = Gdiplus::Color(255, 255, 255, 255); // Білий
+}
+
+
+void CClockvcmfcDlg::DrawSeparator(Gdiplus::Graphics& g, float w, float y)
+{
+	// Темна лінія
+	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, m_dynamicColor.GetR(), m_dynamicColor.GetG(), m_dynamicColor.GetB()), 1.0f), 15.0f, y, w - 15.0f, y);
+	// Світла підсвітка
+	int highlightAlpha = (m_dynamicColor.GetR() > 128) ? 40 : 10;
+	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(highlightAlpha, 255, 255, 255), 1.0f), 15.0f, y + 1.0f, w - 15.0f, y + 1.0f);
 }
