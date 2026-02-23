@@ -50,6 +50,10 @@ CClockvcmfcDlg::CClockvcmfcDlg(CWnd* pParent /*=nullptr*/)
 	m_bPing = TRUE;
 	m_bWeather = FALSE;
 	m_b24Hours = TRUE;
+	m_bMouseOver = FALSE;
+	m_dynamicColor = Gdiplus::Color(255, 0, 0, 0); // Чорний за замовчуванням
+	m_sysMonTickCount = 0;
+	m_weatherTickCount = 0;
 	m_timeShutDown = COleDateTime::GetCurrentTime();
 }
 
@@ -309,7 +313,7 @@ void CClockvcmfcDlg::DrawAnalogClock(Gdiplus::Graphics& g, float xCenter, float 
 	sf.SetLineAlignment(Gdiplus::StringAlignmentCenter);
 
 	Gdiplus::Font fontLN(&fontFamily, innerRadius * 0.2f, Gdiplus::FontStyleItalic | Gdiplus::FontStyleUnderline);
-	g.DrawString(L"LN", -1, &fontLN, Gdiplus::PointF(xCenter, yCenter - innerRadius * 0.52f), &sf, &Gdiplus::SolidBrush(Gdiplus::Color(255, 240, 128, 128)));
+	g.DrawString(L"LAN", -1, &fontLN, Gdiplus::PointF(xCenter, yCenter - innerRadius * 0.52f), &sf, &Gdiplus::SolidBrush(Gdiplus::Color(255, 240, 128, 128)));
 
 	Gdiplus::Font fontText(&fontFamily, innerRadius * 0.11f, Gdiplus::FontStyleBold);
 	Gdiplus::SolidBrush bGray(Gdiplus::Color::Gray);

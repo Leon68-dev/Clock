@@ -595,7 +595,7 @@ namespace Clock_cs_v2
 
             Font f = new Font(Font.FontFamily, clcSizeRatio(1));
 
-            string str = "LN";
+            string str = "LAN";
             f = new Font(Font.FontFamily, clcSizeRatio(10), FontStyle.Italic | FontStyle.Underline);
             SizeF stringSize = e.Graphics.MeasureString(str, f);
             clc = sizeMin() * 2 / 5;
@@ -603,7 +603,6 @@ namespace Clock_cs_v2
             y = clcY(0, clc, mYCenter);
             x -= (int)stringSize.Width / 2;
             drawString(e.Graphics, str, ref f, x, y, Brushes.LightCoral);
-
 
             if (mChkDay)
             {
