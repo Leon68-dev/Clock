@@ -571,74 +571,61 @@ void CClockvcmfcDlg::DrawSystemMonitor(Gdiplus::Graphics& g, float w, float ySta
 	float barW = w - (margin * 2.0f);
 	float barH = 12.0f;
 
-	//// 1. Розділювач (адаптуємо під тему)
-	//// --- УНІФІКОВАНИЙ СЕПАРАТОР ---
-	//g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, m_dynamicColor.GetR(), m_dynamicColor.GetG(), m_dynamicColor.GetB()), 1.0f), 15.0f, monY, w - 15.0f, monY);
-	//int highlightAlpha = (m_dynamicColor.GetR() > 128) ? 40 : 10;
-	//g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(highlightAlpha, 255, 255, 255), 1.0f), 15.0f, monY + 1.0f, w - 15.0f, monY + 1.0f);
-	
+	// 1. Розділювач
+	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, m_dynamicColor.GetR(), m_dynamicColor.GetG(), m_dynamicColor.GetB()), 1.0f), 15.0f, monY, w - 15.0f, monY);
+	int highlightAlpha = (m_dynamicColor.GetR() > 128) ? 40 : 10;
+	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(highlightAlpha, 255, 255, 255), 1.0f), 15.0f, monY + 1.0f, w - 15.0f, monY + 1.0f);
+
 	Gdiplus::FontFamily arial(L"Arial");
 	Gdiplus::Font fontLabel(&arial, 10, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
 	Gdiplus::Font fontValue(&arial, 9, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
 
-	// Використовуємо динамічний колір для тексту
 	Gdiplus::SolidBrush textBrush(m_dynamicColor);
-
-	Gdiplus::StringFormat sfLeft, sfRight;
+	Gdiplus::StringFormat sfRight;
 	sfRight.SetAlignment(Gdiplus::StringAlignmentFar);
 
+	// --- ЛЯМБДА З ПРОСТОЮ ЗАЛІВКОЮ ---
 	auto DrawBar = [&](float y, const TCHAR* label, float percent, Gdiplus::Color color)
+	{
+		g.DrawString(label, -1, &fontLabel, Gdiplus::PointF(margin, y), &textBrush);
+
+		CString sVal;
+		sVal.Format(_T("%.0f%%"), percent);
+		g.DrawString(sVal, -1, &fontValue, Gdiplus::PointF(w - margin, y + 1.0f), &sfRight, &textBrush);
+
+		// Фон смужки
+		Gdiplus::RectF barRect(margin, y + 14.0f, barW, barH);
+		g.FillRectangle(&Gdiplus::SolidBrush(Gdiplus::Color(100, 0, 0, 0)), barRect);
+
+		// Рамка
+		int borderAlpha = (m_dynamicColor.GetR() > 128) ? 60 : 30;
+		g.DrawRectangle(&Gdiplus::Pen(Gdiplus::Color(borderAlpha, 255, 255, 255), 1.0f), barRect);
+
+		// 2. ПРОСТА ЗАЛІВКА (Progress)
+		if (percent > 0.0f)
 		{
-			// 1. Текст зліва (Назва модуля) - тепер динамічний колір
-			g.DrawString(label, -1, &fontLabel, Gdiplus::PointF(margin, y), &textBrush);
+			float fillW = (barW * percent) / 100.0f;
+			if (fillW > barW) fillW = barW;
+			if (fillW < 2.0f) fillW = 2.0f;
 
-			// 2. Текст справа (Відсотки) - тепер динамічний колір
-			CString sVal;
-			sVal.Format(_T("%.0f%%"), percent);
-			g.DrawString(sVal, -1, &fontValue, Gdiplus::PointF(w - margin, y + 1.0f), &sfRight, &textBrush);
+			Gdiplus::RectF fillRect(margin + 1.0f, y + 15.0f, fillW - 2.0f, barH - 2.0f);
 
-			// 3. Фон смужки (вдавлене ложе)
-			Gdiplus::RectF barRect(margin, y + 14.0f, barW, barH);
+			// Використовуємо SolidBrush для абсолютно пласкої залівки
+			// Або простий LinearGradientBrush без SetBlend для легкого об'єму
+			Gdiplus::SolidBrush simpleBrush(color);
+			g.FillRectangle(&simpleBrush, fillRect);
+		}
+	};
 
-			// Малюємо темну підкладку смужки (завжди темна для контрасту з прогресом)
-			g.FillRectangle(&Gdiplus::SolidBrush(Gdiplus::Color(100, 0, 0, 0)), barRect);
+	// Кольори (можна зробити їх трохи м'якшими для пласкої теми)
+	Gdiplus::Color cpuColor = (m_cpuUsage > 80.0f) ? Gdiplus::Color(255, 255, 70, 70) :
+		(m_cpuUsage > 50.0f) ? Gdiplus::Color(255, 255, 160, 0) :
+		Gdiplus::Color(255, 80, 220, 80);
 
-			// Тінь зверху всередині
-			g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(80, 0, 0, 0), 1.0f), margin, y + 14.0f, margin + barW, y + 14.0f);
+	Gdiplus::Color ramColor = Gdiplus::Color(255, 70, 130, 230);
 
-			// Зовнішня рамка смужки (адаптуємо яскравість)
-			int borderAlpha = (m_dynamicColor.GetR() > 128) ? 60 : 30;
-			g.DrawRectangle(&Gdiplus::Pen(Gdiplus::Color(borderAlpha, 255, 255, 255), 1.0f), barRect);
-
-			// 4. Заповнення (Progress)
-			if (percent > 0.0f)
-			{
-				float fillW = (barW * percent) / 100.0f;
-				if (fillW > barW) fillW = barW;
-				if (fillW < 2.0f) fillW = 2.0f;
-
-				Gdiplus::RectF fillRect(margin + 1.0f, y + 15.0f, fillW - 2.0f, barH - 2.0f);
-
-				Gdiplus::LinearGradientBrush grad(fillRect, color, Gdiplus::Color(180, 0, 0, 0), Gdiplus::LinearGradientModeVertical);
-				float factors[] = { 0.0f, 0.8f, 1.0f };
-				float positions[] = { 0.0f, 0.3f, 1.0f };
-				grad.SetBlend(factors, positions, 3);
-
-				g.FillRectangle(&grad, fillRect);
-
-				// Світлий відблиск зверху
-				g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(120, 255, 255, 255), 1.0f), margin + 2.0f, y + 15.0f, margin + fillW - 2.0f, y + 15.0f);
-			}
-		};
-
-	// Визначаємо колір CPU (залишаємо логіку світлофора, вона корисна)
-	Gdiplus::Color cpuColor = (m_cpuUsage > 80.0f) ? Gdiplus::Color(200, 255, 50, 50) :
-		(m_cpuUsage > 50.0f) ? Gdiplus::Color(200, 255, 150, 0) :
-		Gdiplus::Color(200, 100, 255, 100);
-
-	// Малюємо смужки
 	DrawBar(monY + 10.0f, _T("CPU"), m_cpuUsage, cpuColor);
-	DrawBar(monY + 40.0f, _T("RAM"), m_ramUsage, Gdiplus::Color(200, 100, 150, 255));
+	DrawBar(monY + 40.0f, _T("RAM"), m_ramUsage, ramColor);
 }
 
 int CClockvcmfcDlg::ClcX(int sec, int size, int xCenter)
