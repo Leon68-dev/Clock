@@ -48,6 +48,7 @@ void CSetupDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CSetupDlg, CDialogEx)
     ON_WM_HSCROLL()
     ON_BN_CLICKED(IDC_CHK_SOUND_HOURS, &CSetupDlg::OnBnClickedChkSoundHours)
+    ON_BN_CLICKED(IDC_BTN_LINK, &CSetupDlg::OnBnClickedBtnLink)
 END_MESSAGE_MAP()
 
 BOOL CSetupDlg::OnInitDialog()
@@ -67,8 +68,22 @@ BOOL CSetupDlg::OnInitDialog()
     // Ініціалізація підказки (ToolTip)
     m_toolTip.Create(this);
     m_toolTip.AddTool(&m_sliderOpacity, _T(""));
+    m_toolTip.AddTool(GetDlgItem(IDC_EDT_WEATHER_KEY), _T("Get your free API key at https://openweathermap.org/api"));
+    m_toolTip.AddTool(GetDlgItem(IDC_BTN_LINK), _T("Click to register and get your free API Key"));
+
+    m_toolTip.SetDelayTime(TTDT_INITIAL, 200); // 0.2 сек до появи
+    m_toolTip.SetDelayTime(TTDT_AUTOPOP, 10000); // висітиме 10 сек
 
     return TRUE;
+}
+
+BOOL CSetupDlg::PreTranslateMessage(MSG* pMsg)
+{
+    // Передаємо повідомлення об'єкту ToolTip
+    if (m_toolTip.GetSafeHwnd()) {
+        m_toolTip.RelayEvent(pMsg);
+    }
+    return CDialogEx::PreTranslateMessage(pMsg);
 }
 
 void CSetupDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
@@ -92,7 +107,14 @@ void CSetupDlg::OnOK()
     m_nOpacity = m_sliderOpacity.GetPos();
     CDialogEx::OnOK();
 }
+
 void CSetupDlg::OnBnClickedChkSoundHours()
 {
     // TODO: Add your control notification handler code here
+}
+
+void CSetupDlg::OnBnClickedBtnLink()
+{
+    // Відкриваємо сайт OpenWeatherMap
+    ShellExecute(NULL, _T("open"), _T("https://openweathermap.org/api"), NULL, NULL, SW_SHOWNORMAL);
 }

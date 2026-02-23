@@ -39,8 +39,11 @@ protected:
     // Обробник руху слайдера (аналог ValueChanged)
     afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
     virtual void OnOK();
+    virtual BOOL PreTranslateMessage(MSG* pMsg);
 
     DECLARE_MESSAGE_MAP()
 public:
     afx_msg void OnBnClickedChkSoundHours();
+    afx_msg void OnBnClickedBtnLink();
+    
 };
