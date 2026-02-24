@@ -231,9 +231,11 @@ namespace Clock_csc_v2
                     float sin = (float)Math.Sin(angle);
                     if (i % 5 == 0)
                     {
-                        float len = (i % 15 == 0) ? innerRadius * 0.22f : innerRadius * 0.15f;
+                        float len = /* (i % 15 == 0) ? innerRadius * 0.22f : */ innerRadius * 0.15f;
+
                         Pen p = (i % 15 == 0) ? pQuarter : pHour;
                         g.DrawLine(p, xCenter + cos * (innerRadius - len), yCenter + sin * (innerRadius - len), xCenter + cos * (innerRadius + 3.0f), yCenter + sin * (innerRadius + 3.0f));
+                        
                         float markDotR = 1.5f;
                         g.FillEllipse(bFace, xCenter + cos * (innerRadius - len) - markDotR, yCenter + sin * (innerRadius - len) - markDotR, markDotR * 2, markDotR * 2);
                     }
@@ -256,7 +258,7 @@ namespace Clock_csc_v2
             using (SolidBrush bUTC = new SolidBrush(Color.Gray))
             {
                 StringFormat sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                g.DrawString("LN", fontLN, bLN, xCenter, yCenter - innerRadius * 0.52f, sf);
+                g.DrawString("LAN", fontLN, bLN, xCenter, yCenter - innerRadius * 0.52f, sf);
 
                 sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
                 g.DrawString("C#", fontText, bCS, xCenter, yCenter + 16.0f - innerRadius * 0.52f, sf);
