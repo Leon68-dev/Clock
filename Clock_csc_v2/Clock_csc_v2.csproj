@@ -8,6 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <StartupObject>Clock_csc_v2.Program</StartupObject>
     <ApplicationIcon>App.ico</ApplicationIcon>
+	<OptimizationPreference>Speed</OptimizationPreference>
   </PropertyGroup>
 
   <ItemGroup>
