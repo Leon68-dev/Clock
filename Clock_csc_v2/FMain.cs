@@ -124,6 +124,11 @@ namespace Clock_csc_v2
             cPubFunc.playSound(@str + @"\Media\tada.wav");
 
             UpdateLayeredClock();
+
+            // Очищення пам'яті після завершення ініціалізації
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
         }
 
         private void InitResources()
@@ -464,8 +469,6 @@ namespace Clock_csc_v2
                 {
                     ds.ReadXml(filename);
                     DataRow dr = ds.Tables[TBL_NAME].Rows[0];
-                    if (dr.Table.Columns.Contains("timeOff")) mTimeShutDown = Convert.ToDateTime(dr["timeOff"]);
-                    if (dr.Table.Columns.Contains("chkOff")) mIsShutDown = Convert.ToBoolean(dr["chkOff"]);
                     if (dr.Table.Columns.Contains("chkGMT")) mChkGMT = Convert.ToBoolean(dr["chkGMT"]);
                     if (dr.Table.Columns.Contains("chkDate")) mChkDate = Convert.ToBoolean(dr["chkDate"]);
                     if (dr.Table.Columns.Contains("chkDay")) mChkDay = Convert.ToBoolean(dr["chkDay"]);
