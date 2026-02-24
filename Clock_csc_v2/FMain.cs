@@ -125,7 +125,11 @@ namespace Clock_csc_v2
 
             UpdateLayeredClock();
 
-            // Очищення пам'яті після завершення ініціалізації
+            CallGC();
+        }
+
+        public static void CallGC() 
+        {
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();
@@ -624,6 +628,8 @@ namespace Clock_csc_v2
                 UpdateLayeredClock();
                 SaveSettings();
             }
+
+            CallGC();
         }
 
         private void cm_Setup_Click(object sender, EventArgs e)
@@ -646,6 +652,7 @@ namespace Clock_csc_v2
         private void cm_calendar_Click(object sender, EventArgs e)
         {
             new FCalendar().ShowDialog();
+            CallGC();
         }
 
         private void cm_setShutDownPC_Click(object sender, EventArgs e)
@@ -658,11 +665,13 @@ namespace Clock_csc_v2
                 mTimeShutDown = fsd.tm;
                 cm_setShutDownPC.Checked = mIsShutDown;
             }
+            CallGC();
         }
 
         private void cm_about_Click(object sender, EventArgs e)
         {
             new FAbout().ShowDialog();
+            CallGC();
         }
 
         private void cm_exit_Click(object sender, EventArgs e)
