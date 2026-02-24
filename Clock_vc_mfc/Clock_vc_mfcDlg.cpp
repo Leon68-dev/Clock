@@ -647,38 +647,37 @@ void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 	if (nIDEvent == 1)
 	{
 		SYSTEMTIME st;
-		if (m_bGMT) 
-			::GetSystemTime(&st); 
-		else 
+		if (m_bGMT)
+			::GetSystemTime(&st);
+		else
 			::GetLocalTime(&st);
 
-		m_sysMonTickCount++;
-
-		if (m_sysMonTickCount >= 15) // Кожні 3 секунди
-		{
-			UpdateSystemMetrics();
-			UpdatePing();
-			UpdateThemeColor();
-			m_sysMonTickCount = 0; // Скидаємо лічильник
-		}
-
-		//m_weatherTickCount++;
-		//if (m_weatherTickCount >= 6000) // 6000 * 200ms = 20 хвилин
-		//{ 
-		//	UpdateWeather();
-		//	m_weatherTickCount = 0;
-		//}
-
-		if (st.wMinute == 5 && st.wSecond == 0)
-		{
-			UpdateWeather();
-		}
-
+		// 1. ГОЛОВНЕ: Малюємо інтерфейс завжди (5 разів на секунду)
+		// Це забезпечує плавність стрілок
 		UpdateLayeredClock();
 
+		// 2. Логіка, яка має спрацьовувати строго РАЗ НА СЕКУНДУ
 		if (st.wSecond != m_lastSecond)
 		{
 			m_lastSecond = st.wSecond;
+			COleDateTime now(st);
+
+			// Оновлення системних метрик та пінгу кожні 3 секунди
+			// Тепер це всередині m_lastSecond, тому спрацює лише 1 раз
+			if (st.wSecond % 3 == 0)
+			{
+				UpdateSystemMetrics();
+				UpdatePing();
+				UpdateThemeColor();
+			}
+
+			// Оновлення погоди раз на годину (на 5-й хвилині)
+			if (st.wMinute == 5 && st.wSecond == 0)
+			{
+				UpdateWeather();
+			}
+
+			// --- ЗВУКОВА ЛОГІКА ---
 
 			// 1. Щогодинний бій
 			if (m_bHours && st.wMinute == 0 && st.wSecond == 0)
@@ -695,17 +694,22 @@ void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 					PlayMCI(GetSoundPath(_T("_30.wav")), _T("chime"));
 			}
 
-			// 3. Тік-Так (грає паралельно з іншими!)
+			// 3. Тік-Так (кожні 2 секунди)
 			if (m_bTickTack && st.wSecond % 2 == 0)
 			{
-				// Перевіряємо, чи не грає зараз довгий звук (опціонально)
+				// Не перериваємо довгі звуки
 				if (!IsPlayingMCI(_T("hours")) && !IsPlayingMCI(_T("chime")))
 				{
 					PlayMCI(GetSoundPath(_T("_TickTack.wav")), _T("tick"));
 				}
 			}
+
+			// Оновлення тексту в треї (раз на секунду достатньо)
+			CString strTip = now.Format(_T("%A - %H:%M"));
+			if (m_bGMT) strTip += _T(" GMT");
+			_tcscpy_s(m_nid.szTip, strTip.Left(63));
+			Shell_NotifyIcon(NIM_MODIFY, &m_nid);
 		}
-		
 	}
 
 	CDialogEx::OnTimer(nIDEvent);
@@ -796,7 +800,7 @@ void CClockvcmfcDlg::OnMenuSetup()
 	CSetupDlg dlg(m_bGMT, m_bDate, m_bDay, m_bMoving, m_bTopMost, m_bTransparent,
 		m_bBorder, m_nOpacity, m_bSmooth, m_bTickTack, m_b1530, m_bHours,
 		m_bDigitalClock, m_bCalendar, m_bSysMon, m_bPing, m_bWeather,
-		m_strPingAddress, m_strWeatherCity, m_strWeatherApiKey, m_b24Hours);
+		m_strPingAddress, m_strWeatherCity, m_strWeatherUrl, m_b24Hours);
 
 	if (dlg.DoModal() == IDOK)
 	{
@@ -819,7 +823,7 @@ void CClockvcmfcDlg::OnMenuSetup()
 		m_bWeather = dlg.m_bWeather;
 		m_strPingAddress = dlg.m_strPingAddress;
 		m_strWeatherCity = dlg.m_strWeatherCity;
-		m_strWeatherApiKey = dlg.m_strWeatherApiKey;
+		m_strWeatherUrl = dlg.m_strWeatherUrl;
 		m_b24Hours = dlg.m_b24Hours;
 
 		UpdatePing();
@@ -927,7 +931,7 @@ void CClockvcmfcDlg::SaveSettings()
 	WriteBool(_T("chkWeather"), m_bWeather);
 	WritePrivateProfileString(_T("Settings"), _T("pingAddr"), m_strPingAddress, strPath);
 	WritePrivateProfileString(_T("Settings"), _T("weatherCity"), m_strWeatherCity, strPath);
-	WritePrivateProfileString(_T("Settings"), _T("weatherKey"), m_strWeatherApiKey, strPath);
+	WritePrivateProfileString(_T("Settings"), _T("weatherUrl"), m_strWeatherUrl, strPath);
 
 	WritePrivateProfileString(_T("Settings"), _T("timeOff"), m_timeShutDown.Format(_T("%H:%M")), strPath);
 }
@@ -936,6 +940,7 @@ void CClockvcmfcDlg::LoadSettings()
 {
 	CString strPath = GetIniPath();
 	TCHAR szBuf[256];
+	TCHAR szBufLong[512];
 
 	auto GetBool = [&](LPCTSTR key, int def) 
 	{
@@ -980,8 +985,10 @@ void CClockvcmfcDlg::LoadSettings()
 	m_strPingAddress = szBuf;
 	GetPrivateProfileString(_T("Settings"), _T("weatherCity"), _T("Odesa,ua"), szBuf, 256, strPath);
 	m_strWeatherCity = szBuf;
-	GetPrivateProfileString(_T("Settings"), _T("weatherKey"), _T(""), szBuf, 256, strPath);
-	m_strWeatherApiKey = szBuf;	
+	
+	CString defaultUrl = _T("https://api.open-meteo.com/v1/forecast?latitude=46.48&longitude=30.72&current=temperature_2m,weather_code");
+	GetPrivateProfileString(_T("Settings"), _T("weatherUrl"), defaultUrl, szBufLong, 512, strPath);
+	m_strWeatherUrl = szBufLong;
 
 	TCHAR szTime[10];
 	GetPrivateProfileString(_T("Settings"), _T("timeOff"), _T("00:00"), szTime, 10, strPath);
@@ -1388,95 +1395,102 @@ void CClockvcmfcDlg::DrawPing(Gdiplus::Graphics& g, float w, float yStart)
 
 void CClockvcmfcDlg::UpdateWeather()
 {
-	if (!m_bWeather || m_strWeatherApiKey.IsEmpty())
-		return;
+	if (!m_bWeather) return;
 
 	std::thread([this]()
-	{
-		// 1. Формуємо назву міста (замінюємо пробіли для URL)
-		CString city = m_strWeatherCity;
-		city.Replace(_T(" "), _T("%20"));
-
-		CString url;
-		url.Format(_T("http://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s&units=metric"),
-			(LPCTSTR)city, (LPCTSTR)m_strWeatherApiKey);
-
-		// 2. Виконуємо HTTP запит
-		CString jsonResponse;
-		HINTERNET hSession = WinHttpOpen(L"MFC-Clock/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
-		if (hSession)
 		{
-			URL_COMPONENTS urlComp = { sizeof(urlComp) };
-			urlComp.dwHostNameLength = (DWORD)-1;
-			urlComp.dwUrlPathLength = (DWORD)-1;
-			if (WinHttpCrackUrl(url, (DWORD)url.GetLength(), 0, &urlComp))
-			{
-				CString host(urlComp.lpszHostName, urlComp.dwHostNameLength);
-				HINTERNET hConnect = WinHttpConnect(hSession, host, INTERNET_DEFAULT_HTTP_PORT, 0);
-				if (hConnect)
-				{
-					HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", urlComp.lpszUrlPath, NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, 0);
-					if (hRequest && WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0) && WinHttpReceiveResponse(hRequest, NULL)) {
-						DWORD dwSize = 0;
-						do {
-							if (WinHttpQueryDataAvailable(hRequest, &dwSize) && dwSize > 0)
-							{
-								char* buffer = new char[dwSize + 1];
-								DWORD dwDownloaded = 0;
-								if (WinHttpReadData(hRequest, buffer, dwSize, &dwDownloaded))
-								{
-									buffer[dwDownloaded] = 0;
-									jsonResponse += CA2W(buffer, CP_UTF8);
+			// 1. Формуємо URL для Одеси (Open-Meteo використовує координати)
+			// current=temperature_2m,weather_code - запитуємо температуру та код погоди
+			//CString url = _T("https://api.open-meteo.com/v1/forecast?latitude=46.48&longitude=30.72&current=temperature_2m,weather_code");
+			CString url = m_strWeatherUrl;
+
+			// 2. HTTP запит (код залишається майже таким самим, але міняємо протокол на HTTPS)
+			CString jsonResponse;
+			HINTERNET hSession = WinHttpOpen(L"MFC-Clock/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+			if (hSession) {
+				URL_COMPONENTS urlComp = { sizeof(urlComp) };
+				urlComp.dwHostNameLength = (DWORD)-1;
+				urlComp.dwUrlPathLength = (DWORD)-1;
+				if (WinHttpCrackUrl(url, (DWORD)url.GetLength(), 0, &urlComp)) {
+					CString host(urlComp.lpszHostName, urlComp.dwHostNameLength);
+					// Для HTTPS використовуємо INTERNET_DEFAULT_HTTPS_PORT (443)
+					HINTERNET hConnect = WinHttpConnect(hSession, host, INTERNET_DEFAULT_HTTPS_PORT, 0);
+					if (hConnect) {
+						// Додаємо прапорець WINHTTP_FLAG_SECURE для HTTPS
+						HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", urlComp.lpszUrlPath, NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
+						if (hRequest && WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0) && WinHttpReceiveResponse(hRequest, NULL)) {
+							DWORD dwSize = 0;
+							do {
+								if (WinHttpQueryDataAvailable(hRequest, &dwSize) && dwSize > 0) {
+									char* buffer = new char[dwSize + 1];
+									DWORD dwDownloaded = 0;
+									if (WinHttpReadData(hRequest, buffer, dwSize, &dwDownloaded)) {
+										buffer[dwDownloaded] = 0;
+										jsonResponse += CA2W(buffer, CP_UTF8);
+									}
+									delete[] buffer;
 								}
-								delete[] buffer;
-							}
-						} while (dwSize > 0);
+							} while (dwSize > 0);
+						}
+						WinHttpCloseHandle(hRequest);
 					}
-					WinHttpCloseHandle(hRequest);
+					WinHttpCloseHandle(hConnect);
 				}
-				WinHttpCloseHandle(hConnect);
-			}
-			WinHttpCloseHandle(hSession);
-		}
-
-		// 3. Парсинг результатів
-		if (!jsonResponse.IsEmpty())
-		{
-			// Температура
-			int posTemp = jsonResponse.Find(_T("\"temp\":"));
-			if (posTemp != -1)
-			{
-				int posEnd = jsonResponse.Find(_T(","), posTemp);
-				CString t = jsonResponse.Mid(posTemp + 7, posEnd - (posTemp + 7));
-				m_strTemp.Format(_T("%.1f°C"), _ttof(t));
+				WinHttpCloseHandle(hSession);
 			}
 
-			// Опис
-			int posDesc = jsonResponse.Find(_T("\"main\":\""));
-			if (posDesc != -1)
+			// 3. Парсинг результатів (Open-Meteo JSON трохи інший)
+			if (!jsonResponse.IsEmpty())
 			{
-				int posEnd = jsonResponse.Find(_T("\""), posDesc + 8);
-				m_strWeatherDesc = jsonResponse.Mid(posDesc + 8, posEnd - (posDesc + 8));
-			}
-
-			// Іконка
-			int posIcon = jsonResponse.Find(_T("\"icon\":\""));
-			if (posIcon != -1)
-			{
-				CString iconId = jsonResponse.Mid(posIcon + 8, 3);
-				CString iconUrl;
-				iconUrl.Format(_T("http://openweathermap.org/img/wn/%s@2x.png"), (LPCTSTR)iconId);
-
-				Gdiplus::Image* pNewIcon = DownloadImage(iconUrl);
-				if (pNewIcon) 
+				// Спочатку шукаємо початок блоку з поточними даними
+				int posCurrent = jsonResponse.Find(_T("\"current\":"));
+				if (posCurrent != -1)
 				{
-					if (m_pWeatherIcon) delete m_pWeatherIcon;
-					m_pWeatherIcon = pNewIcon;
+					// Шукаємо температуру ТІЛЬКИ після тегу "current"
+					int posTemp = jsonResponse.Find(_T("\"temperature_2m\":"), posCurrent);
+					if (posTemp != -1)
+					{
+						int posStart = posTemp + 17; // довжина "temperature_2m":
+						int posEnd = jsonResponse.Find(_T(","), posStart);
+						if (posEnd == -1) posEnd = jsonResponse.Find(_T("}"), posStart);
+
+						CString t = jsonResponse.Mid(posStart, posEnd - posStart);
+
+						// Очищаємо від лапок та зайвих символів, якщо вони є
+						t.Remove('\"');
+						t.Trim();
+
+						// Форматуємо вивід
+						m_strTemp.Format(_T("%s°C"), (LPCTSTR)t);
+					}
+
+					// Шукаємо код погоди також після тегу "current"
+					int posCode = jsonResponse.Find(_T("\"weather_code\":"), posCurrent);
+					if (posCode != -1)
+					{
+						int posStart = posCode + 15; // довжина "weather_code":
+						int posEnd = jsonResponse.Find(_T(","), posStart);
+						if (posEnd == -1) posEnd = jsonResponse.Find(_T("}"), posStart);
+
+						CString codeStr = jsonResponse.Mid(posStart, posEnd - posStart);
+						codeStr.Remove('\"');
+						int code = _ttoi(codeStr);
+
+						// Мапування кодів (залишаємо як було)
+						if (code == 0) m_strWeatherDesc = _T("Clear sky");
+						else if (code >= 1 && code <= 3) m_strWeatherDesc = _T("Partly cloudy");
+						else if (code >= 45 && code <= 48) m_strWeatherDesc = _T("Foggy");
+						else if (code >= 51 && code <= 67) m_strWeatherDesc = _T("Rainy");
+						else if (code >= 71 && code <= 77) m_strWeatherDesc = _T("Snowy");
+						else if (code >= 80) m_strWeatherDesc = _T("Showers");
+						else m_strWeatherDesc = _T("Cloudy");
+					}
 				}
 			}
-		}
-	}).detach();
+
+		}).detach();
 }
+
 
 Gdiplus::Image* CClockvcmfcDlg::DownloadImage(CString url)
 {
@@ -1495,37 +1509,41 @@ void CClockvcmfcDlg::DrawWeather(Gdiplus::Graphics& g, float w, float yStart)
 	float weaY = yStart + 5.0f;
 	float margin = 15.0f;
 
-	//// 1. Розділювач (адаптуємо під тему)
-	//g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, m_dynamicColor.GetR(), m_dynamicColor.GetG(), m_dynamicColor.GetB()), 1.0f), 15.0f, weaY, w - 15.0f, weaY);
-	//int highlightAlpha = (m_dynamicColor.GetR() > 128) ? 40 : 10;
-	//g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(highlightAlpha, 255, 255, 255), 1.0f), 15.0f, weaY + 1.0f, w - 15.0f, weaY + 1.0f);
-
-	// 2. Іконка (малюємо як є, вони зазвичай кольорові)
-	if (m_pWeatherIcon)
-	{
-		g.DrawImage(m_pWeatherIcon, margin - 5.0f, weaY + 5.0f, 40.0f, 40.0f);
-	}
-
+	// 1. Налаштування шрифтів
 	Gdiplus::FontFamily arial(L"Arial");
-	Gdiplus::Font fontTemp(&arial, 16, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
+	Gdiplus::Font fontCity(&arial, 9, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
+	Gdiplus::Font fontTemp(&arial, 18, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
 	Gdiplus::Font fontDesc(&arial, 10, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
 
-	// Використовуємо динамічний колір для тексту
 	Gdiplus::SolidBrush textBrush(m_dynamicColor);
 
-	// 3. Температура
-	g.DrawString(m_strTemp, -1, &fontTemp, Gdiplus::PointF(margin + 40.0f, weaY + 10.0f), NULL, &textBrush);
+	// 2. Налаштування форматів вирівнювання
+	Gdiplus::StringFormat sfLeft, sfCenter;
+	sfLeft.SetAlignment(Gdiplus::StringAlignmentNear);
+	sfLeft.SetLineAlignment(Gdiplus::StringAlignmentNear);
 
-	// 4. Опис та місто (з автоматичним обрізанням, якщо назва міста довга)
-	CString strInfo = m_strWeatherCity + _T(": ") + m_strWeatherDesc;
+	sfCenter.SetAlignment(Gdiplus::StringAlignmentCenter);
+	sfCenter.SetLineAlignment(Gdiplus::StringAlignmentNear);
 
-	Gdiplus::RectF rectInfo(margin + 40.0f, weaY + 28.0f, w - margin - 45.0f, 15.0f);
-	Gdiplus::StringFormat sf;
-	sf.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
-	sf.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap);
+	// 3. МАЛЮЄМО МІСТО (Зліва зверху)
+	// Виводимо повну назву (наприклад, Odesa,ua)
+	g.DrawString(m_strWeatherCity, -1, &fontCity, Gdiplus::PointF(margin, weaY + 5.0f), &sfLeft, &textBrush);
 
-	g.DrawString(strInfo, -1, &fontDesc, rectInfo, &sf, &textBrush);
+	// 4. МАЛЮЄМО ТЕМПЕРАТУРУ (По центру, трохи нижче міста)
+	g.DrawString(m_strTemp, -1, &fontTemp, Gdiplus::PointF(w / 2.0f, weaY + 15.0f), &sfCenter, &textBrush);
+
+	// 5. МАЛЮЄМО СТАН (По центру під температурою)
+	g.DrawString(m_strWeatherDesc, -1, &fontDesc, Gdiplus::PointF(w / 2.0f, weaY + 36.0f), &sfCenter, &textBrush);
+
+	// 6. ІКОНКА (якщо є)
+	if (m_pWeatherIcon)
+	{
+		// Малюємо іконку зліва від температури
+		g.DrawImage(m_pWeatherIcon, (w / 2.0f) - 60.0f, weaY + 12.0f, 32.0f, 32.0f);
+	}
 }
+
+
 void CClockvcmfcDlg::OnMouseMove(UINT nFlags, CPoint point)
 {
 	if (!m_bMouseOver)

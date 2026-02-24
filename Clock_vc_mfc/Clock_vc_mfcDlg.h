@@ -94,7 +94,7 @@ protected:
 	const int HEIGHT_CALENDAR = 140; 
 	const int HEIGHT_SYSMON = 80; 
 	const int HEIGHT_PING = 35;
-	const int HEIGHT_WEATHER = 55;
+	const int HEIGHT_WEATHER = 60;
 
 	/*****************************************************************************************************************************/
 
@@ -122,7 +122,7 @@ protected:
 
 	BOOL    m_bWeather = FALSE;
 	CString m_strWeatherCity = _T("Odesa,ua");
-	CString m_strWeatherApiKey = _T("");
+	CString m_strWeatherUrl = _T("");
 	CString m_strTemp = _T("?°C");
 	CString m_strWeatherDesc = _T("Loading...");
 	Gdiplus::Image* m_pWeatherIcon = nullptr;

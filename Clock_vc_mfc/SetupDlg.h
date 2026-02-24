@@ -9,7 +9,7 @@ public:
         BOOL trans, BOOL border, int opacity, BOOL smooth, 
         BOOL soundTickTack, BOOL sound1530, BOOL soundHours,
         BOOL digitalClock, BOOL calendar, BOOL sysMon, BOOL ping, BOOL weather,
-        CString pingAddr, CString weatherCity, CString weatherKey, BOOL sound24Hours,
+        CString pingAddr, CString weatherCity, CString weatherUrl, BOOL sound24Hours,
         CWnd* pParent = nullptr);
 
 #ifdef AFX_DESIGN_TIME
@@ -26,7 +26,7 @@ public:
 
     CString m_strPingAddress;
     CString m_strWeatherCity;
-    CString m_strWeatherApiKey;
+    CString m_strWeatherUrl;
 
 protected:
     virtual void DoDataExchange(CDataExchange* pDX);
