@@ -55,6 +55,7 @@ namespace Clock_csc_v2
         private bool mIsSleep = false;
 
         // Налаштування
+        private bool mChkSeconds = true;
         private bool mChkGMT = false;
         private bool mChkDate = true;
         private bool mChkDay = true;
@@ -277,6 +278,7 @@ namespace Clock_csc_v2
         private void timer1_Tick(object sender, EventArgs e)
         {
             mCurDateTime = getCurTime(mChkGMT);
+
             UpdateLayeredClock();
 
             if (mCurDateTime.Second != lastSecond)
@@ -286,9 +288,7 @@ namespace Clock_csc_v2
                 setShutdown(mIsShutDown, mIsSleep);
 
                 if (mCurDateTime.Minute == 8 && mCurDateTime.Second == 48)
-                {
                     GC.Collect();
-                }
 
                 bool isLongSoundPlaying = cPubFunc.isPlayingMCI("hours") || cPubFunc.isPlayingMCI("chime");
 
@@ -347,6 +347,8 @@ namespace Clock_csc_v2
 
             _gBuffer.Clear(Color.Transparent);
             _gBuffer.DrawImageUnscaled(_staticFace, 0, 0);
+           
+            DrawClockLabels(_gBuffer);
             DrawClock(_gBuffer);
 
             IntPtr screenDc = Win32.GetDC(IntPtr.Zero);
@@ -374,6 +376,30 @@ namespace Clock_csc_v2
             float yCenter = this.Height / 2.0f;
             float innerRadius = (Math.Min(this.Width, this.Height) / 2.0f) - 7.5f;
 
+            float fSeconds = mChkSmooth ? (mCurDateTime.Second + mCurDateTime.Millisecond / 1000.0f) : mCurDateTime.Second;
+            float fMinutes = mCurDateTime.Minute + fSeconds / 60.0f;
+            float fHours = (mCurDateTime.Hour % 12 + fMinutes / 60.0f) * 5.0f;
+
+            DrawHand(g, xCenter, yCenter, fHours, innerRadius * 0.58f, 6.5f, true);
+            DrawHand(g, xCenter, yCenter, fMinutes, innerRadius * 0.85f, 4.5f, true);
+
+            if (mChkSeconds) 
+            {
+                float sAngle = (float)(fSeconds * Math.PI / 30.0 - Math.PI / 2.0);
+                float cosS = (float)Math.Cos(sAngle);
+                float sinS = (float)Math.Sin(sAngle);
+                g.DrawLine(_penSec, xCenter - cosS * (innerRadius * 0.15f), yCenter - sinS * (innerRadius * 0.15f), xCenter + cosS * (innerRadius * 0.95f), yCenter + sinS * (innerRadius * 0.95f));
+            }
+
+            g.FillEllipse(_brushBlack, xCenter - 4, yCenter - 4, 8, 8);
+        }
+
+        private void DrawClockLabels(Graphics g)
+        {
+            float xCenter = this.Width / 2.0f;
+            float yCenter = this.Height / 2.0f;
+            float innerRadius = (Math.Min(this.Width, this.Height) / 2.0f) - 7.5f;
+
             g.DrawString("LAN", _fontLN, _brushLN, xCenter, yCenter - innerRadius * 0.52f, _sfCenter);
             g.DrawString("C#", _fontText, _brushCS, xCenter, yCenter + 16.0f - innerRadius * 0.52f, _sfCenter);
 
@@ -395,19 +421,6 @@ namespace Clock_csc_v2
                 g.DrawString("GMT", _fontText, _brushUTC, xCenter, yCenter + yDelta + innerRadius * 0.58f, _sfCenter);
             }
 
-            float fSeconds = mChkSmooth ? (mCurDateTime.Second + mCurDateTime.Millisecond / 1000.0f) : mCurDateTime.Second;
-            float fMinutes = mCurDateTime.Minute + fSeconds / 60.0f;
-            float fHours = (mCurDateTime.Hour % 12 + fMinutes / 60.0f) * 5.0f;
-
-            DrawHand(g, xCenter, yCenter, fHours, innerRadius * 0.58f, 6.5f, true);
-            DrawHand(g, xCenter, yCenter, fMinutes, innerRadius * 0.85f, 4.5f, true);
-
-            float sAngle = (float)(fSeconds * Math.PI / 30.0 - Math.PI / 2.0);
-            float cosS = (float)Math.Cos(sAngle);
-            float sinS = (float)Math.Sin(sAngle);
-            g.DrawLine(_penSec, xCenter - cosS * (innerRadius * 0.15f), yCenter - sinS * (innerRadius * 0.15f), xCenter + cosS * (innerRadius * 0.95f), yCenter + sinS * (innerRadius * 0.95f));
-
-            g.FillEllipse(_brushBlack, xCenter - 4, yCenter - 4, 8, 8);
         }
 
         private void DrawHand(Graphics g, float xc, float yc, float val, float len, float width, bool whiteLine)
@@ -437,6 +450,7 @@ namespace Clock_csc_v2
                 mIsMouseDown = true;
                 mLastMousePos = e.Location;
             }
+
             if (e.Button == MouseButtons.Right && contextMenuFMain != null)
             {
                 contextMenuFMain.Show(Cursor.Position);
@@ -473,25 +487,42 @@ namespace Clock_csc_v2
                 {
                     ds.ReadXml(filename);
                     DataRow dr = ds.Tables[TBL_NAME].Rows[0];
-                    if (dr.Table.Columns.Contains("chkGMT")) mChkGMT = Convert.ToBoolean(dr["chkGMT"]);
-                    if (dr.Table.Columns.Contains("chkDate")) mChkDate = Convert.ToBoolean(dr["chkDate"]);
-                    if (dr.Table.Columns.Contains("chkDay")) mChkDay = Convert.ToBoolean(dr["chkDay"]);
-                    if (dr.Table.Columns.Contains("chkMoving")) mChkMoving = Convert.ToBoolean(dr["chkMoving"]);
-                    if (dr.Table.Columns.Contains("chkTransparent")) mChkTransparent = Convert.ToBoolean(dr["chkTransparent"]);
-                    if (dr.Table.Columns.Contains("chkAlwaysOnTop")) mChkAlwaysOnTop = Convert.ToBoolean(dr["chkAlwaysOnTop"]);
-                    if (dr.Table.Columns.Contains("chkBorder")) mChkBorder = Convert.ToBoolean(dr["chkBorder"]);
-                    if (dr.Table.Columns.Contains("frmOpacity")) mFrmOpacity = Convert.ToInt32(dr["frmOpacity"]);
-                    if (dr.Table.Columns.Contains("deskX")) mDeskX = Convert.ToInt32(dr["deskX"]);
-                    if (dr.Table.Columns.Contains("deskY")) mDeskY = Convert.ToInt32(dr["deskY"]);
-                    if (dr.Table.Columns.Contains("chkSmooth")) mChkSmooth = Convert.ToBoolean(dr["chkSmooth"]);
-                    if (dr.Table.Columns.Contains("chkHours")) mChkHours = Convert.ToBoolean(dr["chkHours"]);
-                    if (dr.Table.Columns.Contains("chk1530")) mChk1530 = Convert.ToBoolean(dr["chk1530"]);
-                    if (dr.Table.Columns.Contains("chkTickTack")) mChkTickTack = Convert.ToBoolean(dr["chkTickTack"]);
+                    if (dr.Table.Columns.Contains("chkSeconds")) 
+                        mChkSeconds = Convert.ToBoolean(dr["chkSeconds"]);
+                    if (dr.Table.Columns.Contains("chkGMT")) 
+                        mChkGMT = Convert.ToBoolean(dr["chkGMT"]);
+                    if (dr.Table.Columns.Contains("chkDate")) 
+                        mChkDate = Convert.ToBoolean(dr["chkDate"]);
+                    if (dr.Table.Columns.Contains("chkDay")) 
+                        mChkDay = Convert.ToBoolean(dr["chkDay"]);
+                    if (dr.Table.Columns.Contains("chkMoving")) 
+                        mChkMoving = Convert.ToBoolean(dr["chkMoving"]);
+                    if (dr.Table.Columns.Contains("chkTransparent")) 
+                        mChkTransparent = Convert.ToBoolean(dr["chkTransparent"]);
+                    if (dr.Table.Columns.Contains("chkAlwaysOnTop")) 
+                        mChkAlwaysOnTop = Convert.ToBoolean(dr["chkAlwaysOnTop"]);
+                    if (dr.Table.Columns.Contains("chkBorder")) 
+                        mChkBorder = Convert.ToBoolean(dr["chkBorder"]);
+                    if (dr.Table.Columns.Contains("frmOpacity")) 
+                        mFrmOpacity = Convert.ToInt32(dr["frmOpacity"]);
+                    if (dr.Table.Columns.Contains("deskX")) 
+                        mDeskX = Convert.ToInt32(dr["deskX"]);
+                    if (dr.Table.Columns.Contains("deskY")) 
+                        mDeskY = Convert.ToInt32(dr["deskY"]);
+                    if (dr.Table.Columns.Contains("chkSmooth")) 
+                        mChkSmooth = Convert.ToBoolean(dr["chkSmooth"]);
+                    if (dr.Table.Columns.Contains("chkHours")) 
+                        mChkHours = Convert.ToBoolean(dr["chkHours"]);
+                    if (dr.Table.Columns.Contains("chk1530")) 
+                        mChk1530 = Convert.ToBoolean(dr["chk1530"]);
+                    if (dr.Table.Columns.Contains("chkTickTack")) 
+                        mChkTickTack = Convert.ToBoolean(dr["chkTickTack"]);
                 }
                 else
                 {
                     DataTable table = new DataTable(TBL_NAME);
                     table.Columns.Add("timeOff", typeof(DateTime));
+                    table.Columns.Add("chkSeconds", typeof(bool));
                     table.Columns.Add("chkOff", typeof(bool));
                     table.Columns.Add("chkGMT", typeof(bool));
                     table.Columns.Add("chkDate", typeof(bool));
@@ -508,8 +539,10 @@ namespace Clock_csc_v2
                     table.Columns.Add("chk1530", typeof(bool));
                     table.Columns.Add("chkTickTack", typeof(bool));
                     ds.Tables.Add(table);
+                    
                     DataRow dr = ds.Tables[TBL_NAME].NewRow();
                     dr["timeOff"] = DateTime.Now;
+                    dr["chkSeconds"] = true;
                     dr["chkOff"] = false;
                     dr["chkGMT"] = false;
                     dr["chkDate"] = true;
@@ -529,9 +562,7 @@ namespace Clock_csc_v2
                     ds.WriteXml(filename);
                 }
             }
-            catch
-            {
-            }
+            catch{ }
         }
 
         private void SaveSettings()
@@ -541,6 +572,7 @@ namespace Clock_csc_v2
                 DataSet ds = new DataSet();
                 ds.ReadXml(cPubFunc.fileNameSet());
                 DataRow dr = ds.Tables[TBL_NAME].Rows[0];
+                dr["chkSeconds"] = mChkSeconds;
                 dr["chkGMT"] = mChkGMT;
                 dr["chkDate"] = mChkDate;
                 dr["chkDay"] = mChkDay;
@@ -557,9 +589,7 @@ namespace Clock_csc_v2
                 dr["chkTickTack"] = mChkTickTack;
                 ds.WriteXml(cPubFunc.fileNameSet());
             }
-            catch
-            {
-            }
+            catch{ }
         }
 
         private DateTime getCurTime(bool isGmt)
@@ -602,13 +632,14 @@ namespace Clock_csc_v2
         private void cm_SetupClick()
         {
             FSetup fs = new FSetup();
-            fs.initialization(mChkGMT, mChkDate, mChkDay, mChkMoving, mChkAlwaysOnTop, mChkTransparent,
-                mChkBorder, mFrmOpacity, mChkSmooth, mChkTickTack, mChk1530, mChkHours);
+            fs.initialization(mChkSeconds, mChkGMT, mChkDate, mChkDay, mChkMoving, mChkAlwaysOnTop, 
+                mChkTransparent, mChkBorder, mFrmOpacity, mChkSmooth, mChkTickTack, mChk1530, mChkHours);
 
             fs.ShowDialog();
 
             if (fs.mClose > 0)
             {
+                mChkSeconds = fs.mChkSeconds;
                 mChkGMT = fs.mChkGMT;
                 mChkDate = fs.mChkDate;
                 mChkDay = fs.mChkDay;

@@ -46,6 +46,7 @@
             chkHours = new CheckBox();
             chk1530 = new CheckBox();
             groupBox3 = new GroupBox();
+            chkSeconds = new CheckBox();
             groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)trckBarOpacity).BeginInit();
             groupBox1.SuspendLayout();
@@ -82,6 +83,7 @@
             // 
             // groupBox1
             // 
+            groupBox1.Controls.Add(chkSeconds);
             groupBox1.Controls.Add(chkSmooth);
             groupBox1.Controls.Add(chkBorder);
             groupBox1.Controls.Add(chkAlwaysOnTop);
@@ -103,7 +105,7 @@
             // chkSmooth
             // 
             chkSmooth.FlatStyle = FlatStyle.System;
-            chkSmooth.Location = new Point(85, 80);
+            chkSmooth.Location = new Point(197, 80);
             chkSmooth.Margin = new Padding(4, 5, 4, 5);
             chkSmooth.Name = "chkSmooth";
             chkSmooth.Size = new Size(111, 31);
@@ -136,7 +138,7 @@
             // chkTransparent
             // 
             chkTransparent.FlatStyle = FlatStyle.System;
-            chkTransparent.Location = new Point(85, 50);
+            chkTransparent.Location = new Point(92, 80);
             chkTransparent.Margin = new Padding(4, 5, 4, 5);
             chkTransparent.Name = "chkTransparent";
             chkTransparent.Size = new Size(111, 31);
@@ -148,7 +150,7 @@
             // 
             chkMoving.AutoSize = true;
             chkMoving.FlatStyle = FlatStyle.System;
-            chkMoving.Location = new Point(86, 22);
+            chkMoving.Location = new Point(93, 52);
             chkMoving.Margin = new Padding(4, 5, 4, 5);
             chkMoving.Name = "chkMoving";
             chkMoving.Size = new Size(90, 25);
@@ -184,7 +186,7 @@
             // 
             chkGMT.AutoSize = true;
             chkGMT.FlatStyle = FlatStyle.System;
-            chkGMT.Location = new Point(12, 22);
+            chkGMT.Location = new Point(93, 26);
             chkGMT.Margin = new Padding(4, 5, 4, 5);
             chkGMT.Name = "chkGMT";
             chkGMT.Size = new Size(71, 25);
@@ -249,6 +251,17 @@
             groupBox3.TabStop = false;
             groupBox3.Text = "Sounds";
             // 
+            // chkSeconds
+            // 
+            chkSeconds.FlatStyle = FlatStyle.System;
+            chkSeconds.Location = new Point(12, 26);
+            chkSeconds.Margin = new Padding(4, 5, 4, 5);
+            chkSeconds.Name = "chkSeconds";
+            chkSeconds.Size = new Size(80, 25);
+            chkSeconds.TabIndex = 14;
+            chkSeconds.Text = "Secunds";
+            chkSeconds.UseVisualStyleBackColor = true;
+            // 
             // FSetup
             // 
             AcceptButton = btnOk;
@@ -294,5 +307,6 @@
         private CheckBox chkHours;
         private CheckBox chk1530;
         private GroupBox groupBox3;
+        private CheckBox chkSeconds;
     }
 }

@@ -12,6 +12,7 @@ namespace Clock_csc_v2
 {
     public partial class FSetup : Form
     {
+        public bool mChkSeconds = true;
         public bool mChkGMT = false;
         public bool mChkDate = true;
         public bool mChkDay = true;
@@ -32,6 +33,7 @@ namespace Clock_csc_v2
         }
 
         public void initialization(
+            bool ChkSeconds,
             bool ChkGMT,
             bool ChkDate,
             bool ChkDay,
@@ -45,6 +47,7 @@ namespace Clock_csc_v2
             bool ChkSound1530,
             bool ChkSoundHours)
         {
+            this.mChkSeconds = ChkSeconds;
             this.mChkGMT = ChkGMT;
             this.mChkDate = ChkDate;
             this.mChkDay = ChkDay;
@@ -57,6 +60,7 @@ namespace Clock_csc_v2
             this.mChk1530 = ChkSound1530;
             this.mChkHours = ChkSoundHours;
 
+            this.chkSeconds.Checked = this.mChkSeconds; 
             this.chkGMT.Checked = this.mChkGMT;
             this.chkDate.Checked = this.mChkDate;
             this.chkDay.Checked = this.mChkDay;
@@ -76,6 +80,7 @@ namespace Clock_csc_v2
         {
             this.mClose = 1;
 
+            this.mChkSeconds = this.chkSeconds.Checked;
             this.mChkGMT = this.chkGMT.Checked;
             this.mChkDate = this.chkDate.Checked;
             this.mChkDay = this.chkDay.Checked;
