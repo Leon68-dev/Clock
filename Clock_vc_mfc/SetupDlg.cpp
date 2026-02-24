@@ -2,20 +2,18 @@
 #include "Clock_vc_mfc.h"
 #include "SetupDlg.h"
 
-CSetupDlg::CSetupDlg(BOOL gmt, BOOL date, BOOL day, BOOL moving, BOOL top, 
+CSetupDlg::CSetupDlg(BOOL seconds, BOOL gmt, BOOL date, BOOL day, BOOL moving, BOOL top, 
     BOOL trans, BOOL border, int opacity, BOOL smooth,
     BOOL soundTickTack, BOOL sound1530, BOOL soundHours,
     BOOL digitalClock, BOOL calendar, BOOL sysMon, BOOL ping, BOOL weather,
     CString pingAddr, CString weatherCity, CString weatherUrl, BOOL sound24Hours,
-    CWnd* pParent) : CDialogEx(IDD_SETUP_DLG, pParent)
-    , m_bGMT(gmt), m_bDate(date), m_bDay(day), m_bMoving(moving)
-    , m_bTopMost(top), m_bTransparent(trans), m_bBorder(border)
-    , m_nOpacity(opacity), m_bSmooth(smooth)
-    , m_bTickTack(soundTickTack), m_b1530(sound1530), m_bHours(soundHours)
-    , m_bDigitalClock(digitalClock), m_bCalendar(calendar)
-    , m_bSysMon(sysMon), m_bPing(ping), m_bWeather(weather) 
-    , m_strPingAddress(pingAddr), m_strWeatherCity(weatherCity), m_strWeatherUrl(weatherUrl)
-    , m_b24Hours(sound24Hours) { }
+    CWnd* pParent) : CDialogEx(IDD_SETUP_DLG, pParent),
+    m_bSeconds(seconds), m_bGMT(gmt), m_bDate(date), m_bDay(day), m_bMoving(moving),
+    m_bTopMost(top), m_bTransparent(trans), m_bBorder(border) , m_nOpacity(opacity),
+    m_bSmooth(smooth), m_bTickTack(soundTickTack), m_b1530(sound1530), m_bHours(soundHours),
+    m_bDigitalClock(digitalClock), m_bCalendar(calendar), m_bSysMon(sysMon), m_bPing(ping),
+    m_bWeather(weather), m_strPingAddress(pingAddr), m_strWeatherCity(weatherCity),
+    m_strWeatherUrl(weatherUrl), m_b24Hours(sound24Hours) { }
 
 void CSetupDlg::DoDataExchange(CDataExchange* pDX)
 {
@@ -23,6 +21,7 @@ void CSetupDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, IDC_SLIDER_OPACITY, m_sliderOpacity);
 
     // Зв'язуємо чекбокси зі змінними (DDX автоматично ставить/знімає галочки)
+    DDX_Check(pDX, IDC_CHK_SECONDS, m_bSeconds);
     DDX_Check(pDX, IDC_CHK_GMT, m_bGMT);
     DDX_Check(pDX, IDC_CHK_DATE, m_bDate);
     DDX_Check(pDX, IDC_CHK_DAY, m_bDay);

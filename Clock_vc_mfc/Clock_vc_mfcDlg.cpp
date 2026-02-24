@@ -29,6 +29,7 @@ CClockvcmfcDlg::CClockvcmfcDlg(CWnd* pParent /*=nullptr*/)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
+	m_bSeconds = TRUE;
 	m_bGMT = FALSE;
 	m_bDate = TRUE;
 	m_bDay = TRUE;
@@ -260,15 +261,16 @@ void CClockvcmfcDlg::DrawPanelBackground(Gdiplus::Graphics& g, float w, float h)
 
 void CClockvcmfcDlg::DrawAnalogClock(Gdiplus::Graphics& g, float xCenter, float yCenter, float radius)
 {
-	const float PI = 3.1415926535f;
 	float borderThickness = 6.0f;
 
-	if (!m_bTransparent) {
+	if (!m_bTransparent) 
+	{
 		Gdiplus::SolidBrush faceBrush(Gdiplus::Color(255, 242, 238, 225));
 		g.FillEllipse(&faceBrush, xCenter - radius, yCenter - radius, radius * 2.0f, radius * 2.0f);
 	}
 
-	if (m_bBorder) {
+	if (m_bBorder) 
+	{
 		Gdiplus::RectF penRect(xCenter - radius, yCenter - radius, radius * 2.0f, radius * 2.0f);
 		float inset = borderThickness / 2.0f;
 		penRect.Inflate(-inset, -inset);
@@ -324,16 +326,21 @@ void CClockvcmfcDlg::DrawAnalogClock(Gdiplus::Graphics& g, float xCenter, float 
 	g.DrawString(L"C++", -1, &fontText, Gdiplus::PointF(xCenter, yCenter + 16.0f - innerRadius * 0.52f), &sf, &bGray);
 
 	float yDelta = 5.0f;
-	if (m_bDay) {
+	if (m_bDay) 
+	{
 		CString strDay = now.Format(_T("%a")); strDay.MakeUpper();
 		bool isWeekend = (now.GetDayOfWeek() == 1 || now.GetDayOfWeek() == 7);
 		Gdiplus::SolidBrush bDay(isWeekend ? Gdiplus::Color(255, 240, 128, 128) : Gdiplus::Color::Gray);
 		g.DrawString(strDay, -1, &fontText, Gdiplus::PointF(xCenter, yCenter + yDelta + innerRadius * 0.12f), &sf, &bDay);
 	}
-	if (m_bDate) {
+	
+	if (m_bDate) 
+	{
 		g.DrawString(now.Format(_T("%d-%m-%y")), -1, &fontText, Gdiplus::PointF(xCenter, yCenter + yDelta + innerRadius * 0.35f), &sf, &bGray);
 	}
-	if (m_bGMT) {
+	
+	if (m_bGMT) 
+	{
 		g.DrawString(L"GMT", -1, &fontText, Gdiplus::PointF(xCenter, yCenter + yDelta + innerRadius * 0.58f), &sf, &bGray);
 	}
 
@@ -345,17 +352,19 @@ void CClockvcmfcDlg::DrawAnalogClock(Gdiplus::Graphics& g, float xCenter, float 
 	DrawHandHelper(g, xCenter, yCenter, fHours, innerRadius * 0.58f, 6.5f, true);
 	DrawHandHelper(g, xCenter, yCenter, fMinutes, innerRadius * 0.85f, 4.5f, true);
 
-	float sAngle = fSeconds * PI / 30.0f - PI / 2.0f;
-	Gdiplus::Pen pSec(Gdiplus::Color::Red, 1.5f);
-	g.DrawLine(&pSec, xCenter - cosf(sAngle) * (innerRadius * 0.15f), yCenter - sinf(sAngle) * (innerRadius * 0.15f),
-		xCenter + cosf(sAngle) * (innerRadius * 0.95f), yCenter + sinf(sAngle) * (innerRadius * 0.95f));
+	if (m_bSeconds)
+	{
+		float sAngle = fSeconds * PI / 30.0f - PI / 2.0f;
+		Gdiplus::Pen pSec(Gdiplus::Color::Red, 1.5f);
+		g.DrawLine(&pSec, xCenter - cosf(sAngle) * (innerRadius * 0.15f), yCenter - sinf(sAngle) * (innerRadius * 0.15f),
+			xCenter + cosf(sAngle) * (innerRadius * 0.95f), yCenter + sinf(sAngle) * (innerRadius * 0.95f));
+	}
 
 	g.FillEllipse(&brushBlack, xCenter - 4.0f, yCenter - 4.0f, 8.0f, 8.0f);
 }
 
 void CClockvcmfcDlg::DrawHandHelper(Gdiplus::Graphics& g, float xCenter, float yCenter, float val, float len, float width, bool hasWhiteLine)
 {
-	const float PI = 3.1415926535f;
 	float a = val * PI / 30.0f - PI / 2.0f;
 	float x = xCenter + cosf(a) * len;
 	float y = yCenter + sinf(a) * len;
@@ -365,7 +374,8 @@ void CClockvcmfcDlg::DrawHandHelper(Gdiplus::Graphics& g, float xCenter, float y
 	pBlack.SetEndCap(Gdiplus::LineCapRound);
 	g.DrawLine(&pBlack, xCenter, yCenter, x, y);
 
-	if (hasWhiteLine) {
+	if (hasWhiteLine) 
+	{
 		Gdiplus::Pen pWhite(Gdiplus::Color::White, width / 2.2f);
 		pWhite.SetStartCap(Gdiplus::LineCapRound);
 		pWhite.SetEndCap(Gdiplus::LineCapRound);
@@ -376,7 +386,10 @@ void CClockvcmfcDlg::DrawHandHelper(Gdiplus::Graphics& g, float xCenter, float y
 void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float yStart)
 {
 	SYSTEMTIME st;
-	if (m_bGMT) ::GetSystemTime(&st); else ::GetLocalTime(&st);
+	if (m_bGMT) 
+		::GetSystemTime(&st); 
+	else 
+		::GetLocalTime(&st);
 
 	Gdiplus::FontFamily digFamily;
 	int numFound = 0;
@@ -703,9 +716,7 @@ void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 			{
 				// Не перериваємо довгі звуки
 				if (!IsPlayingMCI(_T("hours")) && !IsPlayingMCI(_T("chime")))
-				{
 					PlayMCI(GetSoundPath(_T("_TickTack.wav")), _T("tick"));
-				}
 			}
 
 			// Оновлення тексту в треї (раз на секунду достатньо)
@@ -801,13 +812,14 @@ void CClockvcmfcDlg::OnMenuShutdown()
 
 void CClockvcmfcDlg::OnMenuSetup()
 {
-	CSetupDlg dlg(m_bGMT, m_bDate, m_bDay, m_bMoving, m_bTopMost, m_bTransparent,
-		m_bBorder, m_nOpacity, m_bSmooth, m_bTickTack, m_b1530, m_bHours,
-		m_bDigitalClock, m_bCalendar, m_bSysMon, m_bPing, m_bWeather,
-		m_strPingAddress, m_strWeatherCity, m_strWeatherUrl, m_b24Hours);
+	CSetupDlg dlg(m_bSeconds, m_bGMT, m_bDate, m_bDay, m_bMoving, m_bTopMost, m_bTransparent,
+		m_bBorder, m_nOpacity, m_bSmooth, m_bTickTack, m_b1530, m_bHours, m_bDigitalClock, 
+		m_bCalendar, m_bSysMon, m_bPing, m_bWeather, m_strPingAddress, m_strWeatherCity, 
+		m_strWeatherUrl, m_b24Hours);
 
 	if (dlg.DoModal() == IDOK)
 	{
+		m_bSeconds = dlg.m_bSeconds;
 		m_bGMT = dlg.m_bGMT;
 		m_bDate = dlg.m_bDate;
 		m_bDay = dlg.m_bDay;
@@ -884,11 +896,10 @@ CString CClockvcmfcDlg::GetIniPath()
 	TCHAR szPath[MAX_PATH];
 	GetModuleFileName(NULL, szPath, MAX_PATH);
 	CString strPath(szPath);
+
 	int nIndex = strPath.ReverseFind(_T('\\'));
 	if (nIndex != -1)
-	{
 		strPath = strPath.Left(nIndex + 1);
-	}
 
 	return strPath + _T("clock_vc_mfc.ini");
 }
@@ -903,6 +914,7 @@ void CClockvcmfcDlg::SaveSettings()
 		WritePrivateProfileString(_T("Settings"), key, val ? _T("1") : _T("0"), strPath);
 	};
 
+	WriteBool(_T("chkSeconds"), m_bSeconds);
 	WriteBool(_T("chkGMT"), m_bGMT);
 	WriteBool(_T("chkDate"), m_bDate);
 	WriteBool(_T("chkDay"), m_bDay);
@@ -951,6 +963,7 @@ void CClockvcmfcDlg::LoadSettings()
 		return GetPrivateProfileInt(_T("Settings"), key, def, strPath);
 	};
 
+	m_bSeconds = GetBool(_T("chkSeconds"), 1);
 	m_bGMT = GetBool(_T("chkGMT"), 0);
 	m_bDate = GetBool(_T("chkDate"), 1);
 	m_bDay = GetBool(_T("chkDay"), 1);
@@ -1325,7 +1338,8 @@ void CClockvcmfcDlg::UpdatePing()
 					PICMP_ECHO_REPLY pEchoReply = (PICMP_ECHO_REPLY)replyBuffer;
 					m_nPingValue = (int)pEchoReply->RoundTripTime;
 				}
-				else {
+				else 
+				{
 					m_nPingValue = -1; // Timeout або помилка мережі
 				}
 				free(replyBuffer);
@@ -1411,24 +1425,31 @@ void CClockvcmfcDlg::UpdateWeather()
 			// 2. HTTP запит (код залишається майже таким самим, але міняємо протокол на HTTPS)
 			CString jsonResponse;
 			HINTERNET hSession = WinHttpOpen(L"MFC-Clock/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
-			if (hSession) {
+			if (hSession) 
+			{
 				URL_COMPONENTS urlComp = { sizeof(urlComp) };
 				urlComp.dwHostNameLength = (DWORD)-1;
 				urlComp.dwUrlPathLength = (DWORD)-1;
-				if (WinHttpCrackUrl(url, (DWORD)url.GetLength(), 0, &urlComp)) {
+				if (WinHttpCrackUrl(url, (DWORD)url.GetLength(), 0, &urlComp)) 
+				{
 					CString host(urlComp.lpszHostName, urlComp.dwHostNameLength);
 					// Для HTTPS використовуємо INTERNET_DEFAULT_HTTPS_PORT (443)
 					HINTERNET hConnect = WinHttpConnect(hSession, host, INTERNET_DEFAULT_HTTPS_PORT, 0);
-					if (hConnect) {
+					if (hConnect) 
+					{
 						// Додаємо прапорець WINHTTP_FLAG_SECURE для HTTPS
 						HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", urlComp.lpszUrlPath, NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
-						if (hRequest && WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0) && WinHttpReceiveResponse(hRequest, NULL)) {
+						if (hRequest && WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0) && WinHttpReceiveResponse(hRequest, NULL)) 
+						{
 							DWORD dwSize = 0;
-							do {
-								if (WinHttpQueryDataAvailable(hRequest, &dwSize) && dwSize > 0) {
+							do 
+							{
+								if (WinHttpQueryDataAvailable(hRequest, &dwSize) && dwSize > 0) 
+								{
 									char* buffer = new char[dwSize + 1];
 									DWORD dwDownloaded = 0;
-									if (WinHttpReadData(hRequest, buffer, dwSize, &dwDownloaded)) {
+									if (WinHttpReadData(hRequest, buffer, dwSize, &dwDownloaded)) 
+									{
 										buffer[dwDownloaded] = 0;
 										jsonResponse += CA2W(buffer, CP_UTF8);
 									}
@@ -1481,13 +1502,20 @@ void CClockvcmfcDlg::UpdateWeather()
 						int code = _ttoi(codeStr);
 
 						// Мапування кодів (залишаємо як було)
-						if (code == 0) m_strWeatherDesc = _T("Clear sky");
-						else if (code >= 1 && code <= 3) m_strWeatherDesc = _T("Partly cloudy");
-						else if (code >= 45 && code <= 48) m_strWeatherDesc = _T("Foggy");
-						else if (code >= 51 && code <= 67) m_strWeatherDesc = _T("Rainy");
-						else if (code >= 71 && code <= 77) m_strWeatherDesc = _T("Snowy");
-						else if (code >= 80) m_strWeatherDesc = _T("Showers");
-						else m_strWeatherDesc = _T("Cloudy");
+						if (code == 0) 
+							m_strWeatherDesc = _T("Clear sky");
+						else if (code >= 1 && code <= 3) 
+							m_strWeatherDesc = _T("Partly cloudy");
+						else if (code >= 45 && code <= 48) 
+							m_strWeatherDesc = _T("Foggy");
+						else if (code >= 51 && code <= 67) 
+							m_strWeatherDesc = _T("Rainy");
+						else if (code >= 71 && code <= 77) 
+							m_strWeatherDesc = _T("Snowy");
+						else if (code >= 80) 
+							m_strWeatherDesc = _T("Showers");
+						else 
+							m_strWeatherDesc = _T("Cloudy");
 					}
 				}
 			}
@@ -1546,7 +1574,6 @@ void CClockvcmfcDlg::DrawWeather(Gdiplus::Graphics& g, float w, float yStart)
 		g.DrawImage(m_pWeatherIcon, (w / 2.0f) - 60.0f, weaY + 12.0f, 32.0f, 32.0f);
 	}
 }
-
 
 void CClockvcmfcDlg::OnMouseMove(UINT nFlags, CPoint point)
 {

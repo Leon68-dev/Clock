@@ -24,6 +24,7 @@ protected:
 	CWorldMapDlg* m_pMapDlg = nullptr;
 
 	// --- Налаштування годинника (змінні) ---
+	BOOL m_bSeconds;
 	BOOL m_bGMT;
 	BOOL m_bDate;
 	BOOL m_bDay;

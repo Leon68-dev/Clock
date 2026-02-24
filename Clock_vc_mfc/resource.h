@@ -45,8 +45,9 @@
 #define IDC_CHK_WEATHER                 1030
 #define IDC_EDT_WEATHER_CITY            1031
 #define IDC_EDT_WEATHER_KEY             1032
-#define IDC_BUTTON1                     1034
 #define IDC_BTN_LINK                    1034
+#define IDC_CHECK1                      1035
+#define IDC_CHK_SECONDS                 1035
 #define ID_MENU_SETUP                   32771
 #define ID_MENU_ABOUT                   32772
 #define ID_MENU_CALENDAR                32773
@@ -70,7 +71,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        144
 #define _APS_NEXT_COMMAND_VALUE         32787
-#define _APS_NEXT_CONTROL_VALUE         1035
+#define _APS_NEXT_CONTROL_VALUE         1036
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
