@@ -348,7 +348,6 @@ namespace Clock_csc_v2
             _gBuffer.Clear(Color.Transparent);
             _gBuffer.DrawImageUnscaled(_staticFace, 0, 0);
            
-            DrawClockLabels(_gBuffer);
             DrawClock(_gBuffer);
 
             IntPtr screenDc = Win32.GetDC(IntPtr.Zero);
@@ -376,30 +375,6 @@ namespace Clock_csc_v2
             float yCenter = this.Height / 2.0f;
             float innerRadius = (Math.Min(this.Width, this.Height) / 2.0f) - 7.5f;
 
-            float fSeconds = mChkSmooth ? (mCurDateTime.Second + mCurDateTime.Millisecond / 1000.0f) : mCurDateTime.Second;
-            float fMinutes = mCurDateTime.Minute + fSeconds / 60.0f;
-            float fHours = (mCurDateTime.Hour % 12 + fMinutes / 60.0f) * 5.0f;
-
-            DrawHand(g, xCenter, yCenter, fHours, innerRadius * 0.58f, 6.5f, true);
-            DrawHand(g, xCenter, yCenter, fMinutes, innerRadius * 0.85f, 4.5f, true);
-
-            if (mChkSeconds) 
-            {
-                float sAngle = (float)(fSeconds * Math.PI / 30.0 - Math.PI / 2.0);
-                float cosS = (float)Math.Cos(sAngle);
-                float sinS = (float)Math.Sin(sAngle);
-                g.DrawLine(_penSec, xCenter - cosS * (innerRadius * 0.15f), yCenter - sinS * (innerRadius * 0.15f), xCenter + cosS * (innerRadius * 0.95f), yCenter + sinS * (innerRadius * 0.95f));
-            }
-
-            g.FillEllipse(_brushBlack, xCenter - 4, yCenter - 4, 8, 8);
-        }
-
-        private void DrawClockLabels(Graphics g)
-        {
-            float xCenter = this.Width / 2.0f;
-            float yCenter = this.Height / 2.0f;
-            float innerRadius = (Math.Min(this.Width, this.Height) / 2.0f) - 7.5f;
-
             g.DrawString("LAN", _fontLN, _brushLN, xCenter, yCenter - innerRadius * 0.52f, _sfCenter);
             g.DrawString("C#", _fontText, _brushCS, xCenter, yCenter + 16.0f - innerRadius * 0.52f, _sfCenter);
 
@@ -421,6 +396,22 @@ namespace Clock_csc_v2
                 g.DrawString("GMT", _fontText, _brushUTC, xCenter, yCenter + yDelta + innerRadius * 0.58f, _sfCenter);
             }
 
+            float fSeconds = mChkSmooth ? (mCurDateTime.Second + mCurDateTime.Millisecond / 1000.0f) : mCurDateTime.Second;
+            float fMinutes = mCurDateTime.Minute + fSeconds / 60.0f;
+            float fHours = (mCurDateTime.Hour % 12 + fMinutes / 60.0f) * 5.0f;
+
+            DrawHand(g, xCenter, yCenter, fHours, innerRadius * 0.58f, 6.5f, true);
+            DrawHand(g, xCenter, yCenter, fMinutes, innerRadius * 0.85f, 4.5f, true);
+
+            if (mChkSeconds) 
+            {
+                float sAngle = (float)(fSeconds * Math.PI / 30.0 - Math.PI / 2.0);
+                float cosS = (float)Math.Cos(sAngle);
+                float sinS = (float)Math.Sin(sAngle);
+                g.DrawLine(_penSec, xCenter - cosS * (innerRadius * 0.15f), yCenter - sinS * (innerRadius * 0.15f), xCenter + cosS * (innerRadius * 0.95f), yCenter + sinS * (innerRadius * 0.95f));
+            }
+
+            g.FillEllipse(_brushBlack, xCenter - 4, yCenter - 4, 8, 8);
         }
 
         private void DrawHand(Graphics g, float xc, float yc, float val, float len, float width, bool whiteLine)
