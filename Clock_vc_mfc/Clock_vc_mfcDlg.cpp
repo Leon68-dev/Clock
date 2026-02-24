@@ -286,18 +286,22 @@ void CClockvcmfcDlg::DrawAnalogClock(Gdiplus::Graphics& g, float xCenter, float 
 	Gdiplus::SolidBrush brushBlack(Gdiplus::Color::Black);
 	Gdiplus::SolidBrush brushFace(Gdiplus::Color(255, 242, 238, 225));
 
-	for (int i = 0; i < 60; i++) {
+	for (int i = 0; i < 60; i++) 
+	{
 		float angle = i * PI / 30.0f - PI / 2.0f;
 		float cosA = cosf(angle);
 		float sinA = sinf(angle);
-		if (i % 5 == 0) {
-			float len = (i % 15 == 0) ? innerRadius * 0.22f : innerRadius * 0.15f;
+		if (i % 5 == 0) 
+		{
+			float len = /* (i % 15 == 0) ? innerRadius * 0.22f : */ innerRadius * 0.15f;
+
 			Gdiplus::Pen* p = (i % 15 == 0) ? &penQuarter : &penHour;
 			g.DrawLine(p, xCenter + cosA * (innerRadius - len), yCenter + sinA * (innerRadius - len),
 				xCenter + cosA * (innerRadius + 3.0f), yCenter + sinA * (innerRadius + 3.0f));
 			g.FillEllipse(&brushFace, xCenter + cosA * (innerRadius - len) - 1.5f, yCenter + sinA * (innerRadius - len) - 1.5f, 3.0f, 3.0f);
 		}
-		else {
+		else 
+		{
 			g.FillEllipse(&brushBlack, xCenter + cosA * (innerRadius + 1.5f) - 1.3f, yCenter + sinA * (innerRadius + 1.5f) - 1.3f, 2.6f, 2.6f);
 		}
 	}
