@@ -20,6 +20,10 @@ set(SOURCES
     src/CalendarDialog.cpp
     src/ShutdownDialog.h  
     src/ShutdownDialog.cpp
+    src/WorldMapDialog.h
+    src/WorldMapDialog.cpp
+    src/AboutDialog.h
+    src/AboutDialog.cpp
     res/resources.qrc
 )
 

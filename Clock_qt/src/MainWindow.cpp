@@ -6,6 +6,8 @@
 #include "SetupDialog.h"
 #include "CalendarDialog.h"
 #include "ShutdownDialog.h"
+#include "WorldMapDialog.h"
+#include "AboutDialog.h"
 
 MainWindow::MainWindow(QWidget* parent) : QWidget(parent)
 {
@@ -879,12 +881,16 @@ void MainWindow::onMenuShutdown()
 
 void MainWindow::onMenuWorldMap()
 {
-    // Placeholder for World Map dialog
+    // We create it on heap but with 'this' as parent so it's managed
+    // Or just use a local variable for a modal dialog
+    WorldMapDialog dlg(this);
+    dlg.exec();
 }
 
 void MainWindow::onMenuAbout()
 {
-    // Placeholder for About dialog
+    AboutDialog dlg(this);
+    dlg.exec();
 }
 
 void MainWindow::onMenuExit()
@@ -1181,3 +1187,4 @@ void MainWindow::executeShutdown()
 #endif
     QProcess::startDetached(cmd);
 }
+
