@@ -90,10 +90,11 @@ void MainWindow::paintEvent(QPaintEvent*)
     p.setRenderHint(QPainter::Antialiasing);
 
     // 1. Draw Global Glass Background (Only visible on Hover)
-    // MFC: alpha = m_bMouseOver ? 160 : 1
     int glassAlpha = m_bMouseOver ? 160 : 1;
+    float cornerRadius = 8.0f; // Reduced from 15 to 8
+
     QPainterPath fullPath;
-    fullPath.addRoundedRect(rect().adjusted(1, 1, -1, -1), 15, 15);
+    fullPath.addRoundedRect(rect().adjusted(1, 1, -1, -1), cornerRadius, cornerRadius);
     p.fillPath(fullPath, QColor(20, 20, 20, glassAlpha));
 
     if (m_bBorder)
@@ -103,21 +104,20 @@ void MainWindow::paintEvent(QPaintEvent*)
         p.drawPath(fullPath);
     }
 
-    // 2. Calculate where modules start (after Analog and Digital clocks)
-    int modulesYStart = 130; // End of Analog
+    // 2. Calculate where modules start
+    int modulesYStart = 130;
     if (m_bDigitalClock)
     {
-        modulesYStart += 50; // Add Digital clock height
+        modulesYStart += 50;
     }
 
     // 3. Draw Modules Background (Gray underlay)
-    // MFC: Color(100, 60, 60, 60)
     if (m_bCalendar || m_bSysMon || m_bPing || m_bWeather)
     {
         QRectF modulesRect(0, modulesYStart, width(), height() - modulesYStart);
         QPainterPath modulesPath;
-        // Round only bottom corners or all? In MFC you used full rounded rect
-        modulesPath.addRoundedRect(modulesRect.adjusted(1, 0, -1, -1), 15, 15);
+        // Use the same reduced radius here
+        modulesPath.addRoundedRect(modulesRect.adjusted(1, 0, -1, -1), cornerRadius, cornerRadius);
 
         p.fillPath(modulesPath, QColor(60, 60, 60, 100));
         p.setPen(QPen(QColor(255, 255, 255, 50), 1));
@@ -135,7 +135,6 @@ void MainWindow::paintEvent(QPaintEvent*)
         currentY += 50;
     }
 
-    // Modules are drawn on top of the gray background
     if (m_bCalendar)
     {
         drawCalendar(p, currentY);
@@ -151,7 +150,7 @@ void MainWindow::paintEvent(QPaintEvent*)
     if (m_bPing)
     {
         drawPing(p, currentY);
-        currentY += 40;
+        currentY += 25;
     }
 
     if (m_bWeather)
