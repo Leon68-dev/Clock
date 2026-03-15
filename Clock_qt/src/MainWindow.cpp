@@ -24,6 +24,8 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent)
     // 4. Now it is safe to load and apply settings
     loadSettings();
     applySettings();
+    
+    createTrayIcon();
 
     setFixedWidth(122);
     setFixedHeight(530);
@@ -58,6 +60,11 @@ void MainWindow::onTimerTick()
     if (time.second() != lastSec)
     {
         lastSec = time.second();
+
+        QString tip = now.toString("dddd - HH:mm");
+        if (m_bGMT)
+            tip += " GMT";
+        m_trayIcon->setToolTip(tip);
 
         // 1. Match MFC logic: Update metrics and ping every 3 seconds
         if (time.second() % 3 == 0)
@@ -786,9 +793,33 @@ void MainWindow::contextMenuEvent(QContextMenuEvent* event)
     menu.exec(event->globalPos());
 }
 
+void MainWindow::onTrayIconActivated(QSystemTrayIcon::ActivationReason reason)
+{
+    if (reason == QSystemTrayIcon::DoubleClick)
+    {
+        if (isVisible())
+        {
+            hide();
+        }
+        else
+        {
+            show();
+            activateWindow();
+        }
+    }
+}
+
 void MainWindow::onMenuHide()
 {
-    this->hide();
+    if (isVisible())
+    {
+        hide();
+    }
+    else
+    {
+        show();
+        activateWindow();
+    }
 }
 
 void MainWindow::onMenuStartPosition()
@@ -1075,3 +1106,34 @@ void MainWindow::playHourlyChime(int hours)
     m_soundBoom.setLoopCount(count);
     m_soundBoom.play();
 }
+
+void MainWindow::createTrayIcon()
+{
+    m_trayIcon = new QSystemTrayIcon(this);
+
+    // Set icon from your resources
+    m_trayIcon->setIcon(QIcon(":/Clock_vc_mfc.ico"));
+
+    // Create context menu for tray
+    QMenu* trayMenu = new QMenu(this);
+
+    QAction* setupAct = trayMenu->addAction("Setup...");
+    QAction* hideAct = trayMenu->addAction("Hide");
+    trayMenu->addSeparator();
+    QAction* aboutAct = trayMenu->addAction("About...");
+    trayMenu->addSeparator();
+    QAction* exitAct = trayMenu->addAction("Exit");
+
+    connect(setupAct, &QAction::triggered, this, &MainWindow::onMenuSetup);
+    connect(hideAct, &QAction::triggered, this, &MainWindow::onMenuHide);
+    connect(aboutAct, &QAction::triggered, this, &MainWindow::onMenuAbout);
+    connect(exitAct, &QAction::triggered, this, &MainWindow::onMenuExit);
+
+    m_trayIcon->setContextMenu(trayMenu);
+
+    // Handle double click on tray icon
+    connect(m_trayIcon, &QSystemTrayIcon::activated, this, &MainWindow::onTrayIconActivated);
+
+    m_trayIcon->show();
+}
+

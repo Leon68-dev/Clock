@@ -22,6 +22,7 @@
 #include <QSettings>
 #include <QScreen>
 #include <QGuiApplication>
+#include <QSystemTrayIcon>
 #include "SystemMonitor.h"
 #include "SetupDialog.h"
 
@@ -51,6 +52,7 @@ private slots:
     void onMenuWorldMap();
     void onMenuAbout();
     void onMenuExit();
+    void onTrayIconActivated(QSystemTrayIcon::ActivationReason reason);
 
 private:
     QTimer* timer = nullptr; // Initialize with nullptr
@@ -120,6 +122,9 @@ private:
     void updateThemeColor();
 
     void playHourlyChime(int hours);
+
+    QSystemTrayIcon* m_trayIcon = nullptr;
+    void createTrayIcon();
 
 };
 
