@@ -19,6 +19,7 @@
 #include <QContextMenuEvent>
 #include <QMenu>
 #include <QAction>
+#include <QSettings>
 #include "SystemMonitor.h"
 #include "SetupDialog.h"
 
@@ -38,11 +39,19 @@ protected:
 private slots:
     void onTimerTick();
     void onWeatherReceived(QNetworkReply* reply);
+    void onMenuSetup();
+    void onMenuHide();
+    void onMenuStartPosition();
+    void onMenuCalendar();
+    void onMenuShutdown();
+    void onMenuWorldMap();
+    void onMenuAbout();
+    void onMenuExit();
 
 private:
-    QTimer* timer;
+    QTimer* timer = nullptr; // Initialize with nullptr
     QPoint dragPos;
-    
+
     void drawAnalogClock(QPainter& p);
     void drawHandHelper(QPainter& p, float x, float y, float angle, float len, float width, bool hasWhiteLine);
     void drawDigitalClock(QPainter& p, int yStart);
@@ -59,7 +68,6 @@ private:
     float currentRam = 0.0f;
     int currentPing = -1;
     QString weatherTemp = "?°C";
-    bool m_bTickTack = false;
 
     QSoundEffect tickSound;
     QSoundEffect hourSound;
@@ -67,23 +75,38 @@ private:
 
     QString m_digitalFontFamily; // To store the loaded font name
 
-    QString m_pingAddress = "8.8.8.8"; // Default address
+    QString m_strPingAddress = "8.8.8.8"; // Default address
     int m_pingValue = -1;              // -1 means no response
     bool m_isPingInProgress = false;
     
-    QString m_weatherCity = "Odesa,UA";
+    QString m_strWeatherCity = "Odesa,UA";
     QString m_weatherTemp = "?°C";
     QString m_weatherDesc = "Loading...";
-    QString m_weatherUrl = "https://api.open-meteo.com/v1/forecast?latitude=46.48&longitude=30.72&current=temperature_2m,weather_code";
+    QString m_strWeatherUrl = "https://api.open-meteo.com/v1/forecast?latitude=46.48&longitude=30.72&current=temperature_2m,weather_code";
 
-    void onMenuSetup();
-    void onMenuHide();
-    void onMenuStartPosition();
-    void onMenuCalendar();
-    void onMenuShutdown();
-    void onMenuWorldMap();
-    void onMenuAbout();
-    void onMenuExit();
+    bool m_bSeconds = true;
+    bool m_bGMT = false;
+    bool m_bDate = true;
+    bool m_bDay = true;
+    bool m_bMoving = true;
+    bool m_bTopMost = false;
+    bool m_bTransparent = false;
+    bool m_bBorder = true;
+    bool m_bSmooth = true;
+    bool m_bTickTack = false;
+    bool m_b1530 = false;
+    bool m_bHours = false;
+    bool m_bDigitalClock = true;
+    bool m_b24Hours = true;
+    bool m_bCalendar = true;
+    bool m_bSysMon = true;
+    bool m_bPing = true;
+    bool m_bWeather = false;
+    int m_nOpacity = 80;
+
+    void loadSettings();
+    void saveSettings();
+    void applySettings();
 
 };
 

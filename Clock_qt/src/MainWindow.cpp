@@ -1,20 +1,32 @@
-#include "MainWindow.h"
 #include <QDateTime>
 #include <QMouseEvent>
 #include <QFontDatabase>
+#include "MainWindow.h"
+#include "SetupDialog.h"
 
 MainWindow::MainWindow(QWidget* parent) : QWidget(parent)
 {
-    // Window settings
-    setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
-    setAttribute(Qt::WA_TranslucentBackground);
-    
-    setFixedWidth(122);
-    setFixedHeight(530); // Height will be dynamic later
+    // 1. Initialize pointers to nullptr first
+    timer = nullptr;
+    networkManager = nullptr;
 
+    // 2. Create objects BEFORE applying settings
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &MainWindow::onTimerTick);
-    timer->start(200);
+
+    networkManager = new QNetworkAccessManager(this);
+    connect(networkManager, &QNetworkAccessManager::finished, this, &MainWindow::onWeatherReceived);
+
+    // 3. Window settings
+    setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
+    setAttribute(Qt::WA_TranslucentBackground);
+
+    // 4. Now it is safe to load and apply settings
+    loadSettings();
+    applySettings();
+
+    setFixedWidth(122);
+    setFixedHeight(530);
 
     // Load custom digital font from resources
     int fontId = QFontDatabase::addApplicationFont(":/digital_7italic.ttf");
@@ -23,36 +35,47 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent)
         m_digitalFontFamily = QFontDatabase::applicationFontFamilies(fontId).at(0);
     }
 
-    networkManager = new QNetworkAccessManager(this);
-    connect(networkManager, &QNetworkAccessManager::finished, this, &MainWindow::onWeatherReceived);
     updateWeather(); // Initial update
 }
 
 void MainWindow::onTimerTick()
 {
-    // Update system metrics
+    QDateTime now = m_bGMT ? QDateTime::currentDateTimeUtc() : QDateTime::currentDateTime();
+    QTime time = now.time();
+
+    // 1. Update metrics
     currentCpu = SystemMonitor::getCpuUsage();
     currentRam = SystemMonitor::getRamUsage();
 
-    if (m_bTickTack)
+    // 2. Sound Logic (Only once per second)
+    static int lastSec = -1;
+    if (time.second() != lastSec)
     {
-        tickSound.play();
+        lastSec = time.second();
+
+        // Hourly chime
+        if (m_bHours && time.minute() == 0 && time.second() == 0)
+        {
+            // Play hour sound (Boom)
+            hourSound.play();
+        }
+
+        // 15-30-45 minutes chime
+        if (m_b1530 && time.second() == 0)
+        {
+            if (time.minute() == 15 || time.minute() == 30 || time.minute() == 45)
+            {
+                // Play chime sound
+            }
+        }
+
+        // Tick-Tack
+        if (m_bTickTack)
+        {
+            tickSound.play();
+        }
     }
 
-    // Update ping every 5 seconds
-    static int pingCounter = 0;
-    if (pingCounter++ % 25 == 0) // 200ms * 25 = 5 seconds
-    {
-        updatePing();
-    }
-
-    static int weatherCounter = 0;
-    if (weatherCounter++ % 9000 == 0) // 200ms * 9000 = 30 minutes
-    {
-        updateWeather();
-    }
-
-    // Trigger repaint
     update();
 }
 
@@ -61,66 +84,102 @@ void MainWindow::paintEvent(QPaintEvent*)
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
 
-    // Draw panel background
+    // Draw background
     QPainterPath path;
     path.addRoundedRect(rect().adjusted(1, 1, -1, -1), 15, 15);
+    p.fillPath(path, QColor(20, 20, 20, 160));
+    if (m_bBorder)
+    {
+        p.setPen(QPen(QColor(255, 255, 255, 50), 1));
+        p.drawPath(path);
+    }
 
-    QColor bgColor(20, 20, 20, 160);
-    p.fillPath(path, bgColor);
-    p.setPen(QPen(QColor(255, 255, 255, 50), 1));
-    p.drawPath(path);
+    int currentY = 0;
 
+    // Always draw analog clock
     drawAnalogClock(p);
-    drawDigitalClock(p, 125);
-    drawCalendar(p, 175);
-    drawSystemMonitor(p, 285);
-    drawPing(p, 355);
-    drawWeather(p, 380);
+    currentY = 130;
+
+    if (m_bDigitalClock)
+    {
+        drawDigitalClock(p, currentY);
+        currentY += 50;
+    }
+
+    if (m_bCalendar)
+    {
+        drawCalendar(p, currentY);
+        currentY += 110;
+    }
+
+    if (m_bSysMon)
+    {
+        drawSystemMonitor(p, currentY);
+        currentY += 70;
+    }
+
+    if (m_bPing)
+    {
+        drawPing(p, currentY);
+        currentY += 40;
+    }
+
+    if (m_bWeather)
+    {
+        drawWeather(p, currentY);
+        currentY += 60;
+    }
+
+    // Adjust window height dynamically
+    if (height() != currentY + 10)
+    {
+        setFixedHeight(currentY + 10);
+    }
+
 }
 
 void MainWindow::drawAnalogClock(QPainter& p)
 {
     p.save();
-
     p.setRenderHint(QPainter::Antialiasing);
-    p.setRenderHint(QPainter::TextAntialiasing);
 
-    // Adjusted dimensions to match the smaller look
-    float xCenter = width() / 2.0f; // 75.0f
-    float yCenter = 65.0f;          // Moved slightly up
-    float radius = 54.0f;           // Reduced radius
-    float borderThickness = 5.0f;   // Slightly thinner border
+    float xCenter = width() / 2.0f;
+    float yCenter = 65.0f;
+    float radius = 54.0f;
+    float borderThickness = 5.0f;
     float innerRadius = radius - borderThickness - 1.0f;
 
-    // 1. Face background
-    p.setPen(Qt::NoPen);
-    p.setBrush(QColor(242, 238, 225));
-    p.drawEllipse(QPointF(xCenter, yCenter), radius, radius);
+    // 1. Face background - Check m_bTransparent
+    if (!m_bTransparent)
+    {
+        p.setPen(Qt::NoPen);
+        p.setBrush(QColor(242, 238, 225));
+        p.drawEllipse(QPointF(xCenter, yCenter), radius, radius);
+    }
 
-    // 2. Borders (Black and Gray)
-    p.setBrush(Qt::NoBrush);
-    p.setPen(QPen(Qt::black, borderThickness));
-    p.drawEllipse(QPointF(xCenter, yCenter), radius - borderThickness / 2.0f, radius - borderThickness / 2.0f);
+    // 2. Borders - Check m_bBorder
+    if (m_bBorder)
+    {
+        p.setBrush(Qt::NoBrush);
+        p.setPen(QPen(Qt::black, borderThickness));
+        p.drawEllipse(QPointF(xCenter, yCenter), radius - borderThickness / 2.0f, radius - borderThickness / 2.0f);
+        p.setPen(QPen(Qt::gray, 1.5f));
+        p.drawEllipse(QPointF(xCenter, yCenter), radius - borderThickness / 2.0f, radius - borderThickness / 2.0f);
+    }
 
-    p.setPen(QPen(Qt::gray, 1.5f));
-    p.drawEllipse(QPointF(xCenter, yCenter), radius - borderThickness / 2.0f, radius - borderThickness / 2.0f);
-
-    // 3. Marks (Hours and Minutes)
+    // 3. Marks (Always drawn)
     for (int i = 0; i < 60; ++i)
     {
         p.save();
         p.translate(xCenter, yCenter);
         p.rotate(i * 6.0);
-
         if (i % 5 == 0)
         {
-            // Hour marks
             p.setPen(QPen(Qt::black, (i % 15 == 0) ? 3.5f : 1.8f));
             p.drawLine(0, -innerRadius + 8, 0, -innerRadius - 2);
         }
         else
         {
-            // Minute dots
             p.setBrush(Qt::black);
             p.setPen(Qt::NoPen);
             p.drawEllipse(QRectF(-1.1, -innerRadius - 1.2, 2.2, 2.2));
@@ -128,55 +187,60 @@ void MainWindow::drawAnalogClock(QPainter& p)
         p.restore();
     }
 
-    // 4. Text elements (Scaled to fit smaller radius)
-    QDateTime now = QDateTime::currentDateTime();
+    // 4. Text elements - Check GMT, Day, Date
+    QDateTime now = m_bGMT ? QDateTime::currentDateTimeUtc() : QDateTime::currentDateTime();
 
-    // LAN - Moved up (multiplier changed from 0.55 to 0.62)
+    // LAN
     QFont fontLan("Arial", 10);
-    fontLan.setItalic(true);    // Italic font
-    fontLan.setUnderline(true); // Underlined
+    fontLan.setItalic(true);
+    fontLan.setUnderline(true);
     p.setFont(fontLan);
     p.setPen(QColor(240, 128, 128));
     p.drawText(QRectF(xCenter - 25, yCenter - 3 - innerRadius * 0.62, 50, 15), Qt::AlignCenter, "LAN");
 
-    // C++ - Moved up (multiplier changed from 0.32 to 0.42)
+    // C++
     QFont fontCpp("Arial", 6, QFont::Bold);
     p.setFont(fontCpp);
     p.setPen(Qt::gray);
     p.drawText(QRectF(xCenter - 25, yCenter - innerRadius * 0.42, 50, 12), Qt::AlignCenter, "C++");
 
-    // Day - Position remains the same
-    bool isWeekend = (now.date().dayOfWeek() == 6 || now.date().dayOfWeek() == 7);
-    p.setPen(isWeekend ? QColor(240, 128, 128) : Qt::gray);
-    p.drawText(QRectF(xCenter - 25, yCenter + innerRadius * 0.10, 50, 12), Qt::AlignCenter, now.toString("ddd").toUpper());
+    // Day - Check m_bDay
+    if (m_bDay)
+    {
+        bool isWeekend = (now.date().dayOfWeek() == 6 || now.date().dayOfWeek() == 7);
+        p.setPen(isWeekend ? QColor(240, 128, 128) : Qt::gray);
+        p.drawText(QRectF(xCenter - 25, yCenter + innerRadius * 0.10, 50, 12), Qt::AlignCenter, now.toString("ddd").toUpper());
+    }
 
-    // Date - Position remains the same
-    p.setPen(Qt::gray);
-    p.drawText(QRectF(xCenter - 35, yCenter + innerRadius * 0.35, 70, 12), Qt::AlignCenter, now.toString("dd-MM-yy"));
-    // 5. Hands
+    // Date - Check m_bDate
+    if (m_bDate)
+    {
+        p.setPen(Qt::gray);
+        p.drawText(QRectF(xCenter - 35, yCenter + innerRadius * 0.35, 70, 12), Qt::AlignCenter, now.toString("dd-MM-yy"));
+    }
+
+    // 5. Hands - Check Smooth and Seconds
     QTime time = now.time();
+    float fSeconds = m_bSmooth ? (time.second() + time.msec() / 1000.0f) : (float)time.second();
+    float fMinutes = time.minute() + fSeconds / 60.0f;
+    float fHours = (time.hour() % 12 + fMinutes / 60.0f) * 5.0f;
 
-    // Hour hand
-    float hourAngle = 30.0f * (time.hour() % 12 + time.minute() / 60.0f);
-    drawHandHelper(p, xCenter, yCenter, hourAngle, innerRadius * 0.55f, 5.5f, true);
+    drawHandHelper(p, xCenter, yCenter, fHours * 6.0f, innerRadius * 0.55f, 5.5f, true);
+    drawHandHelper(p, xCenter, yCenter, fMinutes * 6.0f, innerRadius * 0.82f, 3.8f, true);
 
-    // Minute hand
-    float minuteAngle = 6.0f * (time.minute() + time.second() / 60.0f);
-    drawHandHelper(p, xCenter, yCenter, minuteAngle, innerRadius * 0.82f, 3.8f, true);
+    if (m_bSeconds)
+    {
+        p.save();
+        p.translate(xCenter, yCenter);
+        p.rotate(fSeconds * 6.0f);
+        p.setPen(QPen(Qt::red, 1.2f));
+        p.drawLine(0, 8, 0, -innerRadius * 0.92f);
+        p.restore();
+    }
 
-    // Second hand
-    p.save();
-    p.translate(xCenter, yCenter);
-    p.rotate(time.second() * 6.0f);
-    p.setPen(QPen(Qt::red, 1.2f));
-    p.drawLine(0, 8, 0, -innerRadius * 0.92f);
-    p.restore();
-
-    // Center cap
     p.setBrush(Qt::black);
     p.setPen(Qt::NoPen);
     p.drawEllipse(QPointF(xCenter, yCenter), 3.5, 3.5);
-
     p.restore();
 }
 
@@ -463,7 +527,7 @@ void MainWindow::drawPing(QPainter& p, int yStart)
     // 2. Draw Label (Left)
     p.setPen(Qt::white);
     p.setFont(fontLabel);
-    QString label = "Ping: " + m_pingAddress;
+    QString label = "Ping: " + m_strPingAddress;
 
     // Truncate label if it's too long
     QFontMetrics fm(fontLabel);
@@ -511,9 +575,9 @@ void MainWindow::updatePing()
 
     QStringList parameters;
 #ifdef Q_OS_WIN
-    parameters << "-n" << "1" << "-w" << "1000" << m_pingAddress;
+    parameters << "-n" << "1" << "-w" << "1000" << m_strPingAddress;
 #else
-    parameters << "-c" << "1" << "-W" << "1" << m_pingAddress;
+    parameters << "-c" << "1" << "-W" << "1" << m_strPingAddress;
 #endif
 
     connect(pingProcess, &QProcess::finished, [this, pingProcess](int exitCode)
@@ -569,7 +633,7 @@ void MainWindow::drawWeather(QPainter& p, int yStart)
     QFont fontCity("Arial", 7, QFont::Bold);
     p.setFont(fontCity);
     p.setPen(Qt::white);
-    p.drawText(QRectF(margin, weaY + 8, width() - 20, 15), Qt::AlignLeft, m_weatherCity);
+    p.drawText(QRectF(margin, weaY + 8, width() - 20, 15), Qt::AlignLeft, m_strWeatherCity);
 
     // 3. Draw Temperature (Center, Large)
     QFont fontTemp("Arial", 12, QFont::Bold);
@@ -588,7 +652,7 @@ void MainWindow::updateWeather()
 {
     if (networkManager)
     {
-        networkManager->get(QNetworkRequest(QUrl(m_weatherUrl)));
+        networkManager->get(QNetworkRequest(QUrl(m_strWeatherUrl)));
     }
 }
 
@@ -675,26 +739,6 @@ void MainWindow::contextMenuEvent(QContextMenuEvent* event)
     menu.exec(event->globalPos());
 }
 
-void MainWindow::onMenuSetup()
-{
-    SetupDialog dlg(this);
-
-    // Fill dialog with current values
-    SetupDialog::SettingsData data;
-    data.showSeconds = true; // Replace with your actual variables
-    // ... fill all other fields ...
-    dlg.setSettings(data);
-
-    if (dlg.exec() == QDialog::Accepted)
-    {
-        SetupDialog::SettingsData newData = dlg.getSettings();
-        // Apply new settings to MainWindow
-        // this->m_bSeconds = newData.showSeconds;
-        // ...
-        update();
-    }
-}
-
 void MainWindow::onMenuHide()
 {
     this->hide();
@@ -737,3 +781,176 @@ void MainWindow::onMenuExit()
     qApp->quit();
 }
 
+void MainWindow::loadSettings()
+{
+    // QSettings handles INI format automatically
+    QSettings settings("clock_qt.ini", QSettings::IniFormat);
+
+    settings.beginGroup("Settings");
+    m_bSeconds = settings.value("chkSeconds", true).toBool();
+    m_bGMT = settings.value("chkGMT", false).toBool();
+    m_bDate = settings.value("chkDate", true).toBool();
+    m_bDay = settings.value("chkDay", true).toBool();
+    m_bMoving = settings.value("chkMoving", true).toBool();
+    m_bTopMost = settings.value("chkAlwaysOnTop", false).toBool();
+    m_bTransparent = settings.value("chkTransparent", false).toBool();
+    m_bBorder = settings.value("chkBorder", true).toBool();
+    m_bSmooth = settings.value("chkSmooth", true).toBool();
+    m_bTickTack = settings.value("chkTickTack", false).toBool();
+    m_b1530 = settings.value("chk1530", false).toBool();
+    m_bHours = settings.value("chkHours", false).toBool();
+    m_bDigitalClock = settings.value("chkDigitalClock", true).toBool();
+    m_b24Hours = settings.value("chk24Hours", true).toBool();
+    m_bCalendar = settings.value("chkCalendar", true).toBool();
+    m_bSysMon = settings.value("chkSysMon", true).toBool();
+    m_bPing = settings.value("chkPing", true).toBool();
+    m_bWeather = settings.value("chkWeather", false).toBool();
+    m_nOpacity = settings.value("frmOpacity", 80).toInt();
+
+    m_strPingAddress = settings.value("pingAddr", "8.8.8.8").toString();
+    m_strWeatherCity = settings.value("weatherCity", "Odesa,UA").toString();
+    m_strWeatherUrl = settings.value("weatherUrl", "").toString();
+
+    // Load position
+    int x = settings.value("deskX", -1).toInt();
+    int y = settings.value("deskY", -1).toInt();
+    if (x != -1 && y != -1)
+    {
+        move(x, y);
+    }
+    settings.endGroup();
+}
+
+void MainWindow::saveSettings()
+{
+    QSettings settings("clock_qt.ini", QSettings::IniFormat);
+
+    settings.beginGroup("Settings");
+    settings.setValue("chkSeconds", m_bSeconds);
+    settings.setValue("chkGMT", m_bGMT);
+    settings.setValue("chkDate", m_bDate);
+    settings.setValue("chkDay", m_bDay);
+    settings.setValue("chkMoving", m_bMoving);
+    settings.setValue("chkAlwaysOnTop", m_bTopMost);
+    settings.setValue("chkTransparent", m_bTransparent);
+    settings.setValue("chkBorder", m_bBorder);
+    settings.setValue("chkSmooth", m_bSmooth);
+    settings.setValue("chkTickTack", m_bTickTack);
+    settings.setValue("chk1530", m_b1530);
+    settings.setValue("chkHours", m_bHours);
+    settings.setValue("chkDigitalClock", m_bDigitalClock);
+    settings.setValue("chk24Hours", m_b24Hours);
+    settings.setValue("chkCalendar", m_bCalendar);
+    settings.setValue("chkSysMon", m_bSysMon);
+    settings.setValue("chkPing", m_bPing);
+    settings.setValue("chkWeather", m_bWeather);
+    settings.setValue("frmOpacity", m_nOpacity);
+    settings.setValue("pingAddr", m_strPingAddress);
+    settings.setValue("weatherCity", m_strWeatherCity);
+    settings.setValue("weatherUrl", m_strWeatherUrl);
+
+    // Save position
+    settings.setValue("deskX", x());
+    settings.setValue("deskY", y());
+    settings.endGroup();
+}
+
+void MainWindow::applySettings()
+{
+    // 1. Opacity
+    setWindowOpacity(m_nOpacity / 100.0);
+
+    // 2. Always on Top
+    Qt::WindowFlags flags = windowFlags();
+    if (m_bTopMost)
+    {
+        flags |= Qt::WindowStaysOnTopHint;
+    }
+    else
+    {
+        flags &= ~Qt::WindowStaysOnTopHint;
+    }
+
+    // 3. Tool window (no taskbar icon)
+    flags |= Qt::Tool;
+    flags |= Qt::FramelessWindowHint;
+
+    if (windowFlags() != flags)
+    {
+        setWindowFlags(flags);
+        show(); // Required to re-apply flags in Qt
+    }
+
+    // 4. Smooth movement (Timer interval)
+    if (timer)
+    {
+        timer->stop();
+        timer->start(m_bSmooth ? 200 : 1000);
+    }
+
+}
+
+void MainWindow::onMenuSetup()
+{
+    SetupDialog dlg(this);
+
+    // Fill dialog with current MainWindow values
+    SetupDialog::SettingsData data;
+    data.showSeconds = m_bSeconds;
+    data.showDay = m_bDay;
+    data.showDate = m_bDate;
+    data.isGmt = m_bGMT;
+    data.isTransparent = m_bTransparent;
+    data.isSmooth = m_bSmooth;
+    data.hasBorder = m_bBorder;
+    data.soundTickTack = m_bTickTack;
+    data.sound1530 = m_b1530;
+    data.soundHours = m_bHours;
+    data.showDigital = m_bDigitalClock;
+    data.is24h = m_b24Hours;
+    data.showCalendar = m_bCalendar;
+    data.showSysMon = m_bSysMon;
+    data.isMoving = m_bMoving;
+    data.isAlwaysOnTop = m_bTopMost;
+    data.usePing = m_bPing;
+    data.pingAddr = m_strPingAddress;
+    data.useWeather = m_bWeather;
+    data.weatherPlace = m_strWeatherCity;
+    data.weatherUrl = m_strWeatherUrl;
+    data.opacity = m_nOpacity;
+
+    dlg.setSettings(data);
+
+    if (dlg.exec() == QDialog::Accepted)
+    {
+        SetupDialog::SettingsData newData = dlg.getSettings();
+
+        // Update MainWindow variables
+        m_bSeconds = newData.showSeconds;
+        m_bDay = newData.showDay;
+        m_bDate = newData.showDate;
+        m_bGMT = newData.isGmt;
+        m_bTransparent = newData.isTransparent;
+        m_bSmooth = newData.isSmooth;
+        m_bBorder = newData.hasBorder;
+        m_bTickTack = newData.soundTickTack;
+        m_b1530 = newData.sound1530;
+        m_bHours = newData.soundHours;
+        m_bDigitalClock = newData.showDigital;
+        m_b24Hours = newData.is24h;
+        m_bCalendar = newData.showCalendar;
+        m_bSysMon = newData.showSysMon;
+        m_bMoving = newData.isMoving;
+        m_bTopMost = newData.isAlwaysOnTop;
+        m_bPing = newData.usePing;
+        m_strPingAddress = newData.pingAddr;
+        m_bWeather = newData.useWeather;
+        m_strWeatherCity = newData.weatherPlace;
+        m_strWeatherUrl = newData.weatherUrl;
+        m_nOpacity = newData.opacity;
+
+        applySettings();
+        saveSettings();
+        update();
+    }
+}
