@@ -11,7 +11,7 @@
 AboutDialog::AboutDialog(QWidget* parent) : QDialog(parent)
 {
     setWindowTitle("About");
-    setFixedSize(320, 200);
+    setFixedSize(320, 220);
     setWindowOpacity(0.85);
     setupUi();
 }

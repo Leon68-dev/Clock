@@ -429,8 +429,8 @@ void MainWindow::drawDigitalClock(QPainter& p, int yStart)
     drawDigit(QRectF(p_M2 - 20, bottomRowY, 20, 30), "8");
 
     p.setFont(digFontSmall);
-    drawDigit(QRectF(p_S1 - 15, bottomRowY + 8, 15, 20), "8");
-    drawDigit(QRectF(p_S2 - 15, bottomRowY + 8, 15, 20), "8");
+    drawDigit(QRectF(p_S1 - 15, bottomRowY + 7, 15, 20), "8");
+    drawDigit(QRectF(p_S2 - 15, bottomRowY + 7, 15, 20), "8");
 
     // 4. Draw actual time data
     p.setPen(Qt::black);
@@ -460,8 +460,8 @@ void MainWindow::drawDigitalClock(QPainter& p, int yStart)
 
     // Seconds
     p.setFont(digFontSmall);
-    drawDigit(QRectF(p_S1 - 15, bottomRowY + 8, 15, 20), QString::number(time.second() / 10));
-    drawDigit(QRectF(p_S2 - 15, bottomRowY + 8, 15, 20), QString::number(time.second() % 10));
+    drawDigit(QRectF(p_S1 - 15, bottomRowY + 7, 15, 20), QString::number(time.second() / 10));
+    drawDigit(QRectF(p_S2 - 15, bottomRowY + 7, 15, 20), QString::number(time.second() % 10));
 
     p.restore();
 }
