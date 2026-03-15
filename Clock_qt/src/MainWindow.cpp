@@ -19,14 +19,14 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent)
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &MainWindow::onTimerTick);
 
+    this->setWindowIcon(QIcon(":/Clock_qt.ico"));
+
     networkManager = new QNetworkAccessManager(this);
     connect(networkManager, &QNetworkAccessManager::finished, this, &MainWindow::onWeatherReceived);
 
     // 3. Window settings
     setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
     setAttribute(Qt::WA_TranslucentBackground);
-
-    this->setWindowIcon(QIcon(":/Clock_qt.ico"));
 
     // 4. Now it is safe to load and apply settings
     loadSettings();
@@ -897,6 +897,7 @@ void MainWindow::onMenuAbout()
 
 void MainWindow::onMenuExit()
 {
+    saveSettings();
     qApp->quit();
 }
 
@@ -1180,6 +1181,8 @@ void MainWindow::createTrayIcon()
 
 void MainWindow::executeShutdown()
 {
+    saveSettings();
+
 #ifdef Q_OS_WIN
     QString cmd = m_isSleepMode ? "rundll32.exe powrprof.dll,SetSuspendState 0,1,0"
         : "shutdown /s /f /t 0";
