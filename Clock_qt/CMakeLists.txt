@@ -12,9 +12,11 @@ set(SOURCES
     main.cpp
     src/MainWindow.h
     src/MainWindow.cpp
+    src/SetupDialog.h   
+    src/SetupDialog.cpp 
     src/SystemMonitor.h
     src/SystemMonitor.cpp
-    res/resources.qrc  # Шлях до ресурсів змінено
+    res/resources.qrc
 )
 
 add_executable(Clock_qt WIN32 ${SOURCES})

@@ -20,6 +20,7 @@
 #include <QMenu>
 #include <QAction>
 #include "SystemMonitor.h"
+#include "SetupDialog.h"
 
 
 class MainWindow : public QWidget

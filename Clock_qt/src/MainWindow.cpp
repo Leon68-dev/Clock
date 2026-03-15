@@ -677,7 +677,22 @@ void MainWindow::contextMenuEvent(QContextMenuEvent* event)
 
 void MainWindow::onMenuSetup()
 {
-    // We will implement Settings window next
+    SetupDialog dlg(this);
+
+    // Fill dialog with current values
+    SetupDialog::SettingsData data;
+    data.showSeconds = true; // Replace with your actual variables
+    // ... fill all other fields ...
+    dlg.setSettings(data);
+
+    if (dlg.exec() == QDialog::Accepted)
+    {
+        SetupDialog::SettingsData newData = dlg.getSettings();
+        // Apply new settings to MainWindow
+        // this->m_bSeconds = newData.showSeconds;
+        // ...
+        update();
+    }
 }
 
 void MainWindow::onMenuHide()
