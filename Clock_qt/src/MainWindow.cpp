@@ -203,13 +203,22 @@ void MainWindow::drawAnalogClock(QPainter& p)
         p.save();
         p.translate(xCenter, yCenter);
         p.rotate(i * 6.0);
+
         if (i % 5 == 0)
         {
+            // Hour marks (Black lines)
             p.setPen(QPen(Qt::black, (i % 15 == 0) ? 3.5f : 1.8f));
             p.drawLine(0, -innerRadius + 8, 0, -innerRadius - 2);
+
+            // THE DOTS (Small dots at the inner end of the hour lines)
+            // We use the face color to create the "hole" effect like in MFC
+            p.setPen(Qt::NoPen);
+            p.setBrush(QColor(242, 238, 225));
+            p.drawEllipse(QRectF(-1.5, -innerRadius + 6.5, 3.0, 3.0));
         }
         else
         {
+            // Minute dots (Small black dots between hours)
             p.setBrush(Qt::black);
             p.setPen(Qt::NoPen);
             p.drawEllipse(QRectF(-1.1, -innerRadius - 1.2, 2.2, 2.2));
