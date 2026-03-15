@@ -1,9 +1,11 @@
 #include <QDateTime>
 #include <QMouseEvent>
 #include <QFontDatabase>
+#include <QProcess>
 #include "MainWindow.h"
 #include "SetupDialog.h"
 #include "CalendarDialog.h"
+#include "ShutdownDialog.h"
 
 MainWindow::MainWindow(QWidget* parent) : QWidget(parent)
 {
@@ -55,6 +57,17 @@ void MainWindow::onTimerTick()
 {
     QDateTime now = m_bGMT ? QDateTime::currentDateTimeUtc() : QDateTime::currentDateTime();
     QTime time = now.time();
+
+    if (m_isShutdownEnabled && !m_alreadyExecuted)
+    {
+        // Compare hours and minutes
+        if (time.hour() == m_shutdownTime.hour() &&
+            time.minute() == m_shutdownTime.minute())
+        {
+            m_alreadyExecuted = true;
+            executeShutdown();
+        }
+    }
 
     // Logic that runs strictly ONCE PER SECOND
     static int lastSec = -1;
@@ -843,7 +856,25 @@ void MainWindow::onMenuCalendar()
 
 void MainWindow::onMenuShutdown()
 {
-    // Placeholder for Shutdown dialog
+    ShutdownDialog dlg(this);
+
+    ShutdownDialog::ShutdownData data;
+    data.time = m_shutdownTime;
+    data.isEnabled = m_isShutdownEnabled;
+    data.isSleep = m_isSleepMode;
+
+    dlg.setData(data);
+
+    if (dlg.exec() == QDialog::Accepted)
+    {
+        ShutdownDialog::ShutdownData newData = dlg.getData();
+        m_shutdownTime = newData.time;
+        m_isShutdownEnabled = newData.isEnabled;
+        m_isSleepMode = newData.isSleep;
+        m_alreadyExecuted = false; // Reset trigger
+
+        saveSettings(); // Don't forget to add these to save/loadSettings
+    }
 }
 
 void MainWindow::onMenuWorldMap()
@@ -1139,3 +1170,14 @@ void MainWindow::createTrayIcon()
     m_trayIcon->show();
 }
 
+void MainWindow::executeShutdown()
+{
+#ifdef Q_OS_WIN
+    QString cmd = m_isSleepMode ? "rundll32.exe powrprof.dll,SetSuspendState 0,1,0"
+        : "shutdown /s /f /t 0";
+#else
+    QString cmd = m_isSleepMode ? "systemctl suspend"
+        : "shutdown -h now";
+#endif
+    QProcess::startDetached(cmd);
+}

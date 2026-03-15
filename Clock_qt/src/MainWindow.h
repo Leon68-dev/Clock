@@ -126,6 +126,13 @@ private:
     QSystemTrayIcon* m_trayIcon = nullptr;
     void createTrayIcon();
 
+    QTime m_shutdownTime = QTime(0, 0);
+    bool m_isShutdownEnabled = false;
+    bool m_isSleepMode = false;
+    bool m_alreadyExecuted = false;
+
+    void executeShutdown();
+
 };
 
 #endif
