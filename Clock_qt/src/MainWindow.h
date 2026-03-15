@@ -16,6 +16,9 @@
 #include <QNetworkReply>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QContextMenuEvent>
+#include <QMenu>
+#include <QAction>
 #include "SystemMonitor.h"
 
 
@@ -29,6 +32,7 @@ protected:
     void paintEvent(QPaintEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
+    void contextMenuEvent(QContextMenuEvent* event) override;
 
 private slots:
     void onTimerTick();
@@ -70,6 +74,15 @@ private:
     QString m_weatherTemp = "?°C";
     QString m_weatherDesc = "Loading...";
     QString m_weatherUrl = "https://api.open-meteo.com/v1/forecast?latitude=46.48&longitude=30.72&current=temperature_2m,weather_code";
+
+    void onMenuSetup();
+    void onMenuHide();
+    void onMenuStartPosition();
+    void onMenuCalendar();
+    void onMenuShutdown();
+    void onMenuWorldMap();
+    void onMenuAbout();
+    void onMenuExit();
 
 };
 

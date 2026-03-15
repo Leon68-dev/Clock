@@ -644,3 +644,81 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
         move(event->globalPosition().toPoint() - dragPos);
 }
 
+void MainWindow::contextMenuEvent(QContextMenuEvent* event)
+{
+    QMenu menu(this);
+
+    // Create actions
+    QAction* setupAct = menu.addAction("Setup...");
+    QAction* hideAct = menu.addAction("Hide");
+    QAction* startPosAct = menu.addAction("Start position");
+    menu.addSeparator();
+    QAction* calendarAct = menu.addAction("Calendar...");
+    QAction* shutdownAct = menu.addAction("Set Shut Down PC...");
+    QAction* worldMapAct = menu.addAction("World Map...");
+    menu.addSeparator();
+    QAction* aboutAct = menu.addAction("About...");
+    menu.addSeparator();
+    QAction* exitAct = menu.addAction("Exit");
+
+    // Connect actions to slots
+    connect(setupAct, &QAction::triggered, this, &MainWindow::onMenuSetup);
+    connect(hideAct, &QAction::triggered, this, &MainWindow::onMenuHide);
+    connect(startPosAct, &QAction::triggered, this, &MainWindow::onMenuStartPosition);
+    connect(calendarAct, &QAction::triggered, this, &MainWindow::onMenuCalendar);
+    connect(shutdownAct, &QAction::triggered, this, &MainWindow::onMenuShutdown);
+    connect(worldMapAct, &QAction::triggered, this, &MainWindow::onMenuWorldMap);
+    connect(aboutAct, &QAction::triggered, this, &MainWindow::onMenuAbout);
+    connect(exitAct, &QAction::triggered, this, &MainWindow::onMenuExit);
+
+    // Show menu at mouse position
+    menu.exec(event->globalPos());
+}
+
+void MainWindow::onMenuSetup()
+{
+    // We will implement Settings window next
+}
+
+void MainWindow::onMenuHide()
+{
+    this->hide();
+}
+
+void MainWindow::onMenuStartPosition()
+{
+    // Move window to top-right corner (standard behavior)
+    if (auto* screen = QGuiApplication::primaryScreen())
+    {
+        QRect screenRect = screen->availableGeometry();
+        int x = screenRect.right() - width() - 20;
+        int y = screenRect.top() + 20;
+        move(x, y);
+    }
+}
+
+void MainWindow::onMenuCalendar()
+{
+    // Placeholder for Calendar dialog
+}
+
+void MainWindow::onMenuShutdown()
+{
+    // Placeholder for Shutdown dialog
+}
+
+void MainWindow::onMenuWorldMap()
+{
+    // Placeholder for World Map dialog
+}
+
+void MainWindow::onMenuAbout()
+{
+    // Placeholder for About dialog
+}
+
+void MainWindow::onMenuExit()
+{
+    qApp->quit();
+}
+
