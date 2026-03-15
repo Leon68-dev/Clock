@@ -43,42 +43,46 @@ void MainWindow::onTimerTick()
     QDateTime now = m_bGMT ? QDateTime::currentDateTimeUtc() : QDateTime::currentDateTime();
     QTime time = now.time();
 
-    // 1. Update metrics
-    currentCpu = SystemMonitor::getCpuUsage();
-    currentRam = SystemMonitor::getRamUsage();
-
-    // 2. Sound Logic (Only once per second)
+    // Logic that runs strictly ONCE PER SECOND
     static int lastSec = -1;
     if (time.second() != lastSec)
     {
         lastSec = time.second();
 
-        // Hourly chime
-        if (m_bHours && time.minute() == 0 && time.second() == 0)
+        // 1. Match MFC logic: Update metrics and ping every 3 seconds
+        if (time.second() % 3 == 0)
         {
-            // Play hour sound (Boom)
-            hourSound.play();
-        }
+            currentCpu = SystemMonitor::getCpuUsage();
+            currentRam = SystemMonitor::getRamUsage();
 
-        // 15-30-45 minutes chime
-        if (m_b1530 && time.second() == 0)
-        {
-            if (time.minute() == 15 || time.minute() == 30 || time.minute() == 45)
+            if (m_bPing)
             {
-                // Play chime sound
+                updatePing();
             }
         }
 
-        // Tick-Tack
+        // 2. Weather update (MFC does it once per hour, let's keep 30 min or match MFC)
+        // In your MFC: if (st.wMinute == 5 && st.wSecond == 0) -> once per hour at 5th minute
+        if (m_bWeather && time.minute() == 5 && time.second() == 0)
+        {
+            updateWeather();
+        }
+
+        // 3. Sound Logic
+        if (m_bHours && time.minute() == 0 && time.second() == 0)
+        {
+            // hourSound.play();
+        }
+
         if (m_bTickTack)
         {
-            tickSound.play();
+            // tickSound.play();
         }
     }
 
+    // Repaint happens every timer tick (200ms) for smooth hands
     update();
 }
-
 void MainWindow::paintEvent(QPaintEvent*)
 {
     QPainter p(this);
@@ -121,7 +125,7 @@ void MainWindow::paintEvent(QPaintEvent*)
     if (m_bPing)
     {
         drawPing(p, currentY);
-        currentY += 40;
+        currentY += 25;
     }
 
     if (m_bWeather)
