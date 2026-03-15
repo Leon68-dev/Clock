@@ -83,24 +83,49 @@ void MainWindow::onTimerTick()
     // Repaint happens every timer tick (200ms) for smooth hands
     update();
 }
+
 void MainWindow::paintEvent(QPaintEvent*)
 {
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
 
-    // Draw background
-    QPainterPath path;
-    path.addRoundedRect(rect().adjusted(1, 1, -1, -1), 15, 15);
-    p.fillPath(path, QColor(20, 20, 20, 160));
+    // 1. Draw Global Glass Background (Only visible on Hover)
+    // MFC: alpha = m_bMouseOver ? 160 : 1
+    int glassAlpha = m_bMouseOver ? 160 : 1;
+    QPainterPath fullPath;
+    fullPath.addRoundedRect(rect().adjusted(1, 1, -1, -1), 15, 15);
+    p.fillPath(fullPath, QColor(20, 20, 20, glassAlpha));
+
     if (m_bBorder)
     {
-        p.setPen(QPen(QColor(255, 255, 255, 50), 1));
-        p.drawPath(path);
+        int borderAlpha = m_bMouseOver ? 80 : 20;
+        p.setPen(QPen(QColor(255, 255, 255, borderAlpha), 1));
+        p.drawPath(fullPath);
     }
 
-    int currentY = 0;
+    // 2. Calculate where modules start (after Analog and Digital clocks)
+    int modulesYStart = 130; // End of Analog
+    if (m_bDigitalClock)
+    {
+        modulesYStart += 50; // Add Digital clock height
+    }
 
-    // Always draw analog clock
+    // 3. Draw Modules Background (Gray underlay)
+    // MFC: Color(100, 60, 60, 60)
+    if (m_bCalendar || m_bSysMon || m_bPing || m_bWeather)
+    {
+        QRectF modulesRect(0, modulesYStart, width(), height() - modulesYStart);
+        QPainterPath modulesPath;
+        // Round only bottom corners or all? In MFC you used full rounded rect
+        modulesPath.addRoundedRect(modulesRect.adjusted(1, 0, -1, -1), 15, 15);
+
+        p.fillPath(modulesPath, QColor(60, 60, 60, 100));
+        p.setPen(QPen(QColor(255, 255, 255, 50), 1));
+        p.drawPath(modulesPath);
+    }
+
+    // 4. Draw Content
+    int currentY = 0;
     drawAnalogClock(p);
     currentY = 130;
 
@@ -110,6 +135,7 @@ void MainWindow::paintEvent(QPaintEvent*)
         currentY += 50;
     }
 
+    // Modules are drawn on top of the gray background
     if (m_bCalendar)
     {
         drawCalendar(p, currentY);
@@ -125,7 +151,7 @@ void MainWindow::paintEvent(QPaintEvent*)
     if (m_bPing)
     {
         drawPing(p, currentY);
-        currentY += 25;
+        currentY += 40;
     }
 
     if (m_bWeather)
@@ -134,12 +160,11 @@ void MainWindow::paintEvent(QPaintEvent*)
         currentY += 60;
     }
 
-    // Adjust window height dynamically
+    // Dynamic height adjustment
     if (height() != currentY + 10)
     {
         setFixedHeight(currentY + 10);
     }
-
 }
 
 void MainWindow::drawAnalogClock(QPainter& p)
@@ -976,4 +1001,16 @@ void MainWindow::onMenuSetup()
         saveSettings();
         update();
     }
+}
+
+void MainWindow::enterEvent(QEnterEvent* event)
+{
+    m_bMouseOver = true;
+    update(); // Redraw to show glass effect
+}
+
+void MainWindow::leaveEvent(QEvent* event)
+{
+    m_bMouseOver = false;
+    update(); // Redraw to hide glass effect
 }

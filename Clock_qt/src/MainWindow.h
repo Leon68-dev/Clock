@@ -35,6 +35,8 @@ protected:
     void mousePressEvent(QMouseEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
     void contextMenuEvent(QContextMenuEvent* event) override;
+    void enterEvent(QEnterEvent* event) override;
+    void leaveEvent(QEvent* event) override;
 
 private slots:
     void onTimerTick();
@@ -103,10 +105,12 @@ private:
     bool m_bPing = true;
     bool m_bWeather = false;
     int m_nOpacity = 80;
+    bool m_bMouseOver = false; // To track hover state
 
     void loadSettings();
     void saveSettings();
     void applySettings();
+
 
 };
 
