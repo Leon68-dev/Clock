@@ -285,11 +285,30 @@ void MainWindow::drawDigitalClock(QPainter& p, int yStart)
     // 2. Prepare fonts
     QFont digFontLarge(m_digitalFontFamily, 18);
     QFont digFontSmall(m_digitalFontFamily, 11);
+    QFont fontIndicator("Arial", 6, QFont::Bold);
 
-    QDateTime now = QDateTime::currentDateTime();
+    // GMT Logic: Get correct time based on setting
+    QDateTime now = m_bGMT ? QDateTime::currentDateTimeUtc() : QDateTime::currentDateTime();
     QTime time = now.time();
 
-    // Your coordinates (used as Right boundaries)
+    // 12/24 Hours Logic
+    int displayHour = time.hour();
+    QString strAMPM = "";
+
+    if (!m_b24Hours)
+    {
+        strAMPM = (displayHour >= 12) ? "PM" : "AM";
+        displayHour = displayHour % 12;
+        if (displayHour == 0)
+            displayHour = 12;
+
+        // Draw AM/PM indicator (top left of LCD)
+        p.setPen(Qt::black);
+        p.setFont(fontIndicator);
+        p.drawText(QRectF(lcdX + 3, lcdY + 2, 20, 10), Qt::AlignLeft, strAMPM);
+    }
+
+    // Your coordinates
     float p_H1 = xCenter - 32.0f;
     float p_H2 = xCenter - 16.0f;
     float p_Colon = xCenter - 10.5f;
@@ -303,7 +322,6 @@ void MainWindow::drawDigitalClock(QPainter& p, int yStart)
     float topRowY = lcdY + 2.0f;
     float bottomRowY = lcdY + 12.0f;
 
-    // Helper lambda to draw right-aligned text like in MFC sfRight
     auto drawDigit = [&](const QRectF& rect, const QString& text, Qt::Alignment align = Qt::AlignRight)
         {
             p.drawText(rect, align | Qt::AlignVCenter, text);
@@ -317,7 +335,9 @@ void MainWindow::drawDigitalClock(QPainter& p, int yStart)
     drawDigit(QRectF(p_Date - 20, topRowY, 18, 15), "88");
 
     p.setFont(digFontLarge);
-    drawDigit(QRectF(p_H1 - 20, bottomRowY, 20, 30), "8");
+    if (m_b24Hours || displayHour >= 10)
+        drawDigit(QRectF(p_H1 - 20, bottomRowY, 20, 30), "8");
+
     drawDigit(QRectF(p_H2 - 20, bottomRowY, 20, 30), "8");
     drawDigit(QRectF(p_Colon - 10, bottomRowY, 20, 30), ":", Qt::AlignCenter);
     drawDigit(QRectF(p_M1 - 20, bottomRowY, 20, 30), "8");
@@ -338,14 +358,13 @@ void MainWindow::drawDigitalClock(QPainter& p, int yStart)
     // Date
     drawDigit(QRectF(p_Date - 20, topRowY, 18, 15), now.toString("dd"));
 
-    // Hours
+    // Hours (using displayHour instead of time.hour())
     p.setFont(digFontLarge);
-    int hh = time.hour();
-    if (hh >= 10)
+    if (displayHour >= 10)
     {
-        drawDigit(QRectF(p_H1 - 20, bottomRowY, 20, 30), QString::number(hh / 10));
+        drawDigit(QRectF(p_H1 - 20, bottomRowY, 20, 30), QString::number(displayHour / 10));
     }
-    drawDigit(QRectF(p_H2 - 20, bottomRowY, 20, 30), QString::number(hh % 10));
+    drawDigit(QRectF(p_H2 - 20, bottomRowY, 20, 30), QString::number(displayHour % 10));
 
     // Colon
     drawDigit(QRectF(p_Colon - 10, bottomRowY, 20, 30), ":", Qt::AlignCenter);
