@@ -1,0 +1,12 @@
+<RCC>
+	<qresource prefix="/">
+		<file>digital_7italic.ttf</file>
+		<file>world_map.jpg</file>
+		<file>_Boom.wav</file>
+		<file>_TickTack.wav</file>
+		<file>_15.wav</file>
+		<file>_30.wav</file>
+		<file>bitmap2.bmp</file>
+		<file>Clock_vc_mfc.ico</file>
+	</qresource>
+</RCC>

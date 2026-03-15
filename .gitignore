@@ -1,4 +1,40 @@
-/.vs
+# --- Специфічно для вашого проєкту ---
+# Ігноруємо папку з результатами збірки Visual Studio
+/out/
+/build/
+
+# --- Visual Studio ---
+.vs/
+*.user
+*.suo
+*.pdb
+*.obj
+*.exe
+*.ilk
+*.log
+
+# --- CMake ---
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+/CMakeSettings.json
+
+# --- Qt (Тимчасові файли генерації) ---
+# Ці файли створюються автоматично з ваших .h та .qrc
+moc_*.cpp
+qrc_*.cpp
+ui_*.h
+*.qrc.depends
+
+# --- Операційна система ---
+Thumbs.db
+.DS_Store
+
+# --- Тимчасові файли редакторів ---
+*.swp
+*~
+
 
 /Clock_cs/bin
 /Clock_cs/obj
@@ -40,3 +76,7 @@
 /Clock_vc_mfc/x64
 /Clock_vc_mfc/Clock_vc_mfc.vcxproj.user
 /Clock_vc_mfc/enc_temp_folder
+
+
+/Clock_qt/.vs
+/Clock_qt/out
