@@ -20,6 +20,8 @@
 #include <QMenu>
 #include <QAction>
 #include <QSettings>
+#include <QScreen>
+#include <QGuiApplication>
 #include "SystemMonitor.h"
 #include "SetupDialog.h"
 
@@ -85,6 +87,8 @@ private:
     QString m_weatherTemp = "?°C";
     QString m_weatherDesc = "Loading...";
     QString m_strWeatherUrl = "https://api.open-meteo.com/v1/forecast?latitude=46.48&longitude=30.72&current=temperature_2m,weather_code";
+    
+    QColor m_dynamicColor = Qt::white; // Default color
 
     bool m_bSeconds = true;
     bool m_bGMT = false;
@@ -110,6 +114,8 @@ private:
     void loadSettings();
     void saveSettings();
     void applySettings();
+    
+    void updateThemeColor();
 
 
 };

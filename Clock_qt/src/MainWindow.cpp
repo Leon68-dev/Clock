@@ -52,6 +52,8 @@ void MainWindow::onTimerTick()
         // 1. Match MFC logic: Update metrics and ping every 3 seconds
         if (time.second() % 3 == 0)
         {
+            updateThemeColor();
+
             currentCpu = SystemMonitor::getCpuUsage();
             currentRam = SystemMonitor::getRamUsage();
 
@@ -416,22 +418,24 @@ void MainWindow::drawCalendar(QPainter& p, int yStart)
     float xCenter = width() / 2.0f;
     float calW = width() - 20.0f;
     float calX = 10.0f;
-    float calY = yStart + 2.0f; // Moved slightly up
+    float calY = yStart + 2.0f;
 
     QDate today = QDate::currentDate();
     QDate firstDayOfMonth(today.year(), today.month(), 1);
 
-    // Determine the starting column (0 = Monday, 6 = Sunday)
     int startDay = firstDayOfMonth.dayOfWeek() - 1;
     int daysInMonth = today.daysInMonth();
+
+    // Adaptive weekend color
+    QColor weekendColor = (m_dynamicColor == Qt::black) ? QColor(200, 0, 0) : QColor(240, 128, 128);
 
     // 1. Draw Header (Month Year)
     QFont fontHeader("Arial", 8, QFont::Bold);
     p.setFont(fontHeader);
-    p.setPen(Qt::white);
+    p.setPen(m_dynamicColor);
     p.drawText(QRectF(0, calY, width(), 15), Qt::AlignCenter, today.toString("MMMM yyyy"));
 
-    // 2. Draw Day Names (M T W T F S S)
+    // 2. Draw Day Names
     QFont fontDays("Arial", 6);
     p.setFont(fontDays);
     const QStringList dayNames = { "M", "T", "W", "T", "F", "S", "S" };
@@ -439,16 +443,11 @@ void MainWindow::drawCalendar(QPainter& p, int yStart)
 
     for (int i = 0; i < 7; ++i)
     {
-        // Highlight weekends in red/coral
         if (i >= 5)
-        {
-            p.setPen(QColor(240, 128, 128));
-        }
+            p.setPen(weekendColor);
         else
-        {
-            p.setPen(Qt::white);
-        }
-        // Moved up from +25 to +18
+            p.setPen(m_dynamicColor);
+
         p.drawText(QRectF(calX + i * cellW, calY + 18, cellW, 12), Qt::AlignCenter, dayNames[i]);
     }
 
@@ -458,32 +457,23 @@ void MainWindow::drawCalendar(QPainter& p, int yStart)
     {
         int col = (startDay + d - 1) % 7;
         if (d > 1 && col == 0)
-        {
             row++;
-        }
 
         float x = calX + col * cellW;
-        // Moved up from +45 to +32, and reduced row spacing from 15 to 12
         float y = calY + 32 + row * 12;
 
-        // Highlight current day background
         if (d == today.day())
         {
             p.setPen(Qt::NoPen);
-            p.setBrush(QColor(255, 255, 255, 60));
-            // Adjusted highlight rectangle size
+            // Highlight background also adapts slightly
+            p.setBrush(QColor(m_dynamicColor.red(), m_dynamicColor.green(), m_dynamicColor.blue(), 40));
             p.drawRoundedRect(QRectF(x + 2, y - 1, cellW - 4, 12), 2, 2);
         }
 
-        // Set text color (weekend vs weekday)
         if (col >= 5)
-        {
-            p.setPen(QColor(240, 128, 128));
-        }
+            p.setPen(weekendColor);
         else
-        {
-            p.setPen(Qt::white);
-        }
+            p.setPen(m_dynamicColor);
 
         p.drawText(QRectF(x, y, cellW, 12), Qt::AlignCenter, QString::number(d));
     }
@@ -500,28 +490,25 @@ void MainWindow::drawSystemMonitor(QPainter& p, int yStart)
     float barH = 10.0f;
     float monY = (float)yStart + 5.0f;
 
-    // 1. Draw Separator line
-    p.setPen(QPen(QColor(255, 255, 255, 30), 1));
+    // 1. Draw Adaptive Separator line
+    p.setPen(QPen(QColor(m_dynamicColor.red(), m_dynamicColor.green(), m_dynamicColor.blue(), 50), 1));
     p.drawLine(QPointF(margin, monY), QPointF((float)width() - margin, monY));
 
     QFont fontLabel("Arial", 7, QFont::Bold);
     QFont fontValue("Arial", 7);
+    p.setPen(m_dynamicColor);
 
     // 2. CPU Section
-    p.setPen(Qt::white); // Ensure color is white
     p.setFont(fontLabel);
     p.drawText(QRectF(margin, monY + 5, 40, 12), Qt::AlignLeft, "CPU");
-
     p.setFont(fontValue);
     p.drawText(QRectF((float)width() - margin - 40, monY + 5, 40, 12), Qt::AlignRight, QString::number((int)currentCpu) + "%");
 
-    // CPU Bar background
     QRectF cpuRect(margin, monY + 18, barW, barH);
     p.setBrush(QColor(0, 0, 0, 100));
     p.setPen(QPen(QColor(255, 255, 255, 40), 1));
     p.drawRect(cpuRect);
 
-    // CPU Bar fill (Green)
     if (currentCpu > 0)
     {
         float cpuFill = (barW * currentCpu) / 100.0f;
@@ -531,21 +518,17 @@ void MainWindow::drawSystemMonitor(QPainter& p, int yStart)
     }
 
     // 3. RAM Section
-    p.setPen(Qt::white); // Re-set pen to white for RAM label
+    p.setPen(m_dynamicColor);
     p.setFont(fontLabel);
-    // Draw RAM label at monY + 35
     p.drawText(QRectF(margin, monY + 35, 40, 12), Qt::AlignLeft, "RAM");
-
     p.setFont(fontValue);
     p.drawText(QRectF((float)width() - margin - 40, monY + 35, 40, 12), Qt::AlignRight, QString::number((int)currentRam) + "%");
 
-    // RAM Bar background
     QRectF ramRect(margin, monY + 48, barW, barH);
     p.setBrush(QColor(0, 0, 0, 100));
     p.setPen(QPen(QColor(255, 255, 255, 40), 1));
     p.drawRect(ramRect);
 
-    // RAM Bar fill (Blue)
     if (currentRam > 0)
     {
         float ramFill = (barW * currentRam) / 100.0f;
@@ -564,43 +547,29 @@ void MainWindow::drawPing(QPainter& p, int yStart)
     float margin = 10.0f;
     float pingY = (float)yStart + 5.0f;
 
-    // 1. Draw Separator line
-    p.setPen(QPen(QColor(255, 255, 255, 30), 1));
+    // 1. Draw Adaptive Separator line
+    p.setPen(QPen(QColor(m_dynamicColor.red(), m_dynamicColor.green(), m_dynamicColor.blue(), 50), 1));
     p.drawLine(QPointF(margin, pingY), QPointF((float)width() - margin, pingY));
 
     QFont fontLabel("Arial", 7, QFont::Bold);
     QFont fontValue("Arial", 7, QFont::StyleItalic);
 
-    // 2. Draw Label (Left)
-    p.setPen(Qt::white);
+    // 2. Draw Label
+    p.setPen(m_dynamicColor);
     p.setFont(fontLabel);
     QString label = "Ping: " + m_strPingAddress;
 
-    // Truncate label if it's too long
     QFontMetrics fm(fontLabel);
     QString elidedLabel = fm.elidedText(label, Qt::ElideRight, width() - 50);
     p.drawText(QRectF(margin, pingY + 8, width() - 50, 15), Qt::AlignLeft, elidedLabel);
 
-    // 3. Draw Value (Right)
-    QString valStr;
+    // 3. Draw Value
+    QString valStr = (m_pingValue == -1) ? "Error" : QString::number(m_pingValue) + " ms";
     QColor valColor;
-
-    if (m_pingValue == -1)
-    {
-        valStr = "Error";
-        valColor = QColor(240, 128, 128); // Reddish
-    }
-    else
-    {
-        valStr = QString::number(m_pingValue) + " ms";
-        // Color based on latency
-        if (m_pingValue < 100)
-            valColor = QColor(80, 220, 80);  // Green
-        else if (m_pingValue < 250)
-            valColor = Qt::yellow;
-        else
-            valColor = QColor(240, 128, 128); // Red
-    }
+    if (m_pingValue == -1) valColor = QColor(240, 128, 128);
+    else if (m_pingValue < 100) valColor = QColor(80, 220, 80);
+    else if (m_pingValue < 250) valColor = Qt::yellow;
+    else valColor = QColor(240, 128, 128);
 
     p.setPen(valColor);
     p.setFont(fontValue);
@@ -670,24 +639,23 @@ void MainWindow::drawWeather(QPainter& p, int yStart)
 
     float margin = 10.0f;
     float weaY = (float)yStart + 5.0f;
-    float xCenter = width() / 2.0f;
 
-    // 1. Draw Separator line
-    p.setPen(QPen(QColor(255, 255, 255, 30), 1));
+    // 1. Draw Adaptive Separator line
+    p.setPen(QPen(QColor(m_dynamicColor.red(), m_dynamicColor.green(), m_dynamicColor.blue(), 50), 1));
     p.drawLine(QPointF(margin, weaY), QPointF((float)width() - margin, weaY));
 
-    // 2. Draw City Name (Top Left)
+    // 2. Draw City Name
     QFont fontCity("Arial", 7, QFont::Bold);
     p.setFont(fontCity);
-    p.setPen(Qt::white);
+    p.setPen(m_dynamicColor);
     p.drawText(QRectF(margin, weaY + 8, width() - 20, 15), Qt::AlignLeft, m_strWeatherCity);
 
-    // 3. Draw Temperature (Center, Large)
+    // 3. Draw Temperature
     QFont fontTemp("Arial", 12, QFont::Bold);
     p.setFont(fontTemp);
     p.drawText(QRectF(0, weaY + 18, width(), 25), Qt::AlignCenter, m_weatherTemp);
 
-    // 4. Draw Description (Center, below temperature)
+    // 4. Draw Description
     QFont fontDesc("Arial", 7);
     p.setFont(fontDesc);
     p.drawText(QRectF(0, weaY + 40, width(), 15), Qt::AlignCenter, m_weatherDesc);
@@ -1012,4 +980,54 @@ void MainWindow::leaveEvent(QEvent* event)
 {
     m_bMouseOver = false;
     update(); // Redraw to hide glass effect
+}
+
+void MainWindow::updateThemeColor()
+{
+    // 1. If mouse is over, background is dark glass (Alpha 160), so text MUST be white
+    if (m_bMouseOver)
+    {
+        m_dynamicColor = Qt::white;
+        return;
+    }
+
+    // 2. Analyze background under the window
+    QScreen* screen = QGuiApplication::primaryScreen();
+    if (!screen) return;
+
+    // Grab the area where the window is located
+    // Note: grabWindow(0, ...) grabs the desktop content
+    QPixmap screenshot = screen->grabWindow(0, x(), y(), width(), height());
+    QImage img = screenshot.toImage();
+
+    if (img.isNull()) return;
+
+    // Sample 5 points like in your MFC code (center + 4 corners)
+    QList<QPoint> points = 
+    {
+        QPoint(width() / 2, height() / 2),
+        QPoint(10, 10),
+        QPoint(width() - 10, 10),
+        QPoint(10, height() - 10),
+        QPoint(width() - 10, height() - 10)
+    };
+
+    double totalLuminance = 0;
+    int validPoints = 0;
+
+    for (const QPoint& pt : points)
+    {
+        if (img.valid(pt))
+        {
+            QRgb rgb = img.pixel(pt);
+            // Standard luminance formula: 0.299*R + 0.587*G + 0.114*B
+            totalLuminance += (0.299 * qRed(rgb) + 0.587 * qGreen(rgb) + 0.114 * qBlue(rgb));
+            validPoints++;
+        }
+    }
+
+    double avgLuminance = (validPoints > 0) ? (totalLuminance / validPoints) : 0;
+
+    // If background is light (> 128) -> Black text, else -> White text
+    m_dynamicColor = (avgLuminance > 128) ? Qt::black : Qt::white;
 }
