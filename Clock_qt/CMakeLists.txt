@@ -16,6 +16,8 @@ set(SOURCES
     src/SetupDialog.cpp 
     src/SystemMonitor.h
     src/SystemMonitor.cpp
+    src/CalendarDialog.h  
+    src/CalendarDialog.cpp
     res/resources.qrc
 )
 

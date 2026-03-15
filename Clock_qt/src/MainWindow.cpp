@@ -3,6 +3,7 @@
 #include <QFontDatabase>
 #include "MainWindow.h"
 #include "SetupDialog.h"
+#include "CalendarDialog.h"
 
 MainWindow::MainWindow(QWidget* parent) : QWidget(parent)
 {
@@ -836,7 +837,8 @@ void MainWindow::onMenuStartPosition()
 
 void MainWindow::onMenuCalendar()
 {
-    // Placeholder for Calendar dialog
+    CalendarDialog dlg(this);
+    dlg.exec(); // Show as modal dialog
 }
 
 void MainWindow::onMenuShutdown()
