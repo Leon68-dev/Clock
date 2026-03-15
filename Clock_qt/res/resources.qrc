@@ -7,6 +7,6 @@
 		<file>_15.wav</file>
 		<file>_30.wav</file>
 		<file>bitmap2.bmp</file>
-		<file>Clock_vc_mfc.ico</file>
+		<file>Clock_qt.ico</file>
 	</qresource>
 </RCC>

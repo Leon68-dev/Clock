@@ -26,6 +26,8 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent)
     setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
     setAttribute(Qt::WA_TranslucentBackground);
 
+    this->setWindowIcon(QIcon(":/Clock_qt.ico"));
+
     // 4. Now it is safe to load and apply settings
     loadSettings();
     applySettings();
@@ -1151,7 +1153,7 @@ void MainWindow::createTrayIcon()
     m_trayIcon = new QSystemTrayIcon(this);
 
     // Set icon from your resources
-    m_trayIcon->setIcon(QIcon(":/Clock_vc_mfc.ico"));
+    m_trayIcon->setIcon(QIcon(":/Clock_qt.ico"));
 
     // Create context menu for tray
     QMenu* trayMenu = new QMenu(this);
