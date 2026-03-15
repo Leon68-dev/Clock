@@ -3,6 +3,8 @@
 ShutdownDialog::ShutdownDialog(QWidget* parent) : QDialog(parent)
 {
     setWindowTitle("Shut down");
+    setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::CustomizeWindowHint);
+
     setWindowOpacity(0.85);
     setFixedSize(250, 180);
     setupUi();

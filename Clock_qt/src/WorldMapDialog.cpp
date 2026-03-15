@@ -6,6 +6,8 @@
 WorldMapDialog::WorldMapDialog(QWidget* parent) : QDialog(parent)
 {
     setWindowTitle("World Day/Night Map");
+    setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::CustomizeWindowHint);
+
     setFixedSize(1000, 500);
 
     // Load map from resources

@@ -11,9 +11,11 @@
 AboutDialog::AboutDialog(QWidget* parent) : QDialog(parent)
 {
     setWindowTitle("About");
+    setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::CustomizeWindowHint);
+
     setFixedSize(320, 220);
     setWindowOpacity(0.85);
-    setupUi();
+    setupUi();    
 }
 
 void AboutDialog::setupUi()

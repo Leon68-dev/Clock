@@ -7,6 +7,8 @@
 SetupDialog::SetupDialog(QWidget* parent) : QDialog(parent)
 {
     setWindowTitle("Setup");
+    setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::CustomizeWindowHint);
+
     setFixedSize(550, 500);
     setupUi();
 }

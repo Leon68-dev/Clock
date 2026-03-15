@@ -4,6 +4,7 @@
 CalendarDialog::CalendarDialog(QWidget* parent) : QDialog(parent)
 {
     setWindowTitle("Calendar");
+    setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::CustomizeWindowHint);
 
     // Apply transparency (MFC used 216/255 = ~0.85)
     setWindowOpacity(0.85);
