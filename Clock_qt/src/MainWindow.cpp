@@ -36,6 +36,16 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent)
     }
 
     updateWeather(); // Initial update
+
+    // Initialize sounds from resources
+    m_soundTick.setSource(QUrl("qrc:/_TickTack.wav"));
+    m_sound15.setSource(QUrl("qrc:/_15.wav"));
+    m_sound30.setSource(QUrl("qrc:/_30.wav"));
+    m_soundBoom.setSource(QUrl("qrc:/_Boom.wav"));
+
+    // Set default volumes
+    m_soundTick.setVolume(0.5f);
+    m_soundBoom.setVolume(0.8f);
 }
 
 void MainWindow::onTimerTick()
@@ -73,13 +83,26 @@ void MainWindow::onTimerTick()
         // 3. Sound Logic
         if (m_bHours && time.minute() == 0 && time.second() == 0)
         {
-            // hourSound.play();
+            playHourlyChime(time.hour());
         }
 
-        if (m_bTickTack)
+        if (m_b1530 && time.second() == 0)
         {
-            // tickSound.play();
+            if (time.minute() == 15 || time.minute() == 45)
+                m_sound15.play();
+            else if (time.minute() == 30)
+                m_sound30.play();
         }
+
+        if (m_bTickTack && time.second() % 2 == 0)
+        {
+            // Don't interrupt long chimes
+            if (!m_soundBoom.isPlaying() && !m_sound15.isPlaying() && !m_sound30.isPlaying())
+            {
+                m_soundTick.play();
+            }
+        }
+
     }
 
     // Repaint happens every timer tick (200ms) for smooth hands
@@ -1039,4 +1062,16 @@ void MainWindow::updateThemeColor()
 
     // If background is light (> 128) -> Black text, else -> White text
     m_dynamicColor = (avgLuminance > 128) ? Qt::black : Qt::white;
+}
+
+void MainWindow::playHourlyChime(int hours)
+{
+    int count = hours % 12;
+    if (count == 0)
+        count = 12;
+
+    // In Qt, we can set how many times to repeat the sound
+    // count is the total number of plays
+    m_soundBoom.setLoopCount(count);
+    m_soundBoom.play();
 }

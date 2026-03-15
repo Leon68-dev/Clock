@@ -73,8 +73,10 @@ private:
     int currentPing = -1;
     QString weatherTemp = "?°C";
 
-    QSoundEffect tickSound;
-    QSoundEffect hourSound;
+    QSoundEffect m_soundTick;
+    QSoundEffect m_sound15;
+    QSoundEffect m_sound30;
+    QSoundEffect m_soundBoom;
     QNetworkAccessManager* networkManager = nullptr;
 
     QString m_digitalFontFamily; // To store the loaded font name
@@ -117,6 +119,7 @@ private:
     
     void updateThemeColor();
 
+    void playHourlyChime(int hours);
 
 };
 
