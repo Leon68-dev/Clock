@@ -34,5 +34,6 @@ target_include_directories(Clock_qt PRIVATE src)
 target_link_libraries(Clock_qt PRIVATE 
     Qt6::Widgets 
     Qt6::Network 
+    Qt6::Core
     Qt6::Multimedia
 )
