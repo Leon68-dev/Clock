@@ -298,18 +298,33 @@ void CClockvcmfcDlg::DrawAnalogClock(Gdiplus::Graphics& g, float xCenter, float 
 			float len = /* (i % 15 == 0) ? innerRadius * 0.22f : */ innerRadius * 0.15f;
 
 			Gdiplus::Pen* p = (i % 15 == 0) ? &penQuarter : &penHour;
-			g.DrawLine(p, xCenter + cosA * (innerRadius - len), yCenter + sinA * (innerRadius - len),
-				xCenter + cosA * (innerRadius + 3.0f), yCenter + sinA * (innerRadius + 3.0f));
-			g.FillEllipse(&brushFace, xCenter + cosA * (innerRadius - len) - 1.5f, yCenter + sinA * (innerRadius - len) - 1.5f, 3.0f, 3.0f);
+			g.DrawLine(p, 
+				xCenter + cosA * (innerRadius - len), 
+				yCenter + sinA * (innerRadius - len),
+				xCenter + cosA * (innerRadius + 3.0f), 
+				yCenter + sinA * (innerRadius + 3.0f));
+			
+			g.FillEllipse(&brushFace, 
+				xCenter + cosA * (innerRadius - len) - 1.5f, 
+				yCenter + sinA * (innerRadius - len) - 1.5f, 
+				3.0f, 
+				3.0f);
 		}
 		else 
 		{
-			g.FillEllipse(&brushBlack, xCenter + cosA * (innerRadius + 1.5f) - 1.3f, yCenter + sinA * (innerRadius + 1.5f) - 1.3f, 2.6f, 2.6f);
+			g.FillEllipse(&brushBlack, 
+				xCenter + cosA * (innerRadius + 1.5f) - 1.3f, 
+				yCenter + sinA * (innerRadius + 1.5f) - 1.3f, 
+				2.6f, 
+				2.6f);
 		}
 	}
 
 	SYSTEMTIME st;
-	if (m_bGMT) ::GetSystemTime(&st); else ::GetLocalTime(&st);
+	if (m_bGMT) 
+		::GetSystemTime(&st); 
+	else 
+		::GetLocalTime(&st);
 	COleDateTime now(st);
 
 	// Текст
@@ -318,7 +333,7 @@ void CClockvcmfcDlg::DrawAnalogClock(Gdiplus::Graphics& g, float xCenter, float 
 	sf.SetAlignment(Gdiplus::StringAlignmentCenter);
 	sf.SetLineAlignment(Gdiplus::StringAlignmentCenter);
 
-	Gdiplus::Font fontLN(&fontFamily, innerRadius * 0.2f, Gdiplus::FontStyleItalic | Gdiplus::FontStyleUnderline);
+	Gdiplus::Font fontLN(&fontFamily, innerRadius * 0.18f, Gdiplus::FontStyleItalic | Gdiplus::FontStyleUnderline);
 	g.DrawString(L"LAN", -1, &fontLN, Gdiplus::PointF(xCenter, yCenter - innerRadius * 0.52f), &sf, &Gdiplus::SolidBrush(Gdiplus::Color(255, 240, 128, 128)));
 
 	Gdiplus::Font fontText(&fontFamily, innerRadius * 0.11f, Gdiplus::FontStyleBold);

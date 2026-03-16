@@ -12,8 +12,6 @@
 #include <QDate>
 #include <QTime>
 #include <QProcess>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QContextMenuEvent>
