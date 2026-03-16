@@ -508,79 +508,76 @@ void CClockvcmfcDlg::DrawCalendar(Gdiplus::Graphics& g, float w, float yStart)
 	float calY = yStart + 5.0f;
 	float calX = 10.0f, calW = w - 20.0f;
 
-	// Визначаємо базові кольори на основі динамічної теми
+	// Determine base colors based on dynamic theme
 	Gdiplus::Color mainColor = m_dynamicColor;
-	// Колір для вихідних (червоний, але адаптований: світліший для темної теми, насичений для світлої)
+	// Weekend color (adapted for light/dark theme)
 	Gdiplus::Color weekendColor = (mainColor.GetR() > 128)
-		? Gdiplus::Color(255, 255, 120, 120)  // Світло-червоний для темного фону
-		: Gdiplus::Color(255, 200, 0, 0);    // Насичений червоний для світлого фону
+		? Gdiplus::Color(255, 255, 120, 120)
+		: Gdiplus::Color(255, 200, 0, 0);
 
-	//// --- УНІФІКОВАНИЙ СЕПАРАТОР ---
-	//// Темна лінія (адаптується під колір тексту)
-	//g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, m_dynamicColor.GetR(), m_dynamicColor.GetG(), m_dynamicColor.GetB()), 1.0f), 15.0f, calY, w - 15.0f, calY);
-	//// Світла лінія (підсвітка) - адаптивна яскравість
-	//int highlightAlpha = (m_dynamicColor.GetR() > 128) ? 40 : 10;
-	//g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(highlightAlpha, 255, 255, 255), 1.0f), 15.0f, calY + 1.0f, w - 15.0f, calY + 1.0f);
-
-	SYSTEMTIME st; GetLocalTime(&st);
+	SYSTEMTIME st;
+	GetLocalTime(&st);
 	COleDateTime today(st);
 	COleDateTime firstDay(st.wYear, st.wMonth, 1, 0, 0, 0);
 	int startDay = firstDay.GetDayOfWeek();
 	startDay = (startDay == 1) ? 6 : startDay - 2;
 
 	int daysInMonth = 31;
-	if (st.wMonth == 4 || st.wMonth == 6 || st.wMonth == 9 || st.wMonth == 11) daysInMonth = 30;
-	else if (st.wMonth == 2) daysInMonth = ((st.wYear % 4 == 0 && st.wYear % 100 != 0) || (st.wYear % 400 == 0)) ? 29 : 28;
+	if (st.wMonth == 4 || st.wMonth == 6 || st.wMonth == 9 || st.wMonth == 11)
+		daysInMonth = 30;
+	else if (st.wMonth == 2)
+		daysInMonth = ((st.wYear % 4 == 0 && st.wYear % 100 != 0) || (st.wYear % 400 == 0)) ? 29 : 28;
 
 	Gdiplus::FontFamily arial(L"Arial");
 	Gdiplus::Font fontHeader(&arial, 12, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
-	Gdiplus::StringFormat sf; sf.SetAlignment(Gdiplus::StringAlignmentCenter);
+	Gdiplus::StringFormat sf;
+	sf.SetAlignment(Gdiplus::StringAlignmentCenter);
 
-	// Заголовок (Місяць Рік)
-	g.DrawString(today.Format(_T("%B %Y")), -1, &fontHeader, Gdiplus::PointF(w / 2.0f, calY + 10), &sf, &Gdiplus::SolidBrush(mainColor));
+	// 1. Header (Month Year) - Moved up from +10 to +2
+	g.DrawString(today.Format(_T("%B %Y")), -1, &fontHeader, Gdiplus::PointF(w / 2.0f, calY + 2.0f), &sf, &Gdiplus::SolidBrush(mainColor));
 
 	Gdiplus::Font fontDays(&arial, 10, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
 	const TCHAR* dayNames[] = { _T("M"), _T("T"), _T("W"), _T("T"), _T("F"), _T("S"), _T("S") };
 	float cellW = calW / 7.0f;
 
-	// Дні тижня (M T W...)
+	// 2. Day Names (M T W...) - Moved up from +30 to +18
 	for (int i = 0; i < 7; i++)
 	{
 		Gdiplus::Color nameCol = (i >= 5) ? weekendColor : mainColor;
-		// Робимо назви днів трохи прозорішими (Alpha 180)
 		Gdiplus::SolidBrush bDayName(Gdiplus::Color(180, nameCol.GetR(), nameCol.GetG(), nameCol.GetB()));
-		g.DrawString(dayNames[i], -1, &fontDays, Gdiplus::PointF(calX + i * cellW + cellW / 2, calY + 30), &sf, &bDayName);
+		g.DrawString(dayNames[i], -1, &fontDays, Gdiplus::PointF(calX + i * cellW + cellW / 2.0f, calY + 18.0f), &sf, &bDayName);
 	}
 
+	// 3. Dates Grid
 	int row = 0;
 	for (int d = 1; d <= daysInMonth; d++)
 	{
 		int col = (startDay + d - 1) % 7;
-		if (d > 1 && col == 0) row++;
+		if (d > 1 && col == 0)
+			row++;
 
-		float x = calX + col * cellW + cellW / 2;
-		float y = calY + 50 + row * 15;
+		float x = calX + col * cellW + cellW / 2.0f;
+		// Moved up from +50 to +34
+		float y = calY + 34.0f + row * 15.0f;
 
 		if (d == st.wDay)
 		{
-			// Прямокутник підсвітки сьогоднішнього дня
-			// Використовуємо інверсний колір або напівпрозорий основний
+			// Highlight rectangle for today
 			Gdiplus::Color highlightCol = (mainColor.GetR() > 128)
-				? Gdiplus::Color(100, 255, 255, 255) // Світла підсвітка для білого тексту
-				: Gdiplus::Color(100, 0, 0, 0);     // Темна підсвітка для чорного тексту
+				? Gdiplus::Color(100, 255, 255, 255)
+				: Gdiplus::Color(100, 0, 0, 0);
 
 			g.FillRectangle(&Gdiplus::SolidBrush(highlightCol), calX + col * cellW + 2.0f, y - 1.0f, cellW - 4.0f, 14.0f);
 		}
 
-		// Колір числа (червоний для вихідних, основний для буднів)
 		Gdiplus::Color numCol = (col >= 5) ? weekendColor : mainColor;
 		Gdiplus::SolidBrush bNum(numCol);
 
-		// Якщо сьогодні — робимо текст максимально чітким (без прозорості)
 		if (d == st.wDay)
 			bNum.SetColor(mainColor);
 
-		CString sD; sD.Format(_T("%d"), d);
+		CString sD;
+		sD.Format(_T("%d"), d);
 		g.DrawString(sD, -1, &fontDays, Gdiplus::PointF(x, y), &sf, &bNum);
 	}
 }
@@ -688,8 +685,8 @@ void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 				UpdateThemeColor();
 			}
 
-			// Оновлення погоди раз на годину (на 5-й хвилині)
-			if (st.wMinute == 5 && st.wSecond == 0)
+			// Оновлення погоди кожні 5хв)
+			if ((st.wMinute % 5 == 0) && st.wSecond == 0)
 			{
 				UpdateWeather();
 			}
@@ -1413,7 +1410,8 @@ void CClockvcmfcDlg::DrawPing(Gdiplus::Graphics& g, float w, float yStart)
 
 void CClockvcmfcDlg::UpdateWeather()
 {
-	if (!m_bWeather) return;
+	if (!m_bWeather) 
+		return;
 
 	std::thread([this]()
 		{

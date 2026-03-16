@@ -87,20 +87,14 @@ void MainWindow::onTimerTick()
         // 1. Match MFC logic: Update metrics and ping every 3 seconds
         if (time.second() % 3 == 0)
         {
+            updatePing();
             updateThemeColor();
-
             currentCpu = SystemMonitor::getCpuUsage();
             currentRam = SystemMonitor::getRamUsage();
-
-            if (m_bPing)
-            {
-                updatePing();
-            }
         }
 
-        // 2. Weather update (MFC does it once per hour, let's keep 30 min or match MFC)
-        // In your MFC: if (st.wMinute == 5 && st.wSecond == 0) -> once per hour at 5th minute
-        if (m_bWeather && time.minute() == 5 && time.second() == 0)
+        // 2. Weather update
+        if ((time.minute() % 5 == 0) && time.second() == 0)
         {
             updateWeather();
         }
@@ -155,7 +149,7 @@ void MainWindow::paintEvent(QPaintEvent*)
     }
 
     // 2. Calculate where modules start
-    int modulesYStart = 130;
+    int modulesYStart = 120;
     if (m_bDigitalClock)
     {
         modulesYStart += 50;
@@ -177,7 +171,7 @@ void MainWindow::paintEvent(QPaintEvent*)
     // 4. Draw Content
     int currentY = 0;
     drawAnalogClock(p);
-    currentY = 130;
+    currentY = 120;
 
     if (m_bDigitalClock)
     {
@@ -188,13 +182,13 @@ void MainWindow::paintEvent(QPaintEvent*)
     if (m_bCalendar)
     {
         drawCalendar(p, currentY);
-        currentY += 110;
+        currentY += 105;
     }
 
     if (m_bSysMon)
     {
         drawSystemMonitor(p, currentY);
-        currentY += 70;
+        currentY += 65;
     }
 
     if (m_bPing)
@@ -206,7 +200,7 @@ void MainWindow::paintEvent(QPaintEvent*)
     if (m_bWeather)
     {
         drawWeather(p, currentY);
-        currentY += 60;
+        currentY += 55;
     }
 
     // Dynamic height adjustment
@@ -222,7 +216,7 @@ void MainWindow::drawAnalogClock(QPainter& p)
     p.setRenderHint(QPainter::Antialiasing);
 
     float xCenter = width() / 2.0f;
-    float yCenter = 65.0f;
+    float yCenter = 60.0f;
     float radius = 54.0f;
     float borderThickness = 5.0f;
     float innerRadius = radius - borderThickness - 1.0f;
@@ -487,7 +481,7 @@ void MainWindow::drawCalendar(QPainter& p, int yStart)
     QColor weekendColor = (m_dynamicColor == Qt::black) ? QColor(200, 0, 0) : QColor(240, 128, 128);
 
     // 1. Draw Header (Month Year)
-    QFont fontHeader("Arial", 8, QFont::Bold);
+    QFont fontHeader("Arial", 7, QFont::Bold);
     p.setFont(fontHeader);
     p.setPen(m_dynamicColor);
     p.drawText(QRectF(0, calY, width(), 15), Qt::AlignCenter, today.toString("MMMM yyyy"));
@@ -551,7 +545,7 @@ void MainWindow::drawSystemMonitor(QPainter& p, int yStart)
     p.setPen(QPen(QColor(m_dynamicColor.red(), m_dynamicColor.green(), m_dynamicColor.blue(), 50), 1));
     p.drawLine(QPointF(margin, monY), QPointF((float)width() - margin, monY));
 
-    QFont fontLabel("Arial", 7, QFont::Bold);
+    QFont fontLabel("Arial", 7);
     QFont fontValue("Arial", 7);
     p.setPen(m_dynamicColor);
 
@@ -608,8 +602,8 @@ void MainWindow::drawPing(QPainter& p, int yStart)
     p.setPen(QPen(QColor(m_dynamicColor.red(), m_dynamicColor.green(), m_dynamicColor.blue(), 50), 1));
     p.drawLine(QPointF(margin, pingY), QPointF((float)width() - margin, pingY));
 
-    QFont fontLabel("Arial", 7, QFont::Bold);
-    QFont fontValue("Arial", 7, QFont::StyleItalic);
+    QFont fontLabel("Arial", 7);
+    QFont fontValue("Arial", 7);
 
     // 2. Draw Label
     p.setPen(m_dynamicColor);
@@ -642,10 +636,11 @@ void MainWindow::drawPing(QPainter& p, int yStart)
 
 void MainWindow::updatePing()
 {
-    if (m_isPingInProgress)
-    {
+    if (!m_bPing)
         return;
-    }
+
+    if (m_isPingInProgress)
+        return;
 
     m_isPingInProgress = true;
 
@@ -722,18 +717,18 @@ void MainWindow::drawWeather(QPainter& p, int yStart)
     p.drawLine(QPointF(margin, weaY), QPointF((float)width() - margin, weaY));
 
     // 2. Draw City Name
-    QFont fontCity("Arial", 7, QFont::Bold);
+    QFont fontCity("Arial", 6);
     p.setFont(fontCity);
     p.setPen(m_dynamicColor);
     p.drawText(QRectF(margin, weaY + 8, width() - 20, 15), Qt::AlignLeft, m_strWeatherCity);
 
     // 3. Draw Temperature
-    QFont fontTemp("Arial", 12, QFont::Bold);
+    QFont fontTemp("Arial", 11, QFont::Bold);
     p.setFont(fontTemp);
     p.drawText(QRectF(0, weaY + 18, width(), 25), Qt::AlignCenter, m_weatherTemp);
 
     // 4. Draw Description
-    QFont fontDesc("Arial", 7);
+    QFont fontDesc("Arial", 6);
     p.setFont(fontDesc);
     p.drawText(QRectF(0, weaY + 40, width(), 15), Qt::AlignCenter, m_weatherDesc);
 
@@ -742,6 +737,9 @@ void MainWindow::drawWeather(QPainter& p, int yStart)
 
 void MainWindow::updateWeather()
 {
+    if (!m_bWeather)
+        return;
+
     if (networkManager)
     {
         networkManager->get(QNetworkRequest(QUrl(m_strWeatherUrl)));
@@ -750,6 +748,9 @@ void MainWindow::updateWeather()
 
 void MainWindow::onWeatherReceived(QNetworkReply* reply)
 {
+    if (!m_bWeather)
+        return;
+
     if (reply->error() == QNetworkReply::NoError)
     {
         QByteArray data = reply->readAll();

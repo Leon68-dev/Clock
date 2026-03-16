@@ -92,7 +92,7 @@ protected:
 
 	/*****************************************************************************************************************************/
 	const int HEIGHT_DIGITAL_CLOCK = 65;
-	const int HEIGHT_CALENDAR = 140; 
+	const int HEIGHT_CALENDAR = 130; 
 	const int HEIGHT_SYSMON = 80; 
 	const int HEIGHT_PING = 35;
 	const int HEIGHT_WEATHER = 60;
