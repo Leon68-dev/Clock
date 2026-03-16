@@ -623,10 +623,15 @@ void MainWindow::drawPing(QPainter& p, int yStart)
     // 3. Draw Value
     QString valStr = (m_pingValue == -1) ? "Error" : QString::number(m_pingValue) + " ms";
     QColor valColor;
-    if (m_pingValue == -1) valColor = QColor(240, 128, 128);
-    else if (m_pingValue < 100) valColor = QColor(80, 220, 80);
-    else if (m_pingValue < 250) valColor = Qt::yellow;
-    else valColor = QColor(240, 128, 128);
+    
+    if (m_pingValue == -1) 
+        valColor = QColor(240, 128, 128);
+    else if (m_pingValue < 100) 
+        valColor = QColor(80, 220, 80);
+    else if (m_pingValue < 250) 
+        valColor = Qt::yellow;
+    else 
+        valColor = QColor(240, 128, 128);
 
     p.setPen(valColor);
     p.setFont(fontValue);
@@ -650,39 +655,54 @@ void MainWindow::updatePing()
 #ifdef Q_OS_WIN
     parameters << "-n" << "1" << "-w" << "1000" << m_strPingAddress;
 #else
+    // Linux parameters: -c 1 (count 1), -W 1 (timeout 1 second)
     parameters << "-c" << "1" << "-W" << "1" << m_strPingAddress;
 #endif
 
     connect(pingProcess, &QProcess::finished, [this, pingProcess](int exitCode)
         {
+            QString output = QString::fromLocal8Bit(pingProcess->readAllStandardOutput());
+            int resultTime = -1;
+
             if (exitCode == 0)
             {
-                QString output = QString::fromLocal8Bit(pingProcess->readAllStandardOutput());
-
-                // Parse "time=XXms" or "час=XXмс"
+#ifdef Q_OS_WIN
+                // Windows parsing: looks for "time=XXms"
                 int index = output.indexOf("time=");
-                if (index == -1)
-                    index = output.indexOf("time<"); // For very fast pings on Windows
-
                 if (index != -1)
                 {
                     int start = index + 5;
                     int end = output.indexOf("ms", start);
                     if (end != -1)
                     {
-                        m_pingValue = output.mid(start, end - start).trimmed().toInt();
+                        resultTime = output.mid(start, end - start).trimmed().toInt();
                     }
                 }
-                else
+#else
+                // Linux parsing: looks for "time=XX.X ms" or "time<XX.X ms"
+                int index = output.indexOf("time=");
+                if (index == -1)
                 {
-                    m_pingValue = -1;
+                    index = output.indexOf("time<");
                 }
-            }
-            else
-            {
-                m_pingValue = -1;
+
+                if (index != -1)
+                {
+                    int start = index + 5;
+                    int end = output.indexOf(" ms", start);
+                    if (end != -1)
+                    {
+                        // Read the float value (e.g., 22.5) and convert to int
+                        QString timeStr = output.mid(start, end - start).trimmed();
+                        resultTime = timeStr.toDouble() * 1000; // Convert ms to integer ms for consistency, or just use toInt() if it's already integer
+                        resultTime = timeStr.toDouble(); // Keep it as double/int for now
+                    }
+                }
+#endif
             }
 
+            // Final assignment
+            m_pingValue = (resultTime > 0) ? resultTime : -1;
             m_isPingInProgress = false;
             pingProcess->deleteLater();
         });
