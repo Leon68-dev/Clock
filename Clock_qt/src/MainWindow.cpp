@@ -762,6 +762,7 @@ void MainWindow::onWeatherReceived(QNetworkReply* reply)
     else
     {
         m_weatherDesc = "Offline";
+        m_weatherTemp = "?\u00B0C";
     }
 
     reply->deleteLater();
