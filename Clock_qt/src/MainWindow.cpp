@@ -200,7 +200,7 @@ void MainWindow::paintEvent(QPaintEvent*)
     if (m_bWeather)
     {
         drawWeather(p, currentY);
-        currentY += 45;
+        currentY += 40;
     }
 
     // Dynamic height adjustment
@@ -283,7 +283,7 @@ void MainWindow::drawAnalogClock(QPainter& p)
     QFont fontCpp("Arial", 6, QFont::Bold);
     p.setFont(fontCpp);
     p.setPen(Qt::gray);
-    p.drawText(QRectF(xCenter - 25, yCenter - innerRadius * 0.42, 50, 12), Qt::AlignCenter, "C++");
+    p.drawText(QRectF(xCenter - 25, yCenter - innerRadius * 0.42, 50, 12), Qt::AlignCenter, "C++(Qt)");
 
     // Day - Check m_bDay
     if (m_bDay)

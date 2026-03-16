@@ -31,7 +31,7 @@ void AboutDialog::setupUi()
     topLayout->addWidget(lblImg);
 
     QVBoxLayout* infoLayout = new QVBoxLayout();
-    infoLayout->addWidget(new QLabel("C++", this));
+    infoLayout->addWidget(new QLabel("C++(Qt)", this));
     infoLayout->addWidget(new QLabel("Clock Version 2.1.0", this));
 
     int year = QDate::currentDate().year();

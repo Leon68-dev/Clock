@@ -323,7 +323,7 @@ void CClockvcmfcDlg::DrawAnalogClock(Gdiplus::Graphics& g, float xCenter, float 
 
 	Gdiplus::Font fontText(&fontFamily, innerRadius * 0.11f, Gdiplus::FontStyleBold);
 	Gdiplus::SolidBrush bGray(Gdiplus::Color::Gray);
-	g.DrawString(L"C++", -1, &fontText, Gdiplus::PointF(xCenter, yCenter + 16.0f - innerRadius * 0.52f), &sf, &bGray);
+	g.DrawString(L"C++(MFC)", -1, &fontText, Gdiplus::PointF(xCenter, yCenter + 16.0f - innerRadius * 0.52f), &sf, &bGray);
 
 	float yDelta = 5.0f;
 	if (m_bDay) 
