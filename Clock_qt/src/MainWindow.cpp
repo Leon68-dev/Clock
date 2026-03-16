@@ -200,7 +200,7 @@ void MainWindow::paintEvent(QPaintEvent*)
     if (m_bWeather)
     {
         drawWeather(p, currentY);
-        currentY += 55;
+        currentY += 45;
     }
 
     // Dynamic height adjustment
@@ -279,7 +279,7 @@ void MainWindow::drawAnalogClock(QPainter& p)
     p.setPen(QColor(240, 128, 128));
     p.drawText(QRectF(xCenter - 25, yCenter - 3 - innerRadius * 0.62, 50, 15), Qt::AlignCenter, "LAN");
 
-    // C++
+    // C++(Qt)
     QFont fontCpp("Arial", 6, QFont::Bold);
     p.setFont(fontCpp);
     p.setPen(Qt::gray);
@@ -481,10 +481,10 @@ void MainWindow::drawCalendar(QPainter& p, int yStart)
     QColor weekendColor = (m_dynamicColor == Qt::black) ? QColor(200, 0, 0) : QColor(240, 128, 128);
 
     // 1. Draw Header (Month Year)
-    QFont fontHeader("Arial", 7, QFont::Bold);
+    QFont fontHeader("Arial", 8, QFont::Bold);
     p.setFont(fontHeader);
     p.setPen(m_dynamicColor);
-    p.drawText(QRectF(0, calY, width(), 15), Qt::AlignCenter, today.toString("MMMM yyyy"));
+    p.drawText(QRectF(0, calY + 2, width(), 15), Qt::AlignCenter, today.toString("MMMM yyyy"));
 
     // 2. Draw Day Names
     QFont fontDays("Arial", 6);
@@ -720,17 +720,18 @@ void MainWindow::drawWeather(QPainter& p, int yStart)
     QFont fontCity("Arial", 6);
     p.setFont(fontCity);
     p.setPen(m_dynamicColor);
-    p.drawText(QRectF(margin, weaY + 8, width() - 20, 15), Qt::AlignLeft, m_strWeatherCity);
+    p.drawText(QRectF(margin, weaY + 4, width() - 20, 15), Qt::AlignLeft, m_strWeatherCity);
 
     // 3. Draw Temperature
     QFont fontTemp("Arial", 11, QFont::Bold);
     p.setFont(fontTemp);
-    p.drawText(QRectF(0, weaY + 18, width(), 25), Qt::AlignCenter, m_weatherTemp);
+    p.drawText(QRectF(0, weaY + 10, width(), 25), Qt::AlignCenter, m_weatherTemp);
 
     // 4. Draw Description
     QFont fontDesc("Arial", 6);
     p.setFont(fontDesc);
-    p.drawText(QRectF(0, weaY + 40, width(), 15), Qt::AlignCenter, m_weatherDesc);
+    p.drawText(QRectF(0, weaY + 28
+        , width(), 15), Qt::AlignCenter, m_weatherDesc);
 
     p.restore();
 }
