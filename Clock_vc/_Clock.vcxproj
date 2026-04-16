@@ -157,10 +157,8 @@
     <ClInclude Include="StdAfx.h" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="res\bitmap1.bmp" />
     <Image Include="res\bitmap2.bmp" />
     <Image Include="res\Clock.ico" />
-    <Image Include="res\icon1.ico" />
     <Image Include="res\icon2.ico" />
   </ItemGroup>
   <ItemGroup>
