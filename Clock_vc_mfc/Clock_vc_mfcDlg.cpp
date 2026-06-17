@@ -3,12 +3,8 @@
 #include "Clock_vc_mfc.h"
 #include "Clock_vc_mfcDlg.h"
 #include "afxdialogex.h"
-
-// Додаємо необхідні бібліотеки
 #include <cmath>
 #include <gdiplus.h>
-
-// Підключаємо ваші створені діалоги
 #include "AboutDlg.h"
 #include "CalendarDlg.h"
 #include "SetupDlg.h"
@@ -21,8 +17,6 @@
 
 #define WM_TRAY_ICON_MSG (WM_USER + 1)
 const double PI = 3.14159265358979323846;
-
-// CClockvcmfcDlg dialog
 
 CClockvcmfcDlg::CClockvcmfcDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_CLOCK_VC_MFC_DIALOG, pParent)
@@ -52,7 +46,7 @@ CClockvcmfcDlg::CClockvcmfcDlg(CWnd* pParent /*=nullptr*/)
 	m_bWeather = FALSE;
 	m_b24Hours = TRUE;
 	m_bMouseOver = FALSE;
-	m_dynamicColor = Gdiplus::Color(255, 0, 0, 0); // Чорний за замовчуванням
+	m_dynamicColor = Gdiplus::Color(255, 0, 0, 0); 
 	m_sysMonTickCount = 0;
 	m_weatherTickCount = 0;
 	m_timeShutDown = COleDateTime::GetCurrentTime();
@@ -92,14 +86,13 @@ BOOL CClockvcmfcDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
-	// --- ІНІЦІАЛІЗАЦІЯ МЕРЕЖІ ---
+	
 	WSADATA wsaData;
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) 
 	{
-		OutputDebugString(_T("WinSock ініціалізація провалена!\n"));
+		OutputDebugString(_T("WinSock error initialisation!\n"));
 	}
 
-	// Завантажуємо шрифт для цифрового годинника
 	m_fontCollection.AddFontFile(L"digital_7italic.ttf");
 
 	ModifyStyleEx(WS_EX_APPWINDOW, WS_EX_TOOLWINDOW);
@@ -116,8 +109,7 @@ BOOL CClockvcmfcDlg::OnInitDialog()
 
 	ModifyStyleEx(0, WS_EX_LAYERED);
 	LoadSettings();
-
-	// Замість прямого виклику SetLayeredWindowAttributes використовуємо наш метод
+	
 	UpdateTransparency();
 
 	if (m_bTopMost)
@@ -166,27 +158,21 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 	g.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
 	g.SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAliasGridFit);
 
-	// 1. Основний фон панелі (стає видимим при наведенні миші)
 	DrawPanelBackground(g, w, h);
 
-	// 2. Розраховуємо, де починається сіра підкладка (після цифрового годинника)
 	float modulesYStart = 150.0f;
 	if (m_bDigitalClock)
 		modulesYStart += HEIGHT_DIGITAL_CLOCK;
 
-	// 3. Малюємо сіру підкладку для нижніх модулів (видима завжди)
-	// Вона малюється від modulesYStart до самого низу h
 	if (m_bCalendar || m_bSysMon || m_bPing || m_bWeather)
 	{
 		DrawModulesBackground(g, w, modulesYStart, h);
 	}
 
-	// 4. Аналоговий годинник (завжди зверху)
 	DrawAnalogClock(g, w / 2.0f, 75.0f, 67.0f);
 
 	float currentY = 150.0f;
 
-	// 5. Цифровий годинник
 	if (m_bDigitalClock)
 	{
 		DrawDigitalClock(g, w / 2.0f, currentY);
@@ -195,7 +181,6 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 
 	bool isFirstInModules = true;
 
-	// 6. Календар
 	if (m_bCalendar)
 	{
 		DrawCalendar(g, w, currentY);
@@ -203,7 +188,6 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 		isFirstInModules = false;
 	}
 
-	// 7. Системний монітор
 	if (m_bSysMon)
 	{
 		if (!isFirstInModules) 
@@ -214,7 +198,6 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 		isFirstInModules = false;
 	}
 
-	// 8. Пінг
 	if (m_bPing)
 	{
 		if (!isFirstInModules) 
@@ -225,7 +208,6 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 		isFirstInModules = false;
 	}
 
-	// 9. Погода
 	if (m_bWeather)
 	{
 		if (!isFirstInModules) 
@@ -246,14 +228,11 @@ void CClockvcmfcDlg::DrawPanelBackground(Gdiplus::Graphics& g, float w, float h)
 	path.AddArc(0.0f, h - r, r, r, 90.0f, 90.0f);
 	path.CloseFigure();
 
-	// Якщо миша НЕ над вікном, ставимо Alpha = 1 (майже невидимий, але клікабельний)
-	// Якщо миша НАД вікном, ставимо Alpha = 160 (ефект скла)
 	int alpha = m_bMouseOver ? 160 : 1;
 
 	Gdiplus::SolidBrush panelBrush(Gdiplus::Color(alpha, 20, 20, 20));
 	g.FillPath(&panelBrush, &path);
 
-	// Рамка також стає яскравішою при наведенні
 	int borderAlpha = m_bMouseOver ? 80 : 20;
 	Gdiplus::Pen glassPen(Gdiplus::Color(borderAlpha, 255, 255, 255), 1.0f);
 	g.DrawPath(&glassPen, &path);
@@ -326,8 +305,7 @@ void CClockvcmfcDlg::DrawAnalogClock(Gdiplus::Graphics& g, float xCenter, float 
 	else 
 		::GetLocalTime(&st);
 	COleDateTime now(st);
-
-	// Текст
+	
 	Gdiplus::FontFamily fontFamily(L"Arial");
 	Gdiplus::StringFormat sf;
 	sf.SetAlignment(Gdiplus::StringAlignmentCenter);
@@ -358,8 +336,7 @@ void CClockvcmfcDlg::DrawAnalogClock(Gdiplus::Graphics& g, float xCenter, float 
 	{
 		g.DrawString(L"GMT", -1, &fontText, Gdiplus::PointF(xCenter, yCenter + yDelta + innerRadius * 0.58f), &sf, &bGray);
 	}
-
-	// Стрілки
+	
 	float fSeconds = m_bSmooth ? (st.wSecond + st.wMilliseconds / 1000.0f) : (float)st.wSecond;
 	float fMinutes = st.wMinute + fSeconds / 60.0f;
 	float fHours = (st.wHour % 12 + fMinutes / 60.0f) * 5.0f;
@@ -417,7 +394,6 @@ void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float
 		float lcdX = xCenter - (lcdW / 2.0f);
 		float lcdY = yStart + 4.0f;
 
-		// 1. Фон та рамка LCD
 		Gdiplus::SolidBrush lcdBackBrush(Gdiplus::Color(255, 170, 185, 165));
 		Gdiplus::GraphicsPath lcdPath;
 		float r = 5.0f;
@@ -429,7 +405,6 @@ void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float
 		g.FillPath(&lcdBackBrush, &lcdPath);
 		g.DrawPath(&Gdiplus::Pen(Gdiplus::Color(120, 0, 0, 0), 1.0f), &lcdPath);
 
-		// 2. Шрифти
 		Gdiplus::Font digFontLarge(&digFamily, 32, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
 		Gdiplus::Font digFontSmall(&digFamily, 18, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
 		Gdiplus::Font fontIndicator(L"Arial", 8, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
@@ -448,7 +423,6 @@ void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float
 		float topRowY = lcdY + 14.0f;
 		float bottomRowY = lcdY + 36.0f;
 
-		// --- ВАШІ КООРДИНАТИ ---
 		float p_H1 = xCenter - 36.0f;
 		float p_H2 = xCenter - 18.0f;
 		float p_Colon = xCenter - 17.5f;
@@ -460,7 +434,6 @@ void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float
 		float p_S1 = xCenter + 42.0f;
 		float p_S2 = xCenter + 56.0f;
 
-		// 3. ЛОГІКА 12/24 ТА AM/PM
 		int displayHour = st.wHour;
 		CString strAMPM = _T("");
 
@@ -471,11 +444,9 @@ void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float
 			if (displayHour == 0) 
 				displayHour = 12;
 
-			// Малюємо індикатор AM або PM
 			g.DrawString(strAMPM, -1, &fontIndicator, Gdiplus::PointF(lcdX + 5.0f, bottomRowY - 26.0f), &sfLeft, &digBrush);
 		}
 
-		// 4. МАЛЮЄМО ТІНІ (88)
 		g.DrawString(L"88", 2, &digFontSmall, Gdiplus::PointF(p_Day + 8.0f, topRowY), &sfRight, &shadowBrush);
 		g.DrawString(L"88", 2, &digFontSmall, Gdiplus::PointF(p_Date, topRowY), &sfRight, &shadowBrush);
 		if (displayHour >= 10) 
@@ -487,7 +458,6 @@ void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float
 		g.DrawString(L"8", 1, &digFontSmall, Gdiplus::PointF(p_S1, bottomRowY + 4.0f), &sfRight, &shadowBrush);
 		g.DrawString(L"8", 1, &digFontSmall, Gdiplus::PointF(p_S2, bottomRowY + 4.0f), &sfRight, &shadowBrush);
 
-		// 5. МАЛЮЄМО ДАНІ
 		const WCHAR* days[] = { L"SU", L"MO", L"TU", L"WE", L"TH", L"FR", L"SA" };
 		g.DrawString(days[st.wDayOfWeek], 2, &digFontSmall, Gdiplus::PointF(p_Day, topRowY), &sfCenter, &digBrush);
 
@@ -604,7 +574,6 @@ void CClockvcmfcDlg::DrawSystemMonitor(Gdiplus::Graphics& g, float w, float ySta
 	float barW = w - (margin * 2.0f);
 	float barH = 12.0f;
 
-	// 1. Розділювач
 	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, m_dynamicColor.GetR(), m_dynamicColor.GetG(), m_dynamicColor.GetB()), 1.0f), 15.0f, monY, w - 15.0f, monY);
 	int highlightAlpha = (m_dynamicColor.GetR() > 128) ? 40 : 10;
 	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(highlightAlpha, 255, 255, 255), 1.0f), 15.0f, monY + 1.0f, w - 15.0f, monY + 1.0f);
@@ -617,7 +586,6 @@ void CClockvcmfcDlg::DrawSystemMonitor(Gdiplus::Graphics& g, float w, float ySta
 	Gdiplus::StringFormat sfRight;
 	sfRight.SetAlignment(Gdiplus::StringAlignmentFar);
 
-	// --- ЛЯМБДА З ПРОСТОЮ ЗАЛІВКОЮ ---
 	auto DrawBar = [&](float y, const TCHAR* label, float percent, Gdiplus::Color color)
 	{
 		g.DrawString(label, -1, &fontLabel, Gdiplus::PointF(margin, y), &textBrush);
@@ -626,15 +594,12 @@ void CClockvcmfcDlg::DrawSystemMonitor(Gdiplus::Graphics& g, float w, float ySta
 		sVal.Format(_T("%.0f%%"), percent);
 		g.DrawString(sVal, -1, &fontValue, Gdiplus::PointF(w - margin, y + 1.0f), &sfRight, &textBrush);
 
-		// Фон смужки
 		Gdiplus::RectF barRect(margin, y + 14.0f, barW, barH);
 		g.FillRectangle(&Gdiplus::SolidBrush(Gdiplus::Color(100, 0, 0, 0)), barRect);
 
-		// Рамка
 		int borderAlpha = (m_dynamicColor.GetR() > 128) ? 60 : 30;
 		g.DrawRectangle(&Gdiplus::Pen(Gdiplus::Color(borderAlpha, 255, 255, 255), 1.0f), barRect);
 
-		// 2. ПРОСТА ЗАЛІВКА (Progress)
 		if (percent > 0.0f)
 		{
 			float fillW = (barW * percent) / 100.0f;
@@ -643,14 +608,11 @@ void CClockvcmfcDlg::DrawSystemMonitor(Gdiplus::Graphics& g, float w, float ySta
 
 			Gdiplus::RectF fillRect(margin + 1.0f, y + 15.0f, fillW - 2.0f, barH - 2.0f);
 
-			// Використовуємо SolidBrush для абсолютно пласкої залівки
-			// Або простий LinearGradientBrush без SetBlend для легкого об'єму
 			Gdiplus::SolidBrush simpleBrush(color);
 			g.FillRectangle(&simpleBrush, fillRect);
 		}
 	};
 
-	// Кольори (можна зробити їх трохи м'якшими для пласкої теми)
 	Gdiplus::Color cpuColor = (m_cpuUsage > 80.0f) ? Gdiplus::Color(255, 255, 70, 70) :
 		(m_cpuUsage > 50.0f) ? Gdiplus::Color(255, 255, 160, 0) :
 		Gdiplus::Color(255, 80, 220, 80);
@@ -681,18 +643,13 @@ void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 		else
 			::GetLocalTime(&st);
 
-		// 1. ГОЛОВНЕ: Малюємо інтерфейс завжди (5 разів на секунду)
-		// Це забезпечує плавність стрілок
 		UpdateLayeredClock();
 
-		// 2. Логіка, яка має спрацьовувати строго РАЗ НА СЕКУНДУ
 		if (st.wSecond != m_lastSecond)
 		{
 			m_lastSecond = st.wSecond;
 			COleDateTime now(st);
 
-			// Оновлення системних метрик та пінгу кожні 3 секунди
-			// Тепер це всередині m_lastSecond, тому спрацює лише 1 раз
 			if (st.wSecond % 3 == 0)
 			{
 				UpdateSystemMetrics();
@@ -700,21 +657,16 @@ void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 				UpdateThemeColor();
 			}
 
-			// Оновлення погоди кожні 5хв)
 			if ((st.wMinute % 5 == 0) && st.wSecond == 0)
 			{
 				UpdateWeather();
 			}
 
-			// --- ЗВУКОВА ЛОГІКА ---
-
-			// 1. Щогодинний бій
 			if (m_bHours && st.wMinute == 0 && st.wSecond == 0)
 			{
 				PlayHourlyChime(st.wHour);
 			}
 
-			// 2. Чверті
 			if (m_b1530 && st.wSecond == 0)
 			{
 				if (st.wMinute == 15 || st.wMinute == 45)
@@ -723,15 +675,12 @@ void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 					PlayMCI(GetSoundPath(_T("_30.wav")), _T("chime"));
 			}
 
-			// 3. Тік-Так (кожні 2 секунди)
 			if (m_bTickTack && st.wSecond % 2 == 0)
 			{
-				// Не перериваємо довгі звуки
 				if (!IsPlayingMCI(_T("hours")) && !IsPlayingMCI(_T("chime")))
 					PlayMCI(GetSoundPath(_T("_TickTack.wav")), _T("tick"));
 			}
 
-			// Оновлення тексту в треї (раз на секунду достатньо)
 			CString strTip = now.Format(_T("%A - %H:%M"));
 			if (m_bGMT) strTip += _T(" GMT");
 			_tcscpy_s(m_nid.szTip, strTip.Left(63));
@@ -856,8 +805,7 @@ void CClockvcmfcDlg::OnMenuSetup()
 
 		UpdatePing();
 		UpdateWeather();
-
-		// Оновлюємо інтервал таймера
+		
 		KillTimer(1);
 		SetTimer(1, m_bSmooth ? 200 : 1000, NULL);
 
@@ -871,17 +819,12 @@ void CClockvcmfcDlg::OnMenuSetup()
 void CClockvcmfcDlg::OnMenuStartPosition()
 {
 	CRect rcWorkArea;
-	// Отримуємо робочу область (без панелі завдань)
 	SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWorkArea, 0);
 
-	// Розрахунок для ПРАВОГО ВЕРХНЬОГО кута
-	// Відступаємо 20 пікселів від правого краю та 20 пікселів зверху
 	int x = rcWorkArea.right - m_nPanelWidth - 20;
 	int y = rcWorkArea.top + 20;
 
 	SetWindowPos(NULL, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_SHOWWINDOW);
-
-	// Одразу зберігаємо нову позицію в INI
 	SaveSettings();
 }
 
@@ -1028,18 +971,15 @@ BOOL CClockvcmfcDlg::SetShutdownPrivilege()
 {
 	HANDLE hToken;
 	TOKEN_PRIVILEGES tkp;
-
-	// Отримуємо токен поточного процесу
+	
 	if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
 		return FALSE;
 
-	// Шукаємо LUID для привілею вимкнення
 	LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &tkp.Privileges[0].Luid);
 
 	tkp.PrivilegeCount = 1;
 	tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
-	// Застосовуємо привілей
 	AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES)NULL, 0);
 
 	if (GetLastError() != ERROR_SUCCESS)
@@ -1048,28 +988,21 @@ BOOL CClockvcmfcDlg::SetShutdownPrivilege()
 	return TRUE;
 }
 
-// Сама логіка вимкнення/сну
 void CClockvcmfcDlg::ExecuteShutdown()
 {
 	if (m_isSleep)
 	{
-		// Режим сну (Sleep)
-		// Параметри: Hibernate = FALSE, ForceCritical = TRUE, DisableWakeEvent = FALSE
 		SetSuspendState(FALSE, TRUE, FALSE);
 	}
 	else
 	{
-		// Режим вимкнення (Power Off)
 		if (SetShutdownPrivilege())
 		{
-			// EWX_POWEROFF - вимкнути живлення
-			// EWX_FORCE - примусово закрити програми (як у вашому C# коді)
 			ExitWindowsEx(EWX_POWEROFF | EWX_FORCE, SHTDN_REASON_MAJOR_OTHER);
 		}
 	}
 }
 
-// Отримання повного шляху до звукового файлу
 CString CClockvcmfcDlg::GetSoundPath(CString fileName)
 {
 	TCHAR szPath[MAX_PATH];
@@ -1082,11 +1015,9 @@ CString CClockvcmfcDlg::GetSoundPath(CString fileName)
 	return strPath + fileName;
 }
 
-// Відтворення одного файлу (асинхронно, щоб не фризити UI)
 void CClockvcmfcDlg::PlaySoundFile(CString fileName)
 {
 	CString fullPath = GetSoundPath(fileName);
-	// SND_ASYNC - не чекати завершення, SND_FILENAME - шлях до файлу
 	::PlaySound(fullPath, NULL, SND_FILENAME | SND_ASYNC | SND_NODEFAULT);
 }
 
@@ -1098,10 +1029,8 @@ void CClockvcmfcDlg::PlayHourlyChime(int hours)
 
 	CString fullPath = GetSoundPath(_T("_Boom.wav"));
 
-	// Передаємо копію шляху, щоб уникнути проблем із доступом
 	std::thread([this, fullPath, count]()
 	{
-		// 1. Відкриваємо файл ОДИН РАЗ для всієї серії
 		mciSendString(_T("close hours"), NULL, 0, NULL);
 		CString openCmd;
 		openCmd.Format(_T("open \"%s\" alias hours"), (LPCTSTR)fullPath);
@@ -1109,10 +1038,9 @@ void CClockvcmfcDlg::PlayHourlyChime(int hours)
 
 		for (int i = 0; i < count; i++)
 		{
-			// 2. Граємо з початку (from 0)
 			mciSendString(_T("play hours from 0"), NULL, 0, NULL);
 
-			Sleep(200); // Даємо час почати
+			Sleep(200);
 
 			int timeout = 0;
 			while (IsPlayingMCI(_T("hours")) && timeout < 60) 
@@ -1120,11 +1048,9 @@ void CClockvcmfcDlg::PlayHourlyChime(int hours)
 				Sleep(100);
 				timeout++;
 			}
-			Sleep(300); // Пауза між ударами
+			Sleep(300); 
 		}
 
-		// 3. ВАЖЛИВО: Закриваємо файл після завершення всіх ударів
-		// Це звільнить той самий буфер у 2.2 МБ
 		mciSendString(_T("close hours"), NULL, 0, NULL);
 
 	}).detach();
@@ -1137,10 +1063,8 @@ void CClockvcmfcDlg::UpdateTransparency()
 
 void CClockvcmfcDlg::UpdateLayeredClock()
 {
-	// 1. Розрахунок динамічної висоти
-	// 150px - зона аналогового годинника
-	// 50px - зона цифрового годинника
 	int newHeight = 150;
+
 	if (m_bDigitalClock) 
 		newHeight += HEIGHT_DIGITAL_CLOCK;
 	
@@ -1157,8 +1081,7 @@ void CClockvcmfcDlg::UpdateLayeredClock()
 		newHeight += HEIGHT_WEATHER;
 
 	m_nPanelHeight = newHeight;
-
-	// Оновлюємо розмір вікна
+	
 	SetWindowPos(NULL, 0, 0, m_nPanelWidth, m_nPanelHeight, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 
 	CRect rect;
@@ -1183,9 +1106,9 @@ void CClockvcmfcDlg::UpdateLayeredClock()
 	HBITMAP hOldBitmap = (HBITMAP)::SelectObject(hMemDC, hBitmap);
 
 	Gdiplus::Graphics g(hMemDC);
-	g.Clear(Gdiplus::Color(0, 0, 0, 0)); // ПОВНА ПРОЗОРІСТЬ ОСНОВИ
+	g.Clear(Gdiplus::Color(0, 0, 0, 0)); 
 
-	DrawClock(g); // Малюємо наш годинник та панель
+	DrawClock(g); 
 
 	BLENDFUNCTION blend = { AC_SRC_OVER, 0, (BYTE)((255 * m_nOpacity) / 100), AC_SRC_ALPHA };
 	::UpdateLayeredWindow(m_hWnd, hdcScreen, &ptDest, &size, hMemDC, &ptSrc, 0, &blend, ULW_ALPHA);
@@ -1205,10 +1128,9 @@ void CClockvcmfcDlg::OnMenuWorldmap()
 	}
 	else
 	{
-		// Якщо об'єкт існує, але вікно закрите - ВИДАЛЯЄМО ОБ'ЄКТ
 		if (m_pMapDlg != nullptr)
 		{
-			delete m_pMapDlg; // Це викличе деструктор і видалить Image
+			delete m_pMapDlg;
 			m_pMapDlg = nullptr;
 		}
 
@@ -1222,10 +1144,8 @@ void CClockvcmfcDlg::OnMenuWorldmap()
 
 void CClockvcmfcDlg::PlayMCI(CString fileName, CString alias)
 {
-	// 1. На випадок, якщо цей аліас ще відкритий — закриваємо
 	mciSendString(_T("close ") + alias, NULL, 0, NULL);
 
-	// 2. Відкриваємо та запускаємо
 	CString cmd;
 	cmd.Format(_T("open \"%s\" alias %s"), (LPCTSTR)fileName, (LPCTSTR)alias);
 
@@ -1233,23 +1153,20 @@ void CClockvcmfcDlg::PlayMCI(CString fileName, CString alias)
 	{
 		mciSendString(_T("play ") + alias, NULL, 0, NULL);
 
-		// 3. Запускаємо фоновий потік для очищення пам'яті
 		std::thread([alias]() 
 		{
-			Sleep(1000); // Даємо звуку почати грати
+			Sleep(1000); 
 
 			TCHAR res[128];
 			CString statusCmd = _T("status ") + alias + _T(" mode");
 
-			// Чекаємо, поки статус зміниться з "playing" на щось інше
 			while (true) 
 			{
 				mciSendString(statusCmd, res, 128, NULL);
 				if (_tcsicmp(res, _T("playing")) != 0) break;
-				Sleep(500); // Перевіряємо двічі на секунду
+				Sleep(500);
 			}
 
-			// 4. ЗВІЛЬНЯЄМО ПАМ'ЯТЬ
 			mciSendString(_T("close ") + alias, NULL, 0, NULL);
 		}).detach();
 	}
@@ -1271,7 +1188,6 @@ BOOL CClockvcmfcDlg::IsPlayingMCI(CString alias)
 
 void CClockvcmfcDlg::UpdateSystemMetrics()
 {
-	// --- 1. РОЗРАХУНОК CPU ---
 	FILETIME idleTime, kernelTime, userTime;
 	if (GetSystemTimes(&idleTime, &kernelTime, &userTime))
 	{
@@ -1293,7 +1209,6 @@ void CClockvcmfcDlg::UpdateSystemMetrics()
 		m_prevUserTime = userTime;
 	}
 
-	// --- 2. РОЗРАХУНОК RAM ---
 	MEMORYSTATUSEX memInfo;
 	memInfo.dwLength = sizeof(MEMORYSTATUSEX);
 	if (GlobalMemoryStatusEx(&memInfo))
@@ -1320,12 +1235,10 @@ void CClockvcmfcDlg::UpdatePing()
 
 		unsigned long ipaddr = INADDR_NONE;
 
-		// Використовуємо ADDRINFOW для повної підтримки Unicode (CString)
 		ADDRINFOW hints = { 0 };
 		hints.ai_family = AF_INET;
 		ADDRINFOW* result = NULL;
 
-		// GetAddrInfoW — це Unicode версія GetAddrInfo
 		if (GetAddrInfoW(m_strPingAddress, NULL, &hints, &result) == 0) 
 		{
 			struct sockaddr_in* sockaddr_ipv4 = (struct sockaddr_in*)result->ai_addr;
@@ -1336,14 +1249,13 @@ void CClockvcmfcDlg::UpdatePing()
 		if (ipaddr != INADDR_NONE) 
 		{
 			char sendData[] = "PingData";
-			// Буфер має бути достатньо великим для відповіді + даних
 			DWORD replySize = sizeof(ICMP_ECHO_REPLY) + sizeof(sendData) + 32;
 			LPVOID replyBuffer = malloc(replySize);
 
 			if (replyBuffer) 
 			{
 				DWORD dwRetVal = IcmpSendEcho(hIcmpFile, ipaddr, sendData, sizeof(sendData),
-					NULL, replyBuffer, replySize, 1000); // Таймаут 1 сек
+					NULL, replyBuffer, replySize, 1000);
 
 				if (dwRetVal != 0) 
 				{
@@ -1352,14 +1264,14 @@ void CClockvcmfcDlg::UpdatePing()
 				}
 				else 
 				{
-					m_nPingValue = -1; // Timeout або помилка мережі
+					m_nPingValue = -1; 
 				}
 				free(replyBuffer);
 			}
 		}
 		else 
 		{
-			m_nPingValue = -1; // Не вдалося розпізнати ім'я/IP
+			m_nPingValue = -1; 
 		}
 
 		IcmpCloseHandle(hIcmpFile);
@@ -1371,44 +1283,33 @@ void CClockvcmfcDlg::DrawPing(Gdiplus::Graphics& g, float w, float yStart)
 {
 	float pingY = yStart + 5.0f;
 	float margin = 15.0f;
-	float valueAreaW = 50.0f; // Зарезервоване місце під "999 ms" справа
-
-	//// 1. Розділювальні лінії (адаптуємо під тему)
-	//g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, m_dynamicColor.GetR(), m_dynamicColor.GetG(), m_dynamicColor.GetB()), 1.0f), 15.0f, pingY, w - 15.0f, pingY);
-	//int highlightAlpha = (m_dynamicColor.GetR() > 128) ? 40 : 10;
-	//g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(highlightAlpha, 255, 255, 255), 1.0f), 15.0f, pingY + 1.0f, w - 15.0f, pingY + 1.0f);
+	float valueAreaW = 50.0f; 
 
 	Gdiplus::FontFamily arial(L"Arial");
 	Gdiplus::Font fontLabel(&arial, 10, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
 	Gdiplus::Font fontValue(&arial, 10, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
 
-	// Використовуємо динамічний колір для назви сервера
 	Gdiplus::SolidBrush textBrush(m_dynamicColor);
 
-	// 2. Підготовка значення пінгу (справа)
 	CString strVal;
 	Gdiplus::Color valColor;
 	if (m_nPingValue == -1)
 	{
 		strVal = _T("Error");
-		// Адаптивний червоний для помилки (світліший на темному фоні)
 		valColor = (m_dynamicColor.GetR() > 128) ? Gdiplus::Color(255, 255, 100, 100) : Gdiplus::Color(255, 200, 0, 0);
 	}
 	else
 	{
 		strVal.Format(_T("%d ms"), m_nPingValue);
-		// Кольори статусу (зелений/жовтий/червоний) залишаємо яскравими
 		valColor = (m_nPingValue < 100) ? Gdiplus::Color(255, 100, 255, 100) :
 			(m_nPingValue < 250) ? Gdiplus::Color(255, 255, 200, 50) :
 			Gdiplus::Color(255, 255, 80, 80);
 	}
 
-	// Малюємо значення пінгу (притиснуте до правого краю)
 	Gdiplus::StringFormat sfRight;
 	sfRight.SetAlignment(Gdiplus::StringAlignmentFar);
 	g.DrawString(strVal, -1, &fontValue, Gdiplus::PointF(w - margin, pingY + 10.0f), &sfRight, &Gdiplus::SolidBrush(valColor));
 
-	// 3. Малюємо назву (зліва) з автоматичним обрізанням
 	CString strLabel;
 	strLabel.Format(_T("Ping: %s"), (LPCTSTR)m_strPingAddress);
 
@@ -1419,7 +1320,6 @@ void CClockvcmfcDlg::DrawPing(Gdiplus::Graphics& g, float w, float yStart)
 	sfLeft.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
 	sfLeft.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap);
 
-	// Малюємо назву динамічним кольором
 	g.DrawString(strLabel, -1, &fontLabel, rectLabel, &sfLeft, &textBrush);
 }
 
@@ -1430,12 +1330,8 @@ void CClockvcmfcDlg::UpdateWeather()
 
 	std::thread([this]()
 		{
-			// 1. Формуємо URL для Одеси (Open-Meteo використовує координати)
-			// current=temperature_2m,weather_code - запитуємо температуру та код погоди
-			//CString url = _T("https://api.open-meteo.com/v1/forecast?latitude=46.48&longitude=30.72&current=temperature_2m,weather_code");
 			CString url = m_strWeatherUrl;
 
-			// 2. HTTP запит (код залишається майже таким самим, але міняємо протокол на HTTPS)
 			CString jsonResponse;
 			HINTERNET hSession = WinHttpOpen(L"MFC-Clock/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
 			if (hSession) 
@@ -1446,11 +1342,9 @@ void CClockvcmfcDlg::UpdateWeather()
 				if (WinHttpCrackUrl(url, (DWORD)url.GetLength(), 0, &urlComp)) 
 				{
 					CString host(urlComp.lpszHostName, urlComp.dwHostNameLength);
-					// Для HTTPS використовуємо INTERNET_DEFAULT_HTTPS_PORT (443)
 					HINTERNET hConnect = WinHttpConnect(hSession, host, INTERNET_DEFAULT_HTTPS_PORT, 0);
 					if (hConnect) 
 					{
-						// Додаємо прапорець WINHTTP_FLAG_SECURE для HTTPS
 						HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", urlComp.lpszUrlPath, NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
 						if (hRequest && WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0) && WinHttpReceiveResponse(hRequest, NULL)) 
 						{
@@ -1477,44 +1371,36 @@ void CClockvcmfcDlg::UpdateWeather()
 				WinHttpCloseHandle(hSession);
 			}
 
-			// 3. Парсинг результатів (Open-Meteo JSON трохи інший)
 			if (!jsonResponse.IsEmpty())
 			{
-				// Спочатку шукаємо початок блоку з поточними даними
 				int posCurrent = jsonResponse.Find(_T("\"current\":"));
 				if (posCurrent != -1)
 				{
-					// Шукаємо температуру ТІЛЬКИ після тегу "current"
 					int posTemp = jsonResponse.Find(_T("\"temperature_2m\":"), posCurrent);
 					if (posTemp != -1)
 					{
-						int posStart = posTemp + 17; // довжина "temperature_2m":
+						int posStart = posTemp + 17; 
 						int posEnd = jsonResponse.Find(_T(","), posStart);
-						if (posEnd == -1) posEnd = jsonResponse.Find(_T("}"), posStart);
+						if (posEnd == -1) 
+							posEnd = jsonResponse.Find(_T("}"), posStart);
 
 						CString t = jsonResponse.Mid(posStart, posEnd - posStart);
-
-						// Очищаємо від лапок та зайвих символів, якщо вони є
 						t.Remove('\"');
 						t.Trim();
-
-						// Форматуємо вивід
 						m_strTemp.Format(_T("%s°C"), (LPCTSTR)t);
 					}
 
-					// Шукаємо код погоди також після тегу "current"
 					int posCode = jsonResponse.Find(_T("\"weather_code\":"), posCurrent);
 					if (posCode != -1)
 					{
-						int posStart = posCode + 15; // довжина "weather_code":
+						int posStart = posCode + 15; 
 						int posEnd = jsonResponse.Find(_T(","), posStart);
 						if (posEnd == -1) posEnd = jsonResponse.Find(_T("}"), posStart);
 
 						CString codeStr = jsonResponse.Mid(posStart, posEnd - posStart);
 						codeStr.Remove('\"');
 						int code = _ttoi(codeStr);
-
-						// Мапування кодів (залишаємо як було)
+						
 						if (code == 0) 
 							m_strWeatherDesc = _T("Clear sky");
 						else if (code >= 1 && code <= 3) 
@@ -1554,15 +1440,12 @@ void CClockvcmfcDlg::DrawWeather(Gdiplus::Graphics& g, float w, float yStart)
 	float weaY = yStart + 5.0f;
 	float margin = 15.0f;
 
-	// 1. Налаштування шрифтів
 	Gdiplus::FontFamily arial(L"Arial");
 	Gdiplus::Font fontCity(&arial, 9, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
 	Gdiplus::Font fontTemp(&arial, 18, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
 	Gdiplus::Font fontDesc(&arial, 10, Gdiplus::FontStyleRegular, Gdiplus::UnitPixel);
 
 	Gdiplus::SolidBrush textBrush(m_dynamicColor);
-
-	// 2. Налаштування форматів вирівнювання
 	Gdiplus::StringFormat sfLeft, sfCenter;
 	sfLeft.SetAlignment(Gdiplus::StringAlignmentNear);
 	sfLeft.SetLineAlignment(Gdiplus::StringAlignmentNear);
@@ -1570,20 +1453,12 @@ void CClockvcmfcDlg::DrawWeather(Gdiplus::Graphics& g, float w, float yStart)
 	sfCenter.SetAlignment(Gdiplus::StringAlignmentCenter);
 	sfCenter.SetLineAlignment(Gdiplus::StringAlignmentNear);
 
-	// 3. МАЛЮЄМО МІСТО (Зліва зверху)
-	// Виводимо повну назву (наприклад, Odesa,ua)
 	g.DrawString(m_strWeatherCity, -1, &fontCity, Gdiplus::PointF(margin, weaY + 5.0f), &sfLeft, &textBrush);
-
-	// 4. МАЛЮЄМО ТЕМПЕРАТУРУ (По центру, трохи нижче міста)
 	g.DrawString(m_strTemp, -1, &fontTemp, Gdiplus::PointF(w / 2.0f, weaY + 15.0f), &sfCenter, &textBrush);
-
-	// 5. МАЛЮЄМО СТАН (По центру під температурою)
 	g.DrawString(m_strWeatherDesc, -1, &fontDesc, Gdiplus::PointF(w / 2.0f, weaY + 36.0f), &sfCenter, &textBrush);
 
-	// 6. ІКОНКА (якщо є)
 	if (m_pWeatherIcon)
 	{
-		// Малюємо іконку зліва від температури
 		g.DrawImage(m_pWeatherIcon, (w / 2.0f) - 60.0f, weaY + 12.0f, 32.0f, 32.0f);
 	}
 }
@@ -1593,11 +1468,10 @@ void CClockvcmfcDlg::OnMouseMove(UINT nFlags, CPoint point)
 	if (!m_bMouseOver)
 	{
 		m_bMouseOver = TRUE;
-		// Запитуємо Windows надіслати WM_MOUSELEAVE, коли миша піде геть
 		TRACKMOUSEEVENT tme = { sizeof(tme), TME_LEAVE, m_hWnd, 0 };
 		TrackMouseEvent(&tme);
 
-		UpdateLayeredClock(); // Перемальовуємо, щоб показати фон
+		UpdateLayeredClock();
 	}
 	CDialogEx::OnMouseMove(nFlags, point);
 }
@@ -1605,7 +1479,7 @@ void CClockvcmfcDlg::OnMouseMove(UINT nFlags, CPoint point)
 LRESULT CClockvcmfcDlg::OnMouseLeave(WPARAM wParam, LPARAM lParam)
 {
 	m_bMouseOver = FALSE;
-	UpdateLayeredClock(); // Перемальовуємо, щоб сховати фон
+	UpdateLayeredClock(); 
 	return 0;
 }
 
@@ -1615,41 +1489,34 @@ void CClockvcmfcDlg::DrawModulesBackground(Gdiplus::Graphics& g, float w, float 
 		return;
 
 	Gdiplus::GraphicsPath path;
-	float r = 15.0f; // Радіус закруглення
+	float r = 15.0f; 
 
-	// Малюємо шлях із закругленими кутами з усіх боків
-	path.AddArc(0.0f, yStart, r, r, 180.0f, 90.0f);     // Верхній лівий кут
-	path.AddArc(w - r, yStart, r, r, 270.0f, 90.0f);    // Верхній правий кут
-	path.AddArc(w - r, h - r, r, r, 0.0f, 90.0f);       // Нижній правий кут
-	path.AddArc(0.0f, h - r, r, r, 90.0f, 90.0f);       // Нижній лівий кут
+	path.AddArc(0.0f, yStart, r, r, 180.0f, 90.0f);     
+	path.AddArc(w - r, yStart, r, r, 270.0f, 90.0f);    
+	path.AddArc(w - r, h - r, r, r, 0.0f, 90.0f);       
+	path.AddArc(0.0f, h - r, r, r, 90.0f, 90.0f);       
 	path.CloseFigure();
 
-	// Малюємо напівпрозору сіру підкладку
 	Gdiplus::SolidBrush grayBrush(Gdiplus::Color(100, 60, 60, 60));
 	g.FillPath(&grayBrush, &path);
 
-	// Малюємо тонку світлу рамку навколо всієї підкладки (ефект картки)
 	Gdiplus::Pen borderPen(Gdiplus::Color(50, 255, 255, 255), 1.0f);
 	g.DrawPath(&borderPen, &path);
 }
 
 void CClockvcmfcDlg::UpdateThemeColor()
 {
-	// Якщо миша над вікном, фон стає темним (Alpha 160), 
-	// тому текст завжди має бути БІЛИМ для контрасту.
 	if (m_bMouseOver)
 	{
 		m_dynamicColor = Gdiplus::Color(255, 255, 255, 255);
 		return;
 	}
-
-	// Якщо панель прозора, аналізуємо те, що ПІД нею (шпалери або інші вікна)
+	
 	CRect rc;
 	GetWindowRect(&rc);
 
 	HDC hdcScreen = ::GetDC(NULL);
 
-	// Беремо 5 точок для аналізу (центр та кути)
 	COLORREF colors[5];
 	colors[0] = GetPixel(hdcScreen, rc.left + rc.Width() / 2, rc.top + rc.Height() / 2);
 	colors[1] = GetPixel(hdcScreen, rc.left + 10, rc.top + 10);
@@ -1663,27 +1530,21 @@ void CClockvcmfcDlg::UpdateThemeColor()
 		int r = GetRValue(colors[i]);
 		int g = GetGValue(colors[i]);
 		int b = GetBValue(colors[i]);
-		// Формула яскравості (Luminance)
 		totalLuminance += (0.299 * r + 0.587 * g + 0.114 * b);
 	}
 	::ReleaseDC(NULL, hdcScreen);
 
 	double avgLuminance = totalLuminance / 5.0;
 
-	// Якщо середня яскравість > 128 (світлий фон) -> ставимо ЧОРНИЙ текст
-	// Якщо < 128 (темний фон) -> ставимо БІЛИЙ текст
 	if (avgLuminance > 128)
-		m_dynamicColor = Gdiplus::Color(255, 0, 0, 0); // Чорний
+		m_dynamicColor = Gdiplus::Color(255, 0, 0, 0); 
 	else
-		m_dynamicColor = Gdiplus::Color(255, 255, 255, 255); // Білий
+		m_dynamicColor = Gdiplus::Color(255, 255, 255, 255);
 }
-
 
 void CClockvcmfcDlg::DrawSeparator(Gdiplus::Graphics& g, float w, float y)
 {
-	// Темна лінія
 	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, m_dynamicColor.GetR(), m_dynamicColor.GetG(), m_dynamicColor.GetB()), 1.0f), 15.0f, y, w - 15.0f, y);
-	// Світла підсвітка
 	int highlightAlpha = (m_dynamicColor.GetR() > 128) ? 40 : 10;
 	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(highlightAlpha, 255, 255, 255), 1.0f), 15.0f, y + 1.0f, w - 15.0f, y + 1.0f);
 }
