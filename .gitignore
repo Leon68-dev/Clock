@@ -43,3 +43,10 @@
 
 /Clock_qt/.vs
 /Clock_qt/out
+/Clock_qt/build
+/Clock_qt/appdir
+/Clock_qt/Clock-x86_64.AppImage
+/Clock_qt/appimagetool
+/Clock_qt/linuxdeploy
+/Clock_qt/linuxdeploy-plugin-qt
+/Clock_qt/linuxdeployqt

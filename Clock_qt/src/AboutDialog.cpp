@@ -8,6 +8,11 @@
 #include <windows.h>
 #endif
 
+#ifndef Q_OS_WIN
+#include <fstream>
+#include <string>
+#endif
+
 AboutDialog::AboutDialog(QWidget* parent) : QDialog(parent)
 {
     setWindowTitle("About");
@@ -86,8 +91,28 @@ QString AboutDialog::getMemoryInfo()
             .arg(availGB, 0, 'f', 1);
     }
 #else
-    // Basic Linux implementation (can be expanded by reading /proc/meminfo)
-    info = "Memory info available in System Monitor";
+    // Повноцінна реалізація для Linux
+    std::ifstream file("/proc/meminfo");
+    std::string line;
+    long long memTotal = 0, memAvailable = 0;
+    while (std::getline(file, line)) {
+        if (line.compare(0, 8, "MemTotal") == 0) {
+            sscanf(line.c_str(), "MemTotal: %lld kB", &memTotal);
+        }
+        if (line.compare(0, 12, "MemAvailable") == 0) {
+            sscanf(line.c_str(), "MemAvailable: %lld kB", &memAvailable);
+        }
+    }
+    
+    if (memTotal > 0) {
+        double totalGB = memTotal / (1024.0 * 1024.0);
+        double availGB = memAvailable / (1024.0 * 1024.0);
+        info = QString("Total Physical Memory: %1 GB\nAvailable Physical Memory: %2 GB")
+            .arg(totalGB, 0, 'f', 1)
+            .arg(availGB, 0, 'f', 1);
+    } else {
+        info = "Memory info unavailable";
+    }
 #endif
     return info;
 }

@@ -2,6 +2,7 @@
 #include <QMouseEvent>
 #include <QFontDatabase>
 #include <QProcess>
+#include <QDir>
 #include "MainWindow.h"
 #include "SetupDialog.h"
 #include "CalendarDialog.h"
@@ -689,8 +690,8 @@ void MainWindow::updatePing()
                     {
                         // Read the float value (e.g., 22.5) and convert to int
                         QString timeStr = output.mid(start, end - start).trimmed();
-                        resultTime = timeStr.toDouble() * 1000; // Convert ms to integer ms for consistency, or just use toInt() if it's already integer
-                        resultTime = timeStr.toDouble(); // Keep it as double/int for now
+                        //resultTime = timeStr.toDouble() * 1000; // Convert ms to integer ms for consistency, or just use toInt() if it's already integer
+                        resultTime = timeStr.toDouble();        // Keep it as double/int for now
                     }
                 }
 #endif
@@ -924,10 +925,11 @@ void MainWindow::onMenuExit()
     qApp->quit();
 }
 
+
 void MainWindow::loadSettings()
 {
-    // QSettings handles INI format automatically
-    QSettings settings("clock_qt.ini", QSettings::IniFormat);
+    QDir().mkpath(QDir::homePath() + "/.config/Clock_qt");
+    QSettings settings(QDir::homePath() + "/.config/Clock_qt/clock_qt.ini", QSettings::IniFormat);
 
     settings.beginGroup("Settings");
     m_bSeconds = settings.value("chkSeconds", true).toBool();
@@ -954,7 +956,6 @@ void MainWindow::loadSettings()
     m_strWeatherCity = settings.value("weatherCity", "Odesa,UA").toString();
     m_strWeatherUrl = settings.value("weatherUrl", "").toString();
 
-    // Load position
     int x = settings.value("deskX", -1).toInt();
     int y = settings.value("deskY", -1).toInt();
     if (x != -1 && y != -1)
@@ -966,7 +967,8 @@ void MainWindow::loadSettings()
 
 void MainWindow::saveSettings()
 {
-    QSettings settings("clock_qt.ini", QSettings::IniFormat);
+    QDir().mkpath(QDir::homePath() + "/.config/Clock_qt");
+    QSettings settings(QDir::homePath() + "/.config/Clock_qt/clock_qt.ini", QSettings::IniFormat);
 
     settings.beginGroup("Settings");
     settings.setValue("chkSeconds", m_bSeconds);
@@ -992,7 +994,6 @@ void MainWindow::saveSettings()
     settings.setValue("weatherCity", m_strWeatherCity);
     settings.setValue("weatherUrl", m_strWeatherUrl);
 
-    // Save position
     settings.setValue("deskX", x());
     settings.setValue("deskY", y());
     settings.endGroup();
@@ -1211,7 +1212,7 @@ void MainWindow::executeShutdown()
         : "shutdown /s /f /t 0";
 #else
     QString cmd = m_isSleepMode ? "systemctl suspend"
-        : "shutdown -h now";
+                                : "systemctl poweroff";
 #endif
     QProcess::startDetached(cmd);
 }
