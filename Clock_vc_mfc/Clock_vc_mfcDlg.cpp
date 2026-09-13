@@ -18,6 +18,30 @@
 #define WM_TRAY_ICON_MSG (WM_USER + 1)
 const double PI = 3.14159265358979323846;
 
+namespace
+{
+	// Helper to construct a rounded rectangle path for UI containers
+	void AddRoundedRectangle(Gdiplus::GraphicsPath& path, float x, float y, float w, float h, float r)
+	{
+		path.AddArc(x, y, r, r, 180.0f, 90.0f);
+		path.AddArc(x + w - r, y, r, r, 270.0f, 90.0f);
+		path.AddArc(x + w - r, y + h - r, r, r, 0.0f, 90.0f);
+		path.AddArc(x, y + h - r, r, r, 90.0f, 90.0f);
+		path.CloseFigure();
+	}
+
+	// Helper to retrieve the current system or local time based on configuration
+	SYSTEMTIME GetActiveTime(BOOL bGMT)
+	{
+		SYSTEMTIME st;
+		if (bGMT)
+			::GetSystemTime(&st);
+		else
+			::GetLocalTime(&st);
+		return st;
+	}
+}
+
 CClockvcmfcDlg::CClockvcmfcDlg(CWnd* pParent)
 	: CDialogEx(IDD_CLOCK_VC_MFC_DIALOG, pParent)
 {
@@ -215,52 +239,28 @@ void CClockvcmfcDlg::DrawClock(Gdiplus::Graphics& g)
 
 	bool isFirstInModules = true;
 
-	if (m_bCalendar)
-	{
-		DrawCalendar(g, w, currentY);
-		currentY += HEIGHT_CALENDAR;
-		isFirstInModules = false;
-	}
+	// Helper lambda to eliminate repetitive separator checks and coordinate offsets
+	auto DrawModule = [&](bool condition, auto drawFunc, float height)
+		{
+			if (!condition) return;
+			if (!isFirstInModules)
+				DrawSeparator(g, w, currentY + 5.0f);
 
-	if (m_bSysMon)
-	{
-		if (!isFirstInModules)
-			DrawSeparator(g, w, currentY + 5.0f);
+			drawFunc();
+			currentY += height;
+			isFirstInModules = false;
+		};
 
-		DrawSystemMonitor(g, w, currentY);
-		currentY += HEIGHT_SYSMON;
-		isFirstInModules = false;
-	}
-
-	if (m_bPing)
-	{
-		if (!isFirstInModules)
-			DrawSeparator(g, w, currentY + 5.0f);
-
-		DrawPing(g, w, currentY);
-		currentY += HEIGHT_PING;
-		isFirstInModules = false;
-	}
-
-	if (m_bWeather)
-	{
-		if (!isFirstInModules)
-			DrawSeparator(g, w, currentY + 5.0f);
-
-		DrawWeather(g, w, currentY);
-		currentY += HEIGHT_WEATHER;
-	}
+	DrawModule(m_bCalendar, [&]() { DrawCalendar(g, w, currentY); }, HEIGHT_CALENDAR);
+	DrawModule(m_bSysMon, [&]() { DrawSystemMonitor(g, w, currentY); }, HEIGHT_SYSMON);
+	DrawModule(m_bPing, [&]() { DrawPing(g, w, currentY); }, HEIGHT_PING);
+	DrawModule(m_bWeather, [&]() { DrawWeather(g, w, currentY); }, HEIGHT_WEATHER);
 }
 
 void CClockvcmfcDlg::DrawPanelBackground(Gdiplus::Graphics& g, float w, float h)
 {
 	Gdiplus::GraphicsPath path;
-	float r = 15.0f;
-	path.AddArc(0.0f, 0.0f, r, r, 180.0f, 90.0f);
-	path.AddArc(w - r, 0.0f, r, r, 270.0f, 90.0f);
-	path.AddArc(w - r, h - r, r, r, 0.0f, 90.0f);
-	path.AddArc(0.0f, h - r, r, r, 90.0f, 90.0f);
-	path.CloseFigure();
+	AddRoundedRectangle(path, 0.0f, 0.0f, w, h, 15.0f);
 
 	int alpha = m_bMouseOver ? 160 : 1;
 
@@ -333,11 +333,7 @@ void CClockvcmfcDlg::DrawAnalogClock(Gdiplus::Graphics& g, float xCenter, float 
 		}
 	}
 
-	SYSTEMTIME st;
-	if (m_bGMT)
-		::GetSystemTime(&st);
-	else
-		::GetLocalTime(&st);
+	SYSTEMTIME st = GetActiveTime(m_bGMT);
 	COleDateTime now(st);
 
 	Gdiplus::FontFamily fontFamily(L"Arial");
@@ -411,11 +407,7 @@ void CClockvcmfcDlg::DrawHandHelper(Gdiplus::Graphics& g, float xCenter, float y
 
 void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float yStart)
 {
-	SYSTEMTIME st;
-	if (m_bGMT)
-		::GetSystemTime(&st);
-	else
-		::GetLocalTime(&st);
+	SYSTEMTIME st = GetActiveTime(m_bGMT);
 
 	Gdiplus::FontFamily digFamily;
 	int numFound = 0;
@@ -430,12 +422,7 @@ void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float
 
 		Gdiplus::SolidBrush lcdBackBrush(Gdiplus::Color(255, 170, 185, 165));
 		Gdiplus::GraphicsPath lcdPath;
-		float r = 5.0f;
-		lcdPath.AddArc(lcdX, lcdY, r, r, 180, 90);
-		lcdPath.AddArc(lcdX + lcdW - r, lcdY, r, r, 270, 90);
-		lcdPath.AddArc(lcdX + lcdW - r, lcdY + lcdH - r, r, r, 0, 90);
-		lcdPath.AddArc(lcdX, lcdY + lcdH - r, r, r, 90, 90);
-		lcdPath.CloseFigure();
+		AddRoundedRectangle(lcdPath, lcdX, lcdY, lcdW, lcdH, 5.0f);
 		g.FillPath(&lcdBackBrush, &lcdPath);
 		g.DrawPath(&Gdiplus::Pen(Gdiplus::Color(120, 0, 0, 0), 1.0f), &lcdPath);
 
@@ -481,44 +468,46 @@ void CClockvcmfcDlg::DrawDigitalClock(Gdiplus::Graphics& g, float xCenter, float
 			g.DrawString(strAMPM, -1, &fontIndicator, Gdiplus::PointF(lcdX + 5.0f, bottomRowY - 26.0f), &sfLeft, &digBrush);
 		}
 
+		// Helper lambda to draw paired digits; always renders background LCD shadows for physical LCD realism
+		auto DrawDigitPair = [&](int value, float p1, float p2, float y, const Gdiplus::Font& font, bool hideLeadingZero = false)
+			{
+				// Always draw the background shadow "8" for both digit places
+				g.DrawString(L"8", 1, &font, Gdiplus::PointF(p1, y), &sfRight, &shadowBrush);
+				g.DrawString(L"8", 1, &font, Gdiplus::PointF(p2, y), &sfRight, &shadowBrush);
+
+				// Draw the first active digit if not hiding leading zero, or if value >= 10
+				if (!hideLeadingZero || value >= 10)
+				{
+					CString s1;
+					s1.Format(_T("%d"), value / 10);
+					g.DrawString(s1, 1, &font, Gdiplus::PointF(p1, y), &sfRight, &digBrush);
+				}
+
+				// Always draw the second active digit
+				CString s2;
+				s2.Format(_T("%d"), value % 10);
+				g.DrawString(s2, 1, &font, Gdiplus::PointF(p2, y), &sfRight, &digBrush);
+			};
+
 		g.DrawString(L"88", 2, &digFontSmall, Gdiplus::PointF(p_Day + 8.0f, topRowY), &sfRight, &shadowBrush);
 		g.DrawString(L"88", 2, &digFontSmall, Gdiplus::PointF(p_Date, topRowY), &sfRight, &shadowBrush);
-		if (displayHour >= 10)
-			g.DrawString(L"8", 1, &digFontLarge, Gdiplus::PointF(p_H1, bottomRowY), &sfRight, &shadowBrush);
-		g.DrawString(L"8", 1, &digFontLarge, Gdiplus::PointF(p_H2, bottomRowY), &sfRight, &shadowBrush);
-		g.DrawString(L":", 1, &digFontLarge, Gdiplus::PointF(p_Colon, bottomRowY), &sfCenter, &shadowBrush);
-		g.DrawString(L"8", 1, &digFontLarge, Gdiplus::PointF(p_M1, bottomRowY), &sfRight, &shadowBrush);
-		g.DrawString(L"8", 1, &digFontLarge, Gdiplus::PointF(p_M2, bottomRowY), &sfRight, &shadowBrush);
-		g.DrawString(L"8", 1, &digFontSmall, Gdiplus::PointF(p_S1, bottomRowY + 4.0f), &sfRight, &shadowBrush);
-		g.DrawString(L"8", 1, &digFontSmall, Gdiplus::PointF(p_S2, bottomRowY + 4.0f), &sfRight, &shadowBrush);
 
 		const WCHAR* days[] = { L"SU", L"MO", L"TU", L"WE", L"TH", L"FR", L"SA" };
 		g.DrawString(days[st.wDayOfWeek], 2, &digFontSmall, Gdiplus::PointF(p_Day, topRowY), &sfCenter, &digBrush);
 
-		CString sDate; sDate.Format(_T("%d"), st.wDay);
+		CString sDate;
+		sDate.Format(_T("%d"), st.wDay);
 		g.DrawString(sDate, -1, &digFontSmall, Gdiplus::PointF(p_Date, topRowY), &sfRight, &digBrush);
 
-		if (displayHour >= 10)
-		{
-			CString sH1; sH1.Format(_T("%d"), displayHour / 10);
-			g.DrawString(sH1, 1, &digFontLarge, Gdiplus::PointF(p_H1, bottomRowY), &sfRight, &digBrush);
-		}
-		CString sH2; sH2.Format(_T("%d"), displayHour % 10);
-		g.DrawString(sH2, 1, &digFontLarge, Gdiplus::PointF(p_H2, bottomRowY), &sfRight, &digBrush);
+		// Render hours (always keep background shadow 8; hide active leading zero in 12h AM/PM mode)
+		bool hideHourLeadingZero = !m_b24Hours;
+		DrawDigitPair(displayHour, p_H1, p_H2, bottomRowY, digFontLarge, hideHourLeadingZero);
 
+		g.DrawString(L":", 1, &digFontLarge, Gdiplus::PointF(p_Colon, bottomRowY), &sfCenter, &shadowBrush);
 		g.DrawString(L":", 1, &digFontLarge, Gdiplus::PointF(p_Colon, bottomRowY), &sfCenter, &digBrush);
 
-		CString sM1, sM2;
-		sM1.Format(_T("%d"), st.wMinute / 10);
-		g.DrawString(sM1, 1, &digFontLarge, Gdiplus::PointF(p_M1, bottomRowY), &sfRight, &digBrush);
-		sM2.Format(_T("%d"), st.wMinute % 10);
-		g.DrawString(sM2, 1, &digFontLarge, Gdiplus::PointF(p_M2, bottomRowY), &sfRight, &digBrush);
-
-		CString sS1, sS2;
-		sS1.Format(_T("%d"), st.wSecond / 10);
-		g.DrawString(sS1, 1, &digFontSmall, Gdiplus::PointF(p_S1, bottomRowY + 4.0f), &sfRight, &digBrush);
-		sS2.Format(_T("%d"), st.wSecond % 10);
-		g.DrawString(sS2, 1, &digFontSmall, Gdiplus::PointF(p_S2, bottomRowY + 4.0f), &sfRight, &digBrush);
+		DrawDigitPair(st.wMinute, p_M1, p_M2, bottomRowY, digFontLarge, false);
+		DrawDigitPair(st.wSecond, p_S1, p_S2, bottomRowY + 4.0f, digFontSmall, false);
 	}
 }
 
@@ -608,9 +597,8 @@ void CClockvcmfcDlg::DrawSystemMonitor(Gdiplus::Graphics& g, float w, float ySta
 	float barW = w - (margin * 2.0f);
 	float barH = 12.0f;
 
-	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(50, m_dynamicColor.GetR(), m_dynamicColor.GetG(), m_dynamicColor.GetB()), 1.0f), 15.0f, monY, w - 15.0f, monY);
-	int highlightAlpha = (m_dynamicColor.GetR() > 128) ? 40 : 10;
-	g.DrawLine(&Gdiplus::Pen(Gdiplus::Color(highlightAlpha, 255, 255, 255), 1.0f), 15.0f, monY + 1.0f, w - 15.0f, monY + 1.0f);
+	// Use existing separator routine instead of duplicate line drawings
+	DrawSeparator(g, w, monY);
 
 	Gdiplus::FontFamily arial(L"Arial");
 	Gdiplus::Font fontLabel(&arial, 10, Gdiplus::FontStyleBold, Gdiplus::UnitPixel);
@@ -671,11 +659,7 @@ void CClockvcmfcDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	if (nIDEvent == 1)
 	{
-		SYSTEMTIME st;
-		if (m_bGMT)
-			::GetSystemTime(&st);
-		else
-			::GetLocalTime(&st);
+		SYSTEMTIME st = GetActiveTime(m_bGMT);
 
 		UpdateLayeredClock();
 
@@ -1455,7 +1439,7 @@ void CClockvcmfcDlg::UpdateWeather()
 						t.Remove('\"');
 						t.Trim();
 						if (!m_bIsClosing)
-							m_strTemp.Format(_T("%sC"), (LPCTSTR)t);
+							m_strTemp.Format(_T("%s C"), (LPCTSTR)t);
 					}
 
 					int posCode = jsonResponse.Find(_T("\"weather_code\":"), posCurrent);
@@ -1560,13 +1544,7 @@ void CClockvcmfcDlg::DrawModulesBackground(Gdiplus::Graphics& g, float w, float 
 		return;
 
 	Gdiplus::GraphicsPath path;
-	float r = 15.0f;
-
-	path.AddArc(0.0f, yStart, r, r, 180.0f, 90.0f);
-	path.AddArc(w - r, yStart, r, r, 270.0f, 90.0f);
-	path.AddArc(w - r, h - r, r, r, 0.0f, 90.0f);
-	path.AddArc(0.0f, h - r, r, r, 90.0f, 90.0f);
-	path.CloseFigure();
+	AddRoundedRectangle(path, 0.0f, yStart, w, h - yStart, 15.0f);
 
 	Gdiplus::SolidBrush grayBrush(Gdiplus::Color(100, 60, 60, 60));
 	g.FillPath(&grayBrush, &path);

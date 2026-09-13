@@ -1,7 +1,7 @@
-﻿
-
-
-
+﻿//{{NO_DEPENDENCIES}}
+// Microsoft Visual C++ generated include file.
+// Used by Clockvcmfc.rc
+//
 #define IDD_CLOCK_VC_MFC_DIALOG         102
 #define IDR_MAINFRAME                   128
 #define IDD_ABOUTBOX                    129
@@ -65,8 +65,8 @@
 #define ID_CLOCKPOPUP_WORLDMAP          32785
 #define ID_MENU_WORLDMAP                32786
 
-
-
+// Next default values for new objects
+// 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        144

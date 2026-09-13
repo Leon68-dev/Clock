@@ -22,18 +22,14 @@ BOOL CAboutDlg::OnInitDialog()
 	ModifyStyleEx(0, WS_EX_LAYERED);
 	SetLayeredWindowAttributes(0, 216, LWA_ALPHA);
 
-
-	SetDlgItemText(IDC_STATIC_VER, _T("Clock Version 2.2.0"));
-
+	SetDlgItemText(IDC_STATIC_VER, _T("Clock Version 2.3.0.8"));
 
 	COleDateTime now = COleDateTime::GetCurrentTime();
 	CString strCopy;
 	strCopy.Format(_T("Copyright (C) 1998-%d"), now.GetYear());
 	SetDlgItemText(IDC_STATIC_COPY, strCopy);
 
-
 	SetDlgItemText(IDC_STATIC_WINVER, GetWindowsVersionString());
-
 
 	MEMORYSTATUSEX memStatus;
 	memStatus.dwLength = sizeof(memStatus);
@@ -67,15 +63,12 @@ CString CAboutDlg::GetWindowsVersionString()
 		TCHAR szBuffer[256];
 		ULONG nChars = 256;
 
-
 		if (key.QueryStringValue(_T("ProductName"), szBuffer, &nChars) == ERROR_SUCCESS)
 			strProductName = szBuffer;
-
 
 		nChars = 256;
 		if (key.QueryStringValue(_T("DisplayVersion"), szBuffer, &nChars) == ERROR_SUCCESS)
 			strDisplayVersion = szBuffer;
-
 
 		nChars = 256;
 		if (key.QueryStringValue(_T("CurrentBuild"), szBuffer, &nChars) == ERROR_SUCCESS)

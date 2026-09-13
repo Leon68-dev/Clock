@@ -114,7 +114,7 @@ protected:
 	BOOL    m_bWeather = FALSE;
 	CString m_strWeatherCity = _T("Odesa,ua");
 	CString m_strWeatherUrl = _T("");
-	CString m_strTemp = _T("C");
+	CString m_strTemp = _T(" C");
 	CString m_strWeatherDesc = _T("Loading...");
 	Gdiplus::Image* m_pWeatherIcon = nullptr;
 	int m_weatherTickCount = 0;
