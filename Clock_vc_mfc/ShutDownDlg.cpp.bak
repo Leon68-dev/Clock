@@ -30,7 +30,7 @@ BOOL CShutDownDlg::OnInitDialog()
     ModifyStyleEx(0, WS_EX_LAYERED);
     SetLayeredWindowAttributes(0, 216, LWA_ALPHA);
 
-    
+    // ≤н≥ц≥ал≥зац≥€ значень
     m_timePicker.SetTime(m_tm);
     m_chkWork.SetCheck(m_isShutDown);
     m_chkSleep.SetCheck(m_isSleep);
@@ -44,7 +44,7 @@ void CShutDownDlg::UpdateUIState()
 {
     BOOL isChecked = m_chkWork.GetCheck();
 
-    
+    // «м≥на тексту та доступност≥ (аналог set_tmShutDown)
     m_chkWork.SetWindowText(isChecked ? _T("Shut down \"On\"") : _T("Shut down \"Off\""));
 
     m_timePicker.EnableWindow(isChecked);
@@ -67,7 +67,7 @@ void CShutDownDlg::OnBnClickedChkSleep()
 
 void CShutDownDlg::OnOK()
 {
-    
+    // «бер≥гаЇмо ф≥нальн≥ значенн€ перед закритт€м
     m_timePicker.GetTime(m_tm);
     m_isShutDown = m_chkWork.GetCheck();
     m_isSleep = m_chkSleep.GetCheck();

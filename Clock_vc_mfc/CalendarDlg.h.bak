@@ -15,7 +15,7 @@ protected:
     virtual void DoDataExchange(CDataExchange* pDX);
     virtual BOOL OnInitDialog();
 
-    
+    // Змінна для керування календарем
     CMonthCalCtrl m_calendar;
 
     DECLARE_MESSAGE_MAP()

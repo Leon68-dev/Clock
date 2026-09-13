@@ -7,19 +7,19 @@ class CAboutDlg : public CDialogEx
 public:
 	CAboutDlg();
 
-	// Dialog Data
+	
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_ABOUTBOX };
 #endif
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	virtual void DoDataExchange(CDataExchange* pDX);    
 
-	// Implementation
+	
 protected:
-	virtual BOOL OnInitDialog(); // Головна функція ініціалізації
+	virtual BOOL OnInitDialog(); 
 
-	// Допоміжна функція для отримання назви Windows з реєстру
+	
 	CString GetWindowsVersionString();
 
 	DECLARE_MESSAGE_MAP()

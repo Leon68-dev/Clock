@@ -1,12 +1,9 @@
-// Clock_vc_mfc.cpp : Defines the class behaviors for the application.
-//
-
 #include "pch.h"
 #include "framework.h"
 #include "Clock_vc_mfc.h"
 #include "Clock_vc_mfcDlg.h"
+#include <memory>
 
-// Додаємо бібліотеку GDI+
 #include <gdiplus.h>
 using namespace Gdiplus;
 #pragma comment (lib,"Gdiplus.lib")
@@ -15,69 +12,44 @@ using namespace Gdiplus;
 #define new DEBUG_NEW
 #endif
 
-
-// CClockvcmfcApp
-
 BEGIN_MESSAGE_MAP(CClockvcmfcApp, CWinApp)
 	ON_COMMAND(ID_HELP, &CWinApp::OnHelp)
 END_MESSAGE_MAP()
 
-
-// CClockvcmfcApp construction
-
 CClockvcmfcApp::CClockvcmfcApp()
 {
-	// support Restart Manager
 	m_dwRestartManagerSupportFlags = AFX_RESTART_MANAGER_SUPPORT_RESTART;
-
-	// TODO: add construction code here,
-	// Place all significant initialization in InitInstance
 }
-
-
-// The one and only CClockvcmfcApp object
 
 CClockvcmfcApp theApp;
 
-// Змінна для токена GDI+
-ULONG_PTR gdiplusToken;
-
-// CClockvcmfcApp initialization
+// File-local token for GDI+ initialization
+static ULONG_PTR s_gdiplusToken = 0;
 
 BOOL CClockvcmfcApp::InitInstance()
 {
-	// InitCommonControlsEx() is required on Windows XP if an application
-	// manifest specifies use of ComCtl32.dll version 6 or later to enable
-	// visual styles.  Otherwise, any window creation will fail.
 	INITCOMMONCONTROLSEX InitCtrls;
 	InitCtrls.dwSize = sizeof(InitCtrls);
-	// Set this to include all the common control classes you want to use
-	// in your application.
+
 	InitCtrls.dwICC = ICC_WIN95_CLASSES;
 	InitCommonControlsEx(&InitCtrls);
 
 	CWinApp::InitInstance();
 
-	// --- Ініціалізація GDI+ ---
 	GdiplusStartupInput gdiplusStartupInput;
-	GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+	if (GdiplusStartup(&s_gdiplusToken, &gdiplusStartupInput, NULL) != Gdiplus::Ok)
+	{
+		TRACE(traceAppMsg, 0, "Error: GdiplusStartup failed.\n");
+		return FALSE;
+	}
 
 	AfxEnableControlContainer();
 
-	// Create the shell manager, in case the dialog contains
-	// any shell tree view or shell list view controls.
-	CShellManager* pShellManager = new CShellManager;
+	// Use smart pointer to manage shell manager lifecycle safely
+	std::unique_ptr<CShellManager> pShellManager = std::make_unique<CShellManager>();
 
-	// Activate "Windows Native" visual manager for enabling themes in MFC controls
 	CMFCVisualManager::SetDefaultManager(RUNTIME_CLASS(CMFCVisualManagerWindows));
 
-	// Standard initialization
-	// If you are not using these features and wish to reduce the size
-	// of your final executable, you should remove from the following
-	// the specific initialization routines you do not need
-	// Change the registry key under which our settings are stored
-	// TODO: You should modify this string to be something appropriate
-	// such as the name of your company or organization
 	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
 
 	CClockvcmfcDlg dlg;
@@ -85,13 +57,13 @@ BOOL CClockvcmfcApp::InitInstance()
 	INT_PTR nResponse = dlg.DoModal();
 	if (nResponse == IDOK)
 	{
-		// TODO: Place code here to handle when the dialog is
-		//  dismissed with OK
+
+
 	}
 	else if (nResponse == IDCANCEL)
 	{
-		// TODO: Place code here to handle when the dialog is
-		//  dismissed with Cancel
+
+
 	}
 	else if (nResponse == -1)
 	{
@@ -99,20 +71,13 @@ BOOL CClockvcmfcApp::InitInstance()
 		TRACE(traceAppMsg, 0, "Warning: if you are using MFC controls on the dialog, you cannot #define _AFX_NO_MFC_CONTROLS_IN_DIALOGS.\n");
 	}
 
-	// Delete the shell manager created above.
-	if (pShellManager != nullptr)
-	{
-		delete pShellManager;
-	}
+	pShellManager.reset();
 
 #if !defined(_AFXDLL) && !defined(_AFX_NO_MFC_CONTROLS_IN_DIALOGS)
 	ControlBarCleanUp();
 #endif
 
-	// --- Завершення роботи GDI+ ---
-	GdiplusShutdown(gdiplusToken);
+	GdiplusShutdown(s_gdiplusToken);
 
-	// Since the dialog has been closed, return FALSE so that we exit the
-	//  application, rather than start the application's message pump.
 	return FALSE;
 }

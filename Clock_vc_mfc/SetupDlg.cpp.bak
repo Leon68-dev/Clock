@@ -20,7 +20,7 @@ void CSetupDlg::DoDataExchange(CDataExchange* pDX)
     CDialogEx::DoDataExchange(pDX);
     DDX_Control(pDX, IDC_SLIDER_OPACITY, m_sliderOpacity);
 
-    
+    // Зв'язуємо чекбокси зі змінними (DDX автоматично ставить/знімає галочки)
     DDX_Check(pDX, IDC_CHK_SECONDS, m_bSeconds);
     DDX_Check(pDX, IDC_CHK_GMT, m_bGMT);
     DDX_Check(pDX, IDC_CHK_DATE, m_bDate);
@@ -57,30 +57,27 @@ BOOL CSetupDlg::OnInitDialog()
     ModifyStyleEx(0, WS_EX_LAYERED);
     SetLayeredWindowAttributes(0, 216, LWA_ALPHA);
 
+    // Налаштування слайдера (20-100%)
     m_sliderOpacity.SetRange(20, 100);
-    if (m_nOpacity < 20)
+    if (m_nOpacity < 20) 
         m_nOpacity = 20;
-    if (m_nOpacity > 100)
-        m_nOpacity = 100;
     m_sliderOpacity.SetPos(m_nOpacity);
     m_sliderOpacity.SetTicFreq(10);
 
+    // Ініціалізація підказки (ToolTip)
     m_toolTip.Create(this);
-    // Display initial opacity percentage in tooltip
-    CString strInitOpacity;
-    strInitOpacity.Format(_T("%d%%"), m_nOpacity);
-    m_toolTip.AddTool(&m_sliderOpacity, strInitOpacity);
+    m_toolTip.AddTool(&m_sliderOpacity, _T(""));
     m_toolTip.AddTool(GetDlgItem(IDC_EDT_WEATHER_KEY), _T("Paste the 'API URL' generated on the website here"));
     m_toolTip.AddTool(GetDlgItem(IDC_BTN_LINK), _T("Open Open-Meteo configurator to select your city and get the URL"));
-    m_toolTip.SetDelayTime(TTDT_INITIAL, 200);
-    m_toolTip.SetDelayTime(TTDT_AUTOPOP, 10000);
+    m_toolTip.SetDelayTime(TTDT_INITIAL, 200); // 0.2 сек до появи
+    m_toolTip.SetDelayTime(TTDT_AUTOPOP, 10000); // висітиме 10 сек
 
     return TRUE;
 }
 
 BOOL CSetupDlg::PreTranslateMessage(MSG* pMsg)
 {
-    
+    // Передаємо повідомлення об'єкту ToolTip
     if (m_toolTip.GetSafeHwnd()) {
         m_toolTip.RelayEvent(pMsg);
     }
@@ -89,12 +86,12 @@ BOOL CSetupDlg::PreTranslateMessage(MSG* pMsg)
 
 void CSetupDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
-    
+    // Якщо рухали наш слайдер прозорості
     if (pScrollBar == (CScrollBar*)&m_sliderOpacity)
     {
         m_nOpacity = m_sliderOpacity.GetPos();
 
-        
+        // Оновлюємо текст підказки (аналог вашого toolTip1.SetToolTip)
         CString str;
         str.Format(_T("%d%%"), m_nOpacity);
         m_toolTip.UpdateTipText(str, &m_sliderOpacity);
@@ -104,37 +101,19 @@ void CSetupDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 
 void CSetupDlg::OnOK()
 {
-    // Synchronize data from controls before validation
-    UpdateData(TRUE);
-
-    // Sanitize network inputs
-    m_strPingAddress.Trim();
-    if (m_strPingAddress.IsEmpty())
-    {
-        m_strPingAddress = _T("8.8.8.8");
-    }
-
-    m_strWeatherCity.Trim();
-    m_strWeatherUrl.Trim();
-
-
+    // DDX_Check спрацює автоматично при виклику базового OnOK
     m_nOpacity = m_sliderOpacity.GetPos();
-    if (m_nOpacity < 20)
-        m_nOpacity = 20;
-    if (m_nOpacity > 100)
-        m_nOpacity = 100;
-
     CDialogEx::OnOK();
 }
 
 void CSetupDlg::OnBnClickedChkSoundHours()
 {
-    
+    // TODO: Add your control notification handler code here
 }
 
 void CSetupDlg::OnBnClickedBtnLink()
 {
-    
-    
+    // Відкриваємо сайт OpenWeatherMap
+    //ShellExecute(NULL, _T("open"), _T("https://openweathermap.org/api"), NULL, NULL, SW_SHOWNORMAL);
     ShellExecute(NULL, _T("open"), _T("https://open-meteo.com/en/docs"), NULL, NULL, SW_SHOWNORMAL);
 }

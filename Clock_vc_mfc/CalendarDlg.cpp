@@ -1,8 +1,8 @@
-#include "pch.h" // Або "stdafx.h"
+#include "pch.h" 
 #include "Clock_vc_mfc.h"
 #include "CalendarDlg.h"
 
-CCalendarDlg::CCalendarDlg(CWnd* pParent /*=nullptr*/)
+CCalendarDlg::CCalendarDlg(CWnd* pParent )
     : CDialogEx(IDD_CALENDAR_DLG, pParent)
 {
 }
@@ -10,7 +10,7 @@ CCalendarDlg::CCalendarDlg(CWnd* pParent /*=nullptr*/)
 void CCalendarDlg::DoDataExchange(CDataExchange* pDX)
 {
     CDialogEx::DoDataExchange(pDX);
-    // Зв'язуємо змінну з контролом на формі
+    
     DDX_Control(pDX, IDC_MONTHCALENDAR1, m_calendar);
 }
 
@@ -24,14 +24,14 @@ BOOL CCalendarDlg::OnInitDialog()
     ModifyStyleEx(0, WS_EX_LAYERED);
     SetLayeredWindowAttributes(0, 216, LWA_ALPHA);
 
-    // Аналог вашого setCalendar()
+    
     SYSTEMTIME st;
-    GetLocalTime(&st); // Отримуємо поточний системний час
+    GetLocalTime(&st); 
 
-    // Встановлюємо поточну дату як вибрану
+    
     m_calendar.SetCurSel(&st);
 
-    // Встановлюємо "Today" (нижній напис у календарі)
+    
     m_calendar.SetToday(&st);
 
     return TRUE;

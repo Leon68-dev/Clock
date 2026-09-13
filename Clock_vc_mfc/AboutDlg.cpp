@@ -22,30 +22,31 @@ BOOL CAboutDlg::OnInitDialog()
 	ModifyStyleEx(0, WS_EX_LAYERED);
 	SetLayeredWindowAttributes(0, 216, LWA_ALPHA);
 
-	// 1. Версія
+
 	SetDlgItemText(IDC_STATIC_VER, _T("Clock Version 2.2.0"));
 
-	// 2. Copyright
+
 	COleDateTime now = COleDateTime::GetCurrentTime();
 	CString strCopy;
 	strCopy.Format(_T("Copyright (C) 1998-%d"), now.GetYear());
 	SetDlgItemText(IDC_STATIC_COPY, strCopy);
 
-	// 3. ОС
+
 	SetDlgItemText(IDC_STATIC_WINVER, GetWindowsVersionString());
 
-	// 4. Пам'ять
+
 	MEMORYSTATUSEX memStatus;
 	memStatus.dwLength = sizeof(memStatus);
 
 	if (::GlobalMemoryStatusEx(&memStatus))
 	{
-		DWORDLONG totalGB = memStatus.ullTotalPhys / (1024 * 1024 * 1024);
-		DWORDLONG availGB = memStatus.ullAvailPhys / (1024 * 1024 * 1024);
+		// Format memory with fractional precision rather than truncated integers
+		double totalGB = (double)memStatus.ullTotalPhys / (1024.0 * 1024.0 * 1024.0);
+		double availGB = (double)memStatus.ullAvailPhys / (1024.0 * 1024.0 * 1024.0);
 
 		CString strTotal, strAvail;
-		strTotal.Format(_T("Total Physical Memory %I64u GB"), totalGB);
-		strAvail.Format(_T("Available Physical Memory %I64u GB"), availGB);
+		strTotal.Format(_T("Total Physical Memory: %.1f GB"), totalGB);
+		strAvail.Format(_T("Available Physical Memory: %.1f GB"), availGB);
 
 		SetDlgItemText(IDC_STATIC_TOTAL_MEM, strTotal);
 		SetDlgItemText(IDC_STATIC_AVAIL_MEM, strAvail);
@@ -66,23 +67,45 @@ CString CAboutDlg::GetWindowsVersionString()
 		TCHAR szBuffer[256];
 		ULONG nChars = 256;
 
-		// Читаємо назву (напр. Windows 10 Pro)
+
 		if (key.QueryStringValue(_T("ProductName"), szBuffer, &nChars) == ERROR_SUCCESS)
 			strProductName = szBuffer;
 
-		// Читаємо версію (напр. 22H2 або 10.0)
+
 		nChars = 256;
 		if (key.QueryStringValue(_T("DisplayVersion"), szBuffer, &nChars) == ERROR_SUCCESS)
 			strDisplayVersion = szBuffer;
 
-		// Читаємо номер збірки (Build)
+
 		nChars = 256;
 		if (key.QueryStringValue(_T("CurrentBuild"), szBuffer, &nChars) == ERROR_SUCCESS)
 			strBuild = szBuffer;
+
+		// Correct product name for Windows 11 (Build >= 22000 still reports Windows 10 in registry)
+		int nBuildNumber = _ttoi(strBuild);
+		if (nBuildNumber >= 22000)
+		{
+			strProductName.Replace(_T("Windows 10"), _T("Windows 11"));
+		}
+
+		// Query Update Build Revision (UBR) if available
+		DWORD dwUBR = 0;
+		if (key.QueryDWORDValue(_T("UBR"), dwUBR) == ERROR_SUCCESS)
+		{
+			strBuild.AppendFormat(_T(".%u"), dwUBR);
+		}
 	}
 
 	CString strResult;
-	// Форматуємо точно як у C# прикладі
-	strResult.Format(_T("Microsoft %s %s.%s"), strProductName, strDisplayVersion, strBuild);
+
+	if (!strDisplayVersion.IsEmpty())
+	{
+		strResult.Format(_T("Microsoft %s %s (Build %s)"), (LPCTSTR)strProductName, (LPCTSTR)strDisplayVersion, (LPCTSTR)strBuild);
+	}
+	else
+	{
+		strResult.Format(_T("Microsoft %s (Build %s)"), (LPCTSTR)strProductName, (LPCTSTR)strBuild);
+	}
+
 	return strResult;
 }
