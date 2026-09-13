@@ -3,6 +3,8 @@
 #include "AboutDlg.h"
 #include <atlbase.h> 
 
+#pragma comment(lib, "version.lib")
+
 CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
 {
 }
@@ -22,14 +24,44 @@ BOOL CAboutDlg::OnInitDialog()
 	ModifyStyleEx(0, WS_EX_LAYERED);
 	SetLayeredWindowAttributes(0, 216, LWA_ALPHA);
 
-	SetDlgItemText(IDC_STATIC_VER, _T("Clock Version 2.3.0.8"));
+	// Dynamically retrieve application version from resource info
+	CString strVersion = _T("Clock Version 1.0.0.1");
+	TCHAR szModulePath[MAX_PATH];
+	if (::GetModuleFileName(NULL, szModulePath, MAX_PATH))
+	{
+		DWORD dwHandle = 0;
+		DWORD dwSize = ::GetFileVersionInfoSize(szModulePath, &dwHandle);
+		if (dwSize > 0)
+		{
+			std::vector<BYTE> verData(dwSize);
+			if (::GetFileVersionInfo(szModulePath, dwHandle, dwSize, verData.data()))
+			{
+				VS_FIXEDFILEINFO* pFileInfo = nullptr;
+				UINT uLen = 0;
+				if (::VerQueryValue(verData.data(), _T("\\"), (LPVOID*)&pFileInfo, &uLen) && pFileInfo && uLen > 0)
+				{
+					strVersion.Format(_T("Clock Version %u.%u.%u.%u"),
+						HIWORD(pFileInfo->dwFileVersionMS),
+						LOWORD(pFileInfo->dwFileVersionMS),
+						HIWORD(pFileInfo->dwFileVersionLS),
+						LOWORD(pFileInfo->dwFileVersionLS));
+				}
+			}
+		}
+	}
+
+
+	SetDlgItemText(IDC_STATIC_VER, strVersion);
+
 
 	COleDateTime now = COleDateTime::GetCurrentTime();
 	CString strCopy;
 	strCopy.Format(_T("Copyright (C) 1998-%d"), now.GetYear());
 	SetDlgItemText(IDC_STATIC_COPY, strCopy);
 
+
 	SetDlgItemText(IDC_STATIC_WINVER, GetWindowsVersionString());
+
 
 	MEMORYSTATUSEX memStatus;
 	memStatus.dwLength = sizeof(memStatus);
